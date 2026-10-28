@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherBuilder - Next-Gen Elementor Visual Web Builder & Publisher</title>
+  <meta name="description" content="Next-generation visual web page builder like Elementor with public view, Argon2id cryptographically protected admin studio, and dynamic reactive widgets.">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.ico">
+
+  <!-- Typography & Google Fonts Pre-fetch -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Core Design System & Component Styles -->
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/widgets.css">
+  <link rel="stylesheet" href="css/builder.css">
+
+  <!-- Argon2 WebAssembly Engine (Local copy with CDN fallback) -->
+  <script src="js/vendor/argon2.umd.min.js"></script>
+  <script>
+    if (!window.hashwasm || !window.hashwasm.argon2id) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/hash-wasm@4/dist/argon2.umd.min.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+  <!-- Application Shell injected dynamically by js/app.js -->
+  <noscript>
+    <div style="padding: 40px; text-align: center; color: #fff; background: #0b0f19;">
+      <h2>JavaScript Required</h2>
+      <p>AetherBuilder requires JavaScript to render the visual canvas and compute Argon2 cryptographic hashes.</p>
+    </div>
+  </noscript>
+
+  <!-- Main ES Module Bootstrap -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

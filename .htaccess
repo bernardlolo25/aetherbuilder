@@ -1,0 +1,74 @@
+# ============================================================
+#  AETHERBUILDER — Apache .htaccess
+#  Works on InfinityFree, AwardSpace, and standard cPanel hosts
+# ============================================================
+
+# ── PHP Upload Limits (increase if host allows) ────────────────
+php_value upload_max_filesize 20M
+php_value post_max_size 22M
+php_value memory_limit 128M
+php_value max_execution_time 60
+
+# ── Correct MIME Types ─────────────────────────────────────────
+# Critical: without this, Apache may serve .js as text/plain
+# which causes ES Modules to be rejected by browsers.
+AddType application/javascript          .js .mjs
+AddType text/css                        .css
+AddType application/json                .json
+AddType image/svg+xml                   .svg
+AddType font/woff                       .woff
+AddType font/woff2                      .woff2
+AddType font/ttf                        .ttf
+AddType image/webp                      .webp
+AddType video/mp4                       .mp4
+AddType video/webm                      .webm
+
+# ── Security Headers ───────────────────────────────────────────
+<IfModule mod_headers.c>
+    # NOTE: COOP/COEP headers are intentionally NOT set here.
+    # InfinityFree and similar free hosts inject cross-origin scripts
+    # (translate.js, error redirects) that break under require-corp COEP.
+    # Argon2id security is fully preserved — only multi-thread WASM speed is affected.
+
+    # Cache control: no-cache for HTML/PHP, long cache for static assets
+    <FilesMatch "\.(html|htm|php)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    <FilesMatch "\.(js|css|woff|woff2|ttf|png|jpg|jpeg|gif|webp|svg|ico)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>
+
+# ── Directory Index ────────────────────────────────────────────
+DirectoryIndex index.html index.php
+
+# ── Block direct access to private data files ──────────────────
+# submissions.json contains private contact form submissions
+<FilesMatch "^(submissions\.json|.*\.log)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect sensitive data folders from browser access
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block private submissions and revision history
+    RewriteRule ^data/(submissions\.json|revisions/) - [F,L]
+</IfModule>
+
+# ── Prevent directory listing ──────────────────────────────────
+Options -Indexes
+
+# ── Gzip Compression ──────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json text/plain
+</IfModule>
+
+# ── mod_security: relax rules that block JSON POST ─────────────
+<IfModule mod_security.c>
+    SecFilterEngine Off
+    SecFilterScanPOST Off
+</IfModule>
