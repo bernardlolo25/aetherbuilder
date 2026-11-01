@@ -162,6 +162,26 @@ export class Argon2Auth {
     return this._adminPass || '';
   }
 
+  /** Ensures a valid server-side session token is present; fetches one if missing */
+  async ensureSessionToken() {
+    if (this.isAuthenticated() && !this.getAdminToken()) {
+      try {
+        const targetHash = this.getStoredHash();
+        const res = await fetch('api.php?action=verify_session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ argon2_hash: targetHash })
+        });
+        const data = await res.json();
+        if (data && data.token) {
+          sessionStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+        }
+      } catch (err) {
+        console.warn('ensureSessionToken background call failed:', err);
+      }
+    }
+  }
+
   /** Returns the server-signed session token stored in sessionStorage */
   getAdminToken() {
     return sessionStorage.getItem(TOKEN_STORAGE_KEY) || '';

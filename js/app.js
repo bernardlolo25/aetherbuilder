@@ -12,6 +12,11 @@ import { BuilderCanvas } from './builder.js';
 import { InspectorPanel } from './inspector.js';
 import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
+
+// ── Admin session token helper ──────────────────────────────────
+export function getAdminToken() {
+  return sessionStorage.getItem('aether_admin_token') || '';
+}
 import { addonManager, AddonMaker } from './addons.js';
 import './receipt.js';
 
@@ -397,7 +402,8 @@ class AetherApp {
     }
   }
 
-  renderAdminStudio() {
+  async renderAdminStudio() {
+    if (auth && typeof auth.ensureSessionToken === 'function') { await auth.ensureSessionToken(); }
     document.body.innerHTML = `
       <div class="builder-shell">
         <!-- 1. Top Navigation Bar -->
@@ -1438,7 +1444,8 @@ class AetherApp {
         formData.append('overwrite', '1');
       }
       try {
-        const res = await fetch('api.php?action=upload', { method: 'POST', body: formData });
+        formData.append('admin_token', getAdminToken());
+        const res = await fetch('api.php?action=upload', { method: 'POST', headers: { 'X-Admin-Token': getAdminToken() }, body: formData });
         const result = await res.json();
         if (result.success) {
           uploaded++;
@@ -3437,10 +3444,7 @@ ${varCss}
   <script type="module">
     import { initPublicChatbot } from './js/assistant.js';
 
-// ── Admin token helper ──────────────────────────────────────────
-function getAdminToken() {
-  return sessionStorage.getItem('aether_admin_token') || '';
-}
+
     initPublicChatbot(${JSON.stringify(siteSettings.chatbot)});
   </script>` : ''}
   ${addonManager.getAllActiveJs() ? `<script id="wb-addons-js">
@@ -4678,9 +4682,11 @@ ${addonManager.getAllActiveJs()}
         const formData = new FormData();
         formData.append('update_zip', zipBlob, 'aetherbuilder-update.zip');
         formData.append('backup', chkBackup ? (chkBackup.checked ? '1' : '0') : '1');
+        formData.append('admin_token', getAdminToken());
 
         const postRes = await fetch('api.php?action=upload_update_zip', {
           method: 'POST',
+          headers: { 'X-Admin-Token': getAdminToken() },
           body: formData
         });
         data = await postRes.json();
@@ -4786,10 +4792,12 @@ ${addonManager.getAllActiveJs()}
       const formData = new FormData();
       formData.append('update_zip', selectedFile);
       formData.append('backup', '1');
+      formData.append('admin_token', getAdminToken());
 
       try {
         const res = await fetch('api.php?action=upload_update_zip', {
           method: 'POST',
+          headers: { 'X-Admin-Token': getAdminToken() },
           body: formData
         });
         const data = await res.json();
