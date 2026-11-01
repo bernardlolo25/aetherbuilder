@@ -4696,7 +4696,6 @@ ${addonManager.getAllActiveJs()}
 
         const postRes = await fetch('api.php?action=upload_update_zip', {
           method: 'POST',
-          headers: { 'X-Admin-Token': getAdminToken() },
           body: formData
         });
         data = await postRes.json();
@@ -4841,7 +4840,6 @@ ${addonManager.getAllActiveJs()}
       try {
         const res = await fetch('api.php?action=upload_update_zip', {
           method: 'POST',
-          headers: { 'X-Admin-Token': getAdminToken() },
           body: formData
         });
         const data = await res.json();
@@ -4855,7 +4853,8 @@ ${addonManager.getAllActiveJs()}
           btnUpload.innerHTML = '<span>🚀</span> Unpack & Install';
         }
       } catch (err) {
-        alert('Network error while uploading update package.');
+        console.error('Manual ZIP upload error:', err);
+        alert('Hosting upload limit reached or connection reset by InfinityFree.\n\nTip: Upload "aetherbuilder-update.zip" to your site root using FTP, then click "⚡ Unpack Server ZIP" right above!');
         btnUpload.disabled = false;
         btnUpload.innerHTML = '<span>🚀</span> Unpack & Install';
       }
