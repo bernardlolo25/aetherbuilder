@@ -5,6 +5,9 @@
  */
 
 import { WIDGET_REGISTRY, formatSafeCurrency, getSafeIcon } from './widgets.js';
+
+// Admin token helper (server-side session)
+function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') || ''; }
 import { state } from './state.js';
 
 // ── 1. LIGHTWEIGHT & SAFE ADD-ON TEMPLATE COMPILER ───────────────────────────
@@ -824,7 +827,8 @@ class AddonManager {
         const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
         await fetch(`${apiBase}?action=save_addons`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': _getAdminToken(), },
           body: JSON.stringify(this.addons)
         });
       } catch {}

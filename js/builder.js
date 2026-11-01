@@ -4,6 +4,9 @@
  */
 
 import { state } from './state.js';
+
+// Admin token helper (server-side session)
+function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') || ''; }
 import { WIDGET_REGISTRY, initCountdownTimers } from './widgets.js';
 import { normalizeGoogleSheetUrl, parseCsv, fetchGoogleSheetLecturers } from './sheets.js';
 import { showRegistrationReceiptModal } from './receipt.js';
@@ -1066,7 +1069,8 @@ export class BuilderCanvas {
         try {
           await fetch(apiBase + '?action=submit_form', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': _getAdminToken(), },
             body: JSON.stringify(payload)
           });
         } catch (err) {
@@ -1305,7 +1309,8 @@ export class BuilderCanvas {
         try {
           const localRes = await fetch(apiBase + '?action=submit_form', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': _getAdminToken(), },
             body: JSON.stringify(payload)
           });
           const localData = await localRes.json();

@@ -5,6 +5,7 @@
 
 const AUTH_STORAGE_KEY = 'aether_argon2_master_hash';
 const SESSION_STORAGE_KEY = 'aether_admin_session';
+const TOKEN_STORAGE_KEY    = 'aether_admin_token';
 
 export class Argon2Auth {
   constructor() {
@@ -113,6 +114,7 @@ export class Argon2Auth {
 
   logout() {
     this.setSession(false);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     window.location.reload();
   }
 
@@ -129,16 +131,28 @@ export class Argon2Auth {
     const computeTime = Math.round(performance.now() - startTime);
 
     if (valid) {
-      this.setSession(true);
       this._adminPass = password;
+      // Obtain server-side session token (validates this browser session server-side)
       try {
-        fetch('api.php?action=login', {
+        const res = await fetch('api.php?action=verify_session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ argon2_hash: targetHash })
         });
-      } catch {}
-      return { success: true, computeTime };
+        const data = await res.json();
+        if (data.success && data.token) {
+          sessionStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+          this.setSession(true);
+          return { success: true, computeTime };
+        } else {
+          return { success: false, error: data.error || 'Server authentication failed. Check that api.php is accessible.', computeTime };
+        }
+      } catch (e) {
+        // Offline / localhost fallback — still allow local session
+        console.warn('verify_session fetch failed, using local-only session:', e);
+        this.setSession(true);
+        return { success: true, computeTime, offline: true };
+      }
     } else {
       return { success: false, error: 'Invalid admin password.', computeTime };
     }
@@ -146,6 +160,16 @@ export class Argon2Auth {
 
   getAdminPassword() {
     return this._adminPass || '';
+  }
+
+  /** Returns the server-signed session token stored in sessionStorage */
+  getAdminToken() {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  }
+
+  /** Checks whether a server session token is present (doesn't re-verify server-side) */
+  hasValidToken() {
+    return !!sessionStorage.getItem(TOKEN_STORAGE_KEY);
   }
 
   async updatePassword(oldPassword, newPassword) {
@@ -161,6 +185,19 @@ export class Argon2Auth {
 
     const newHash = await this.hashPassword(newPassword);
     localStorage.setItem(AUTH_STORAGE_KEY, newHash);
+    // Persist new hash server-side
+    try {
+      await fetch('api.php?action=save_admin_hash', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': this.getAdminToken()
+        },
+        body: JSON.stringify({ argon2_hash: newHash })
+      });
+    } catch (e) {
+      console.warn('Could not sync password to server:', e);
+    }
     return { success: true, newHash };
   }
 

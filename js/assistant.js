@@ -1,3 +1,6 @@
+
+// Admin token helper (server-side session)
+function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') || ''; }
 /**
  * AETHERBUILDER - NON-AI DECISION TREE CHATBOT ENGINE
  * Completely standalone, deterministic, zero-API cost interactive support & lead capture bot.
@@ -297,7 +300,8 @@ export function initPublicChatbot(customConfig = {}) {
         try {
           const res = await fetch('api.php?action=submit_form', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': _getAdminToken(), },
             body: JSON.stringify(payload)
           });
           const result = await res.json();

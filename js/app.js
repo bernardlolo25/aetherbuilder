@@ -1208,7 +1208,8 @@ class AetherApp {
         if (!confirm(`Delete "${asset.name}"?`)) return;
         await fetch('api.php?action=delete_asset', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
           body: JSON.stringify({ name: asset.name })
         });
         this.fetchAssets().then(assets2 => {
@@ -3261,7 +3262,8 @@ ${varCss}
           try {
             var localRes = await fetch(apiBase + '?action=submit_form', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
               body: JSON.stringify(payload)
             });
             var localData = await localRes.json();
@@ -3364,6 +3366,11 @@ ${varCss}
   ${(siteSettings.chatbot && siteSettings.chatbot.enabled !== false) ? `
   <script type="module">
     import { initPublicChatbot } from './js/assistant.js';
+
+// ── Admin token helper ──────────────────────────────────────────
+function getAdminToken() {
+  return sessionStorage.getItem('aether_admin_token') || '';
+}
     initPublicChatbot(${JSON.stringify(siteSettings.chatbot)});
   </script>` : ''}
   ${addonManager.getAllActiveJs() ? `<script id="wb-addons-js">
@@ -3686,7 +3693,8 @@ ${addonManager.getAllActiveJs()}
           const id = btn.getAttribute('data-id');
           await fetch('api.php?action=mark_read', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
             body: JSON.stringify({ id })
           });
           const item = allSubs.find(x => x.id === id);
@@ -3703,7 +3711,8 @@ ${addonManager.getAllActiveJs()}
           if (!confirm('Delete this submission?')) return;
           await fetch('api.php?action=delete_submission', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
             body: JSON.stringify({ id })
           });
           allSubs = allSubs.filter(x => x.id !== id);
@@ -3751,7 +3760,8 @@ ${addonManager.getAllActiveJs()}
     modal.querySelector('#notif-btn-mark-all').addEventListener('click', async () => {
       await fetch('api.php?action=mark_read', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
         body: JSON.stringify({ id: '' })
       });
       allSubs.forEach(s => s.is_read = true);
@@ -4066,7 +4076,8 @@ ${addonManager.getAllActiveJs()}
           try {
             const rbRes = await fetch('api.php?action=rollback_revision', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
               body: JSON.stringify({ revisionId: revId })
             });
             const rbData = await rbRes.json();
@@ -4608,7 +4619,8 @@ ${addonManager.getAllActiveJs()}
         setProgress(25, 'Connecting to update channel & creating safety backup...');
         const res = await fetch('api.php?action=apply_update', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',
+          'X-Admin-Token': getAdminToken(), },
           body: JSON.stringify({
             download_url: manifest?.download_url || 'aetherbuilder-update.zip',
             backup: chkBackup ? chkBackup.checked : true

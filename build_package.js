@@ -29,27 +29,43 @@ function copyRecursive(src, dest) {
   }
 }
 
-// Core files
-['index.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico'].forEach(f => {
+// Core files (exclude dev/patch scripts)
+['index.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', '.htaccess'].forEach(f => {
   const p = path.join(rootDir, f);
   if (fs.existsSync(p)) fs.copyFileSync(p, path.join(stageDir, f));
 });
 
 // Core directories
 ['js', 'css', 'assets'].forEach(d => {
-  const p = path.join(rootDir, d);
-  if (fs.existsSync(p)) copyRecursive(p, path.join(stageDir, d));
+  const src = path.join(rootDir, d);
+  if (!fs.existsSync(src)) return;
+  // Copy directory but skip dev artifacts and user uploads
+  function copyDir(s, dst) {
+    if (fs.statSync(s).isDirectory()) {
+      if (!fs.existsSync(dst)) fs.mkdirSync(dst, { recursive: true });
+      for (const item of fs.readdirSync(s)) {
+        // Skip uploads directory — buyer installs fresh
+        if (s === path.join(rootDir, 'assets') && item === 'uploads') continue;
+        copyDir(path.join(s, item), path.join(dst, item));
+      }
+    } else {
+      fs.copyFileSync(s, dst);
+    }
+  }
+  copyDir(src, path.join(stageDir, d));
 });
 
-// Ensure data folder has default skeleton if needed, without wiping user data
+// data folder — only include fresh skeleton files, NOT user data
 const stageData = path.join(stageDir, 'data');
 fs.mkdirSync(stageData, { recursive: true });
-if (fs.existsSync(path.join(rootDir, 'data', 'site.json'))) {
-  fs.copyFileSync(path.join(rootDir, 'data', 'site.json'), path.join(stageData, 'site.json'));
-}
+// Include addons definition (part of app), but NOT site.json, submissions, revisions, config
 if (fs.existsSync(path.join(rootDir, 'data', 'addons.json'))) {
   fs.copyFileSync(path.join(rootDir, 'data', 'addons.json'), path.join(stageData, 'addons.json'));
 }
+// Create empty placeholder dirs with .gitkeep
+['backups', 'revisions', 'uploads'].forEach(sub => {
+  fs.mkdirSync(path.join(stageData, sub), { recursive: true });
+});
 
 console.log('Staged files successfully. Creating standard POSIX ZIP archive...');
 

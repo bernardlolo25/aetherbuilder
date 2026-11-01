@@ -1,14 +1,19 @@
 {
   "name": "AetherBuilder",
-  "version": "2.5.1",
-  "release_date": "2026-10-31",
+  "version": "2.5.2",
+  "release_date": "2026-11-01",
   "min_php": "7.4",
   "changelog": [
+    "Security: Server-side session token validation — all admin endpoints now require a signed token",
+    "Security: CORS restricted from wildcard (*) to a domain allowlist",
+    "Security: Rate limiting on form submissions (3/min) and login attempts (10/min)",
+    "Security: data/config.json, data/ratelimit.json blocked from web access via .htaccess",
+    "Security: HTTPS redirect enforced via .htaccess",
+    "Added: verify_session, validate_token, and save_admin_hash API endpoints",
     "Fixed: Visual repeater for Nav Links & Dropdowns in Navbar/Header and navigation add-ons",
     "Fixed: Submenu builder now supports page selector dropdowns and URL inputs",
-    "Fixed: Full canvas containment preventing navbar overlaps in admin studio",
-    "Updated: Removed legacy institutional branding for fully generic deployments"
+    "Updated: Official AetherBuilder logo applied across admin UI and login modal"
   ],
   "download_url": "aetherbuilder-update.zip",
-  "releaseDate": "2026-10-31"
+  "releaseDate": "2026-11-01"
 }

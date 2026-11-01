@@ -4,6 +4,9 @@
  */
 
 import { TEMPLATES } from './templates.js';
+
+// Admin token helper (server-side session)
+function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') || ''; }
 import { WIDGET_REGISTRY } from './widgets.js';
 import { applyTheme } from './themes.js';
 
@@ -435,7 +438,8 @@ class BuilderState {
     };
     try { localStorage.setItem(STORAGE_KEY_PUBLIC, JSON.stringify(payload)); } catch {}
     try {
-      const headers = { 'Content-Type': 'application/json' };
+      const headers = { 'Content-Type': 'application/json',
+          'X-Admin-Token': _getAdminToken(), };
       if (typeof window !== 'undefined' && window.auth && typeof window.auth.getAdminPassword === 'function') {
         headers['X-Admin-Password'] = window.auth.getAdminPassword();
       }

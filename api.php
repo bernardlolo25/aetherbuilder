@@ -24,9 +24,21 @@
  */
 
 // ── CORS Headers ─────────────────────────────────────────────────────────────
-header('Access-Control-Allow-Origin: *');
+// Restrict CORS to known origins only
+$_aether_allowed_origins = [
+    'https://softexpert.freehosting.dev',
+    'http://localhost:3000',
+    'http://localhost',
+];
+$_aether_req_origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($_aether_req_origin, $_aether_allowed_origins, true)) {
+    header('Access-Control-Allow-Origin: ' . $_aether_req_origin);
+    header('Vary: Origin');
+} else {
+    header('Access-Control-Allow-Origin: ' . $_aether_allowed_origins[0]);
+}
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password');
+header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -34,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.5.1');
+define('AETHER_VERSION', '2.5.2');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -242,8 +254,154 @@ function perform_core_update($zipFilePath, $createBackup = true) {
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════
+// SERVER-SIDE SESSION TOKEN SYSTEM
+// ═══════════════════════════════════════════════════════════════
+define('CONFIG_FILE', DATA_DIR . '/config.json');
+define('TOKEN_TTL',   28800); // 8 hours in seconds
+
+function get_server_secret() {
+    $cfg = [];
+    if (file_exists(CONFIG_FILE)) {
+        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
+    }
+    if (empty($cfg['server_secret'])) {
+        $cfg['server_secret'] = bin2hex(random_bytes(32));
+        if (empty($cfg['admin_hash'])) {
+            $cfg['admin_hash'] = '';
+        }
+        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+        @chmod(CONFIG_FILE, 0600);
+    }
+    return $cfg['server_secret'];
+}
+
+function get_admin_hash_from_config() {
+    if (!file_exists(CONFIG_FILE)) return null;
+    $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
+    return $cfg['admin_hash'] ?? null;
+}
+
+function save_admin_hash_to_config($hash) {
+    $cfg = [];
+    if (file_exists(CONFIG_FILE)) {
+        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
+    }
+    if (empty($cfg['server_secret'])) {
+        $cfg['server_secret'] = bin2hex(random_bytes(32));
+    }
+    $cfg['admin_hash'] = $hash;
+    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+    @chmod(CONFIG_FILE, 0600);
+}
+
+function generate_session_token() {
+    $secret  = get_server_secret();
+    $ts      = time();
+    $nonce   = bin2hex(random_bytes(8));
+    $payload = $ts . ':' . $nonce;
+    $sig     = hash_hmac('sha256', $payload, $secret);
+    return base64_encode($payload . ':' . $sig);
+}
+
+function validate_session_token($token) {
+    if (!$token) return false;
+    $decoded = @base64_decode($token, true);
+    if ($decoded === false) return false;
+    $parts = explode(':', $decoded, 3);
+    if (count($parts) !== 3) return false;
+    [$ts, $nonce, $sig] = $parts;
+    if (!ctype_digit($ts)) return false;
+    if ((time() - (int)$ts) > TOKEN_TTL) return false;
+    $secret   = get_server_secret();
+    $expected = hash_hmac('sha256', $ts . ':' . $nonce, $secret);
+    return hash_equals($expected, $sig);
+}
+
+function require_admin_token() {
+    $token = $_SERVER['HTTP_X_ADMIN_TOKEN'] ?? '';
+    if (!validate_session_token($token)) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'error' => 'Unauthorized. A valid admin session token is required.',
+            'code'  => 'TOKEN_REQUIRED'
+        ]);
+        exit;
+    }
+}
+
+// Simple file-based rate limiter (no MySQL needed)
+function check_rate_limit($action_key, $max_per_window = 5, $window_seconds = 60) {
+    $rlFile = DATA_DIR . '/ratelimit.json';
+    $rl     = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?: []) : [];
+    $ip     = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $key    = $action_key . ':' . md5($ip);
+    $now    = time();
+    if (!isset($rl[$key])) $rl[$key] = ['count' => 0, 'window_start' => $now];
+    if (($now - $rl[$key]['window_start']) > $window_seconds) {
+        $rl[$key] = ['count' => 0, 'window_start' => $now];
+    }
+    $rl[$key]['count']++;
+    // Prune old keys to keep file small
+    foreach ($rl as $k => $v) {
+        if (($now - $v['window_start']) > ($window_seconds * 2)) unset($rl[$k]);
+    }
+    file_put_contents($rlFile, json_encode($rl), LOCK_EX);
+    if ($rl[$key]['count'] > $max_per_window) {
+        http_response_code(429);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Too many requests. Please wait before trying again.', 'code' => 'RATE_LIMITED']);
+        exit;
+    }
+}
+// ═══════════════════════════════════════════════════════════════
+
 $action = isset($_GET['action']) ? trim($_GET['action']) : '';
 $method = $_SERVER['REQUEST_METHOD'];
+
+// POST: verify_session — client sends Argon2 hash; server returns signed token
+if ($action === 'verify_session' && $method === 'POST') {
+    check_rate_limit('verify_session', 10, 60); // 10 attempts per minute
+    $body  = @json_decode(get_request_body(), true) ?: [];
+    $clientHash = trim($body['argon2_hash'] ?? '');
+    if (!$clientHash) {
+        send_json(400, ['error' => 'No hash provided']);
+    }
+    $storedHash = get_admin_hash_from_config();
+    if (!$storedHash) {
+        // First-time: accept client hash as the admin credential
+        save_admin_hash_to_config($clientHash);
+        $token = generate_session_token();
+        send_json(200, ['success' => true, 'token' => $token, 'first_time' => true]);
+    }
+    // Compare hashes (constant-time)
+    if (hash_equals($storedHash, $clientHash)) {
+        $token = generate_session_token();
+        send_json(200, ['success' => true, 'token' => $token]);
+    }
+    send_json(401, ['error' => 'Invalid credentials', 'code' => 'AUTH_FAILED']);
+}
+
+// POST: save_admin_hash — update stored hash (requires valid session)
+if ($action === 'save_admin_hash' && $method === 'POST') {
+    require_admin_token();
+    $body = @json_decode(get_request_body(), true) ?: [];
+    $newHash = trim($body['argon2_hash'] ?? '');
+    if (!$newHash) send_json(400, ['error' => 'No hash provided']);
+    save_admin_hash_to_config($newHash);
+    send_json(200, ['success' => true, 'message' => 'Admin password updated successfully.']);
+}
+
+// GET: validate_token — check if current token is still valid
+if ($action === 'validate_token' && $method === 'GET') {
+    $token = $_SERVER['HTTP_X_ADMIN_TOKEN'] ?? '';
+    $valid = validate_session_token($token);
+    send_json(200, ['valid' => $valid]);
+}
+
+
 
 // ── GET: get_site ─────────────────────────────────────────────────────────────
 if ($action === 'get_site' && $method === 'GET') {
@@ -258,6 +416,7 @@ if ($action === 'get_site' && $method === 'GET') {
 
 // ── POST: publish ─────────────────────────────────────────────────────────────
 if ($action === 'publish' && $method === 'POST') {
+    require_admin_token();
     $body = get_request_body();
     if (!$body) send_json(400, ['error' => 'Empty body']);
     $decoded = @json_decode($body, true);
@@ -296,6 +455,7 @@ if ($action === 'list_assets' && $method === 'GET') {
 
 // ── POST: upload ──────────────────────────────────────────────────────────────
 if ($action === 'upload' && $method === 'POST') {
+    require_admin_token();
     if (empty($_FILES['file'])) {
         send_json(400, ['success' => false, 'error' => 'No file received. Ensure the field name is "file".']);
     }
@@ -344,6 +504,7 @@ if ($action === 'upload' && $method === 'POST') {
 
 // ── POST: delete_asset ───────────────────────────────────────────────────────
 if ($action === 'delete_asset' && $method === 'POST') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     $name = isset($body['name']) ? safe_basename($body['name']) : '';
     if (!$name) send_json(400, ['success' => false, 'error' => 'No filename provided']);
@@ -355,6 +516,7 @@ if ($action === 'delete_asset' && $method === 'POST') {
 
 // ── POST: submit_form ─────────────────────────────────────────────────────────
 if ($action === 'submit_form' && $method === 'POST') {
+    check_rate_limit('submit_form', 3, 60); // 3 submissions per minute per IP
     $body = get_request_body();
     $entry = @json_decode($body, true);
     if (!is_array($entry)) $entry = [];
@@ -401,6 +563,7 @@ if ($action === 'submit_form' && $method === 'POST') {
 
 // ── GET: get_submissions ──────────────────────────────────────────────────────
 if ($action === 'get_submissions' && $method === 'GET') {
+    require_admin_token();
     $subs = read_json_file(DATA_DIR . '/submissions.json', []);
     if (!is_array($subs)) $subs = [];
     $unread = count(array_filter($subs, function($s) { return empty($s['is_read']); }));
@@ -414,6 +577,7 @@ if ($action === 'get_submissions' && $method === 'GET') {
 
 // ── POST: mark_read ───────────────────────────────────────────────────────────
 if ($action === 'mark_read') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     $id   = $body['id'] ?? null;
     $subFile = DATA_DIR . '/submissions.json';
@@ -429,6 +593,7 @@ if ($action === 'mark_read') {
 
 // ── POST: delete_submission ───────────────────────────────────────────────────
 if ($action === 'delete_submission' && $method === 'POST') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     $id   = $body['id'] ?? null;
     if (!$id) send_json(400, ['success' => false, 'error' => 'No ID provided']);
@@ -442,12 +607,14 @@ if ($action === 'delete_submission' && $method === 'POST') {
 
 // ── GET/POST: clear_submissions ───────────────────────────────────────────────
 if ($action === 'clear_submissions') {
+    require_admin_token();
     write_json_file(DATA_DIR . '/submissions.json', []);
     send_json(200, ['success' => true, 'message' => 'All submissions cleared.']);
 }
 
 // ── GET: export_submissions_csv ───────────────────────────────────────────────
 if ($action === 'export_submissions_csv' && $method === 'GET') {
+    require_admin_token();
     $subs = read_json_file(DATA_DIR . '/submissions.json', []);
     if (!is_array($subs)) $subs = [];
 
@@ -492,6 +659,7 @@ if ($action === 'get_addons' && $method === 'GET') {
 
 // ── POST: save_addons ─────────────────────────────────────────────────────────
 if ($action === 'save_addons' && $method === 'POST') {
+    require_admin_token();
     $payload = @json_decode(get_request_body(), true);
     if (!is_array($payload)) $payload = [];
     write_json_file(DATA_DIR . '/addons.json', $payload);
@@ -500,6 +668,7 @@ if ($action === 'save_addons' && $method === 'POST') {
 
 // ── GET: get_revisions ────────────────────────────────────────────────────────
 if ($action === 'get_revisions' && $method === 'GET') {
+    require_admin_token();
     $revs = read_json_file(DATA_DIR . '/revisions.json', []);
     if (!is_array($revs)) $revs = [];
     // Return only metadata (no full snapshot) to keep payload light
@@ -516,6 +685,7 @@ if ($action === 'get_revisions' && $method === 'GET') {
 
 // ── POST: rollback_revision ───────────────────────────────────────────────────
 if ($action === 'rollback_revision' && $method === 'POST') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     $id   = $body['id'] ?? null;
     if (!$id) send_json(400, ['success' => false, 'error' => 'No revision ID']);
@@ -533,6 +703,7 @@ if ($action === 'rollback_revision' && $method === 'POST') {
 
 // ── POST: save_revision (auto-save hook) ──────────────────────────────────────
 if ($action === 'save_revision' && $method === 'POST') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     if (!is_array($body)) send_json(400, ['success' => false, 'error' => 'Invalid body']);
     $revFile = DATA_DIR . '/revisions.json';
@@ -552,6 +723,7 @@ if ($action === 'save_revision' && $method === 'POST') {
 
 // ── GET: get_system_info ──────────────────────────────────────────────────────
 if ($action === 'get_system_info' && $method === 'GET') {
+    require_admin_token();
     send_json(200, [
         'success'         => true,
         'version'         => AETHER_VERSION,
@@ -565,6 +737,7 @@ if ($action === 'get_system_info' && $method === 'GET') {
 
 // ── GET: list_backups ─────────────────────────────────────────────────────────
 if ($action === 'list_backups' && $method === 'GET') {
+    require_admin_token();
     $backups = [];
     if (is_dir(BACKUPS_DIR)) {
         foreach (scandir(BACKUPS_DIR) as $f) {
@@ -583,6 +756,7 @@ if ($action === 'list_backups' && $method === 'GET') {
 
 // ── POST: apply_update ────────────────────────────────────────────────────────
 if ($action === 'apply_update' && $method === 'POST') {
+    require_admin_token();
     $body = @json_decode(get_request_body(), true);
     $url  = trim($body['download_url'] ?? '');
     $createBackup = isset($body['backup']) ? (bool)$body['backup'] : true;
@@ -670,6 +844,7 @@ if ($action === 'apply_update' && $method === 'POST') {
 
 // ── POST: upload_update_zip ───────────────────────────────────────────────────
 if ($action === 'upload_update_zip' && $method === 'POST') {
+    require_admin_token();
     if (empty($_FILES['update_zip'])) {
         send_json(400, ['success' => false, 'error' => 'No zip file received. Field name must be "update_zip".']);
     }

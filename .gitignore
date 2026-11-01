@@ -16,6 +16,14 @@ data/backups/*
 assets/uploads/*
 !assets/uploads/.gitkeep
 
+# Sensitive runtime data (never expose these on GitHub)
+data/revisions/*
+!data/revisions/.gitkeep
+data/config.json
+data/ratelimit.json
+data/submissions.json
+data/site.json
+
 # Logs & Temp files
 *.log
 temp_*

@@ -3,6 +3,14 @@
 #  Optimized for InfinityFree, AwardSpace & standard cPanel
 # ============================================================
 
+# ── HTTPS Redirect ─────────────────────────────────────────────
+# Force all traffic to HTTPS (InfinityFree provides free SSL)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
 # ── Directory Index ────────────────────────────────────────────
 DirectoryIndex index.html index.php
 
@@ -55,7 +63,8 @@ DirectoryIndex index.html index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^data/(submissions\.json|revisions/) - [F,L]
+    # Block direct access to sensitive data files
+    RewriteRule ^data/(submissions\.json|revisions/|config\.json|ratelimit\.json) - [F,L]
 </IfModule>
 
 # ── Gzip Compression ──────────────────────────────────────────
