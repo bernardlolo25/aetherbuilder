@@ -199,6 +199,30 @@ class AetherApp {
       document.head.appendChild(gaInit);
     }
 
+    // 3b. Site Verification Meta Tags (Google, Bing, Yandex, Pinterest)
+    const verifyMap = [
+      { key: 'verifyGoogle',    name: 'google-site-verification' },
+      { key: 'verifyBing',      name: 'msvalidate.01' },
+      { key: 'verifyYandex',    name: 'yandex-verification' },
+      { key: 'verifyPinterest', name: 'p:domain_verify' },
+    ];
+    verifyMap.forEach(({ key, name }) => {
+      const code = (siteSettings[key] || '').trim();
+      const existingId = 'aether-verify-' + key;
+      let tag = document.getElementById(existingId);
+      if (code) {
+        if (!tag) {
+          tag = document.createElement('meta');
+          tag.id = existingId;
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute('name', name);
+        tag.setAttribute('content', code);
+      } else if (tag) {
+        tag.remove();
+      }
+    });
+
     // 4. Meta Pixel
     if (siteSettings.metaPixelId && !document.getElementById('aether-fb-pixel')) {
       const pixelScript = document.createElement('script');
@@ -781,6 +805,44 @@ class AetherApp {
                     <div>
                       <label class="prop-label" style="font-size:0.75rem;">Meta / Facebook Pixel ID</label>
                       <input type="text" id="site-pixel-id" placeholder="e.g. 123456789012345" style="font-size:0.78rem;" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Site Verification -->
+                <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                    <span>🔍</span> Site Verification
+                    <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(99,102,241,0.15); color: #a5b4fc; font-weight: 700; margin-left: 4px;">SEO</span>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px;">Paste only the <code style="color:#a5f3fc;background:rgba(99,102,241,0.12);padding:1px 5px;border-radius:3px;">content="..."</code> value from each search engine's verification meta tag.</div>
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                      <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+                        <img src="https://www.google.com/favicon.ico" style="width:13px;height:13px;border-radius:2px;" onerror="this.style.display='none'" />
+                        Google Search Console
+                      </label>
+                      <input type="text" id="site-verify-google" placeholder="NcM2UD8GVMDC0zjg_Gt4GPl15Hx1IP_27AbZxK5ZQho" style="font-size:0.78rem; font-family: monospace;" />
+                      <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">From Google Search Console → Settings → Ownership Verification → HTML tag.</div>
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+                        <img src="https://www.bing.com/favicon.ico" style="width:13px;height:13px;border-radius:2px;" onerror="this.style.display='none'" />
+                        Bing Webmaster Tools
+                      </label>
+                      <input type="text" id="site-verify-bing" placeholder="Paste your Bing verification code..." style="font-size:0.78rem; font-family: monospace;" />
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:11px;">🟡</span> Yandex Webmaster
+                      </label>
+                      <input type="text" id="site-verify-yandex" placeholder="Paste your Yandex verification code..." style="font-size:0.78rem; font-family: monospace;" />
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:11px;">📌</span> Pinterest
+                      </label>
+                      <input type="text" id="site-verify-pinterest" placeholder="Paste your Pinterest verification code..." style="font-size:0.78rem; font-family: monospace;" />
                     </div>
                   </div>
                 </div>
@@ -2239,6 +2301,10 @@ class AetherApp {
       { id: 'site-logo-input',      key: 'brandLogoUrl' },
       { id: 'site-ga-id',           key: 'gaId' },
       { id: 'site-pixel-id',        key: 'metaPixelId' },
+      { id: 'site-verify-google',   key: 'verifyGoogle' },
+      { id: 'site-verify-bing',     key: 'verifyBing' },
+      { id: 'site-verify-yandex',   key: 'verifyYandex' },
+      { id: 'site-verify-pinterest',key: 'verifyPinterest' },
       { id: 'site-custom-css',      key: 'customCss' },
       { id: 'site-header-scripts',  key: 'headerScripts' },
       { id: 'site-footer-scripts',  key: 'footerScripts' },
@@ -2486,6 +2552,10 @@ class AetherApp {
       'site-logo-input':      s.brandLogoUrl || '',
       'site-ga-id':           s.gaId || '',
       'site-pixel-id':        s.metaPixelId || '',
+      'site-verify-google':   s.verifyGoogle || '',
+      'site-verify-bing':     s.verifyBing || '',
+      'site-verify-yandex':   s.verifyYandex || '',
+      'site-verify-pinterest':s.verifyPinterest || '',
       'site-custom-css':      s.customCss || '',
       'site-header-scripts':  s.headerScripts || '',
       'site-footer-scripts':  s.footerScripts || '',
