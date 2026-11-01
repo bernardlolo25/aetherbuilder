@@ -168,6 +168,23 @@ export class InspectorPanel {
         fieldsContainer.appendChild(this.createControlElement(activeEl, field));
       });
     } else if (this.currentTab === 'advanced') {
+      // Custom widget advanced properties (e.g. EmailJS credentials, custom endpoints)
+      const widgetAdvFields = schema.advanced || [];
+      if (widgetAdvFields.length > 0) {
+        const widgetAdvHeader = document.createElement('div');
+        widgetAdvHeader.style.cssText = 'font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--primary-light, #a5b4fc); margin-bottom: 12px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;';
+        widgetAdvHeader.innerHTML = '<span>⚡</span> Widget Advanced Settings';
+        fieldsContainer.appendChild(widgetAdvHeader);
+
+        widgetAdvFields.forEach((field) => {
+          fieldsContainer.appendChild(this.createControlElement(activeEl, field));
+        });
+
+        const divider = document.createElement('div');
+        divider.style.cssText = 'margin: 18px 0 14px; border-top: 1px solid var(--border-subtle);';
+        fieldsContainer.appendChild(divider);
+      }
+
       // Section header
       const advHeader = document.createElement('div');
       advHeader.style.cssText = 'font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: #cbd5e1; margin-bottom: 12px; letter-spacing: 0.05em;';

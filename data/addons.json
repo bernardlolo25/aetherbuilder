@@ -2626,5 +2626,169 @@
     "customCss": ".wb-addon-pro-heading{width:100%;box-sizing:border-box;padding:24px 20px;}\n.wb-h-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(99,102,241,0.14);border:1px solid rgba(99,102,241,0.35);color:#a5b4fc;font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;}\n.wb-h-badge-ico{font-size:0.9rem;}\n.wb-h-title{margin:0 0 14px;font-weight:800;line-height:1.2;color:#fff;}\n.wb-h-size-small{font-size:1.5rem;}\n.wb-h-size-medium{font-size:2.2rem;}\n.wb-h-size-large{font-size:3rem;}\n.wb-h-size-giant{font-size:3.8rem;}\n@media(max-width:768px){.wb-h-size-giant{font-size:2.4rem;}.wb-h-size-large{font-size:2rem;}.wb-h-size-medium{font-size:1.7rem;}}\n.wb-h-sub{font-size:1.02rem;line-height:1.65;color:var(--text-muted,#94a3b8);margin:0 auto;max-width:680px;}",
     "customJs": "function onMount(el,props){var root=el.querySelector('.wb-addon-pro-heading');if(!root)return;var titleEl=root.querySelector('.wb-h-title');if(!titleEl||!props.highlightWord)return;var html=titleEl.innerHTML;var word=props.highlightWord;if(html.indexOf(word)!==-1){var from=props.highlightFrom||'#6366f1';var to=props.highlightTo||'#ec4899';var grad='linear-gradient(135deg,'+from+','+to+')';html=html.replace(word,'<span style=\"background:'+grad+';-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;\">'+word+'</span>');titleEl.innerHTML=html;}}",
     "installedAt": "2026-10-30T03:37:12.779Z"
+  },
+  {
+    "id": "addon_contact_hire_me",
+    "name": "Contact & Hire Me",
+    "category": "addons",
+    "icon": "📬",
+    "version": "1.0.2",
+    "author": "Aether Studio",
+    "description": "Professional contact section with a working email form (via EmailJS) and a contact details card featuring Viber, WhatsApp, and phone call icons.",
+    "enabled": true,
+    "defaultProps": {
+      "sectionTitle": "Let's Work Together",
+      "sectionSubtitle": "Have a project in mind? Send me a message and I'll get back to you within 24 hours.",
+      "recipientName": "Alex Morgan",
+      "emailServiceId": "",
+      "emailTemplateId": "",
+      "emailPublicKey": "",
+      "phoneNumber": "",
+      "viberNumber": "",
+      "whatsappNumber": "",
+      "contactCardTitle": "Other Ways to Reach Me",
+      "contactCardSubtitle": "Prefer a quick chat? Use any of these channels.",
+      "showPhone": true,
+      "showViber": true,
+      "showWhatsapp": true,
+      "accentColor": "#6366f1",
+      "formPosition": "left",
+      "cardStyle": "elevated"
+    },
+    "schema": {
+      "content": [
+        {
+          "key": "sectionTitle",
+          "label": "📝 Section Title",
+          "type": "text"
+        },
+        {
+          "key": "sectionSubtitle",
+          "label": "📄 Section Subtitle",
+          "type": "textarea"
+        },
+        {
+          "key": "recipientName",
+          "label": "👤 Your Name (shown in confirmation)",
+          "type": "text"
+        },
+        {
+          "key": "emailServiceId",
+          "label": "📧 EmailJS Service ID",
+          "type": "text"
+        },
+        {
+          "key": "emailTemplateId",
+          "label": "📧 EmailJS Template ID",
+          "type": "text"
+        },
+        {
+          "key": "emailPublicKey",
+          "label": "📧 EmailJS Public Key",
+          "type": "text"
+        },
+        {
+          "key": "contactCardTitle",
+          "label": "📇 Contact Card Title",
+          "type": "text"
+        },
+        {
+          "key": "contactCardSubtitle",
+          "label": "📇 Contact Card Subtitle",
+          "type": "textarea"
+        },
+        {
+          "key": "showPhone",
+          "label": "📞 Show Phone Icon",
+          "type": "toggle"
+        },
+        {
+          "key": "phoneNumber",
+          "label": "📞 Phone Number (e.g. +639123456789)",
+          "type": "text"
+        },
+        {
+          "key": "showViber",
+          "label": "💜 Show Viber Icon",
+          "type": "toggle"
+        },
+        {
+          "key": "viberNumber",
+          "label": "💜 Viber Number (digits only, e.g. 639123456789)",
+          "type": "text"
+        },
+        {
+          "key": "showWhatsapp",
+          "label": "💚 Show WhatsApp Icon",
+          "type": "toggle"
+        },
+        {
+          "key": "whatsappNumber",
+          "label": "💚 WhatsApp Number (digits only, e.g. 639123456789)",
+          "type": "text"
+        }
+      ],
+      "style": [
+        {
+          "key": "formPosition",
+          "label": "🧭 Form Position",
+          "type": "select",
+          "options": [
+            {
+              "label": "Left (Default)",
+              "value": "left"
+            },
+            {
+              "label": "Right",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "key": "cardStyle",
+          "label": "🎨 Card Style",
+          "type": "select",
+          "options": [
+            {
+              "label": "Elevated (Default)",
+              "value": "elevated"
+            },
+            {
+              "label": "Flat",
+              "value": "flat"
+            },
+            {
+              "label": "Outlined",
+              "value": "outlined"
+            }
+          ]
+        },
+        {
+          "key": "accentColor",
+          "label": "🎨 Accent Color",
+          "type": "color"
+        }
+      ],
+      "advanced": [
+        {
+          "key": "emailServiceId",
+          "label": "📧 EmailJS Service ID",
+          "type": "text"
+        },
+        {
+          "key": "emailTemplateId",
+          "label": "📧 EmailJS Template ID",
+          "type": "text"
+        },
+        {
+          "key": "emailPublicKey",
+          "label": "📧 EmailJS Public Key",
+          "type": "text"
+        }
+      ]
+    },
+    "template": "<div class=\"wb-addon-contact-hire\" data-ch-formpos=\"{{formPosition}}\" data-ch-cardstyle=\"{{cardStyle}}\" data-ch-showphone=\"{{showPhone}}\" data-ch-showviber=\"{{showViber}}\" data-ch-showwhatsapp=\"{{showWhatsapp}}\" style=\"--ch-accent: {{accentColor}};\"><div class=\"wb-ch-header\">{{#if sectionTitle}}<h2 class=\"wb-ch-title\">{{sectionTitle}}</h2>{{/if}}{{#if sectionSubtitle}}<p class=\"wb-ch-subtitle\">{{sectionSubtitle}}</p>{{/if}}</div><div class=\"wb-ch-layout\"><div class=\"wb-ch-form-col\"><div class=\"wb-ch-form-card\" data-ch-mount=\"form\"></div></div><div class=\"wb-ch-contact-col\"><div class=\"wb-ch-contact-card\" data-ch-mount=\"contact\"></div></div></div></div>",
+    "customCss": ".wb-addon-contact-hire{--ch-accent:#6366f1;--ch-accent-soft:rgba(99,102,241,0.14);--ch-accent-line:rgba(99,102,241,0.35);--ch-accent-glow:rgba(99,102,241,0.35);font-family:inherit;width:100%;box-sizing:border-box;padding:56px 24px;max-width:1100px;margin:0 auto;color:var(--text-main,#f8fafc)}\n.wb-addon-contact-hire *,.wb-addon-contact-hire *::before,.wb-addon-contact-hire *::after{box-sizing:border-box}\n.wb-ch-header{text-align:center;margin-bottom:40px}\n.wb-ch-title{font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:800;margin:0 0 10px;letter-spacing:-.02em;background:linear-gradient(135deg,var(--text-main,#f8fafc) 40%,var(--ch-accent) 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.wb-ch-subtitle{font-size:1rem;color:var(--text-muted,#94a3b8);margin:0;line-height:1.6;max-width:56ch;margin-left:auto;margin-right:auto}\n.wb-ch-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:start}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr 1.3fr}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col{order:2}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:1}\n@media(max-width:820px){.wb-ch-layout,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr}.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:0}}\n.wb-ch-form-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e);transition:box-shadow .3s ease}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-form-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-form-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-form-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}\n@media(max-width:520px){.wb-ch-form-row{grid-template-columns:1fr}}\n.wb-ch-field{margin-bottom:16px}\n.wb-ch-label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;color:var(--text-main,#e2e8f0);letter-spacing:.02em}\n.wb-ch-input,.wb-ch-textarea{width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(15,23,42,.6);color:var(--text-main,#f8fafc);font:inherit;font-size:.9rem;transition:border-color .2s ease,box-shadow .2s ease}\n.wb-ch-input:focus,.wb-ch-textarea:focus{outline:none;border-color:var(--ch-accent);box-shadow:0 0 0 3px var(--ch-accent-soft)}\n.wb-ch-textarea{resize:vertical;min-height:120px;line-height:1.55}\n.wb-ch-submit{width:100%;padding:13px 20px;border-radius:10px;border:none;background:var(--ch-accent);color:#fff;font:inherit;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s ease;box-shadow:0 8px 24px -8px var(--ch-accent-glow);display:flex;align-items:center;justify-content:center;gap:8px}\n.wb-ch-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px -8px var(--ch-accent-glow);filter:brightness(1.08)}\n.wb-ch-submit:disabled{opacity:.6;cursor:not-allowed}\n.wb-ch-status{padding:12px 16px;border-radius:9px;font-size:.86rem;font-weight:600;margin-bottom:16px;display:none}\n.wb-ch-status--success{display:block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#86efac}\n.wb-ch-status--error{display:block;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}\n.wb-ch-status--info{display:block;background:var(--ch-accent-soft);border:1px solid var(--ch-accent-line);color:var(--ch-accent)}\n.wb-ch-contact-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-contact-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-contact-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-contact-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-contact-title{font-size:1.1rem;font-weight:800;margin:0 0 6px;color:var(--text-main,#f8fafc)}\n.wb-ch-contact-sub{font-size:.86rem;color:var(--text-muted,#94a3b8);margin:0 0 22px;line-height:1.5}\n.wb-ch-contact-links{display:flex;flex-direction:column;gap:12px}\n.wb-ch-contact-link{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;text-decoration:none;color:var(--text-main,#f8fafc);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .2s ease}\n.wb-ch-contact-link:hover{background:var(--ch-accent-soft);border-color:var(--ch-accent-line);transform:translateX(4px)}\n.wb-ch-contact-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem}\n.wb-ch-icon-phone{background:rgba(59,130,246,.18);color:#60a5fa}\n.wb-ch-icon-viber{background:rgba(115,86,220,.18);color:#a78bfa}\n.wb-ch-icon-whatsapp{background:rgba(37,211,102,.18);color:#4ade80}\n.wb-ch-contact-text{flex:1;min-width:0}\n.wb-ch-contact-name{font-size:.88rem;font-weight:700;margin-bottom:2px}\n.wb-ch-contact-value{font-size:.78rem;color:var(--text-muted,#94a3b8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.wb-ch-contact-arrow{color:var(--text-dim,#64748b);font-size:1rem}\n.wb-ch-empty{padding:24px;text-align:center;color:var(--text-dim,#94a3b8);font-size:.86rem;border:1px dashed rgba(255,255,255,.12);border-radius:10px}\n.wb-ch-config-warning{padding:14px 16px;border-radius:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fcd34d;font-size:.82rem;line-height:1.55;margin-bottom:16px}\n@media(prefers-reduced-motion:reduce){.wb-addon-contact-hire *{transition:none!important;animation:none!important}}",
+    "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-contact-hire') || el;\n  if (!root) return;\n\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]; }); };\n  var $ = function (sel, ctx) { return (ctx || root).querySelector(sel); };\n  var accent = props.accentColor || '#6366f1';\n  root.style.setProperty('--ch-accent', accent);\n\n  var svc = (props.emailServiceId || '').trim();\n  var tpl = (props.emailTemplateId || '').trim();\n  var pub = (props.emailPublicKey || '').trim();\n  var configured = !!(svc && tpl && pub);\n\n  function loadEmailJs(callback) {\n    if (window.emailjs) {\n      try { window.emailjs.init({ publicKey: pub }); } catch (e) {}\n      if (callback) callback();\n      return;\n    }\n    var existing = document.querySelector('script[src*=\"emailjs\"]');\n    if (existing) {\n      existing.addEventListener('load', function () {\n        try { window.emailjs.init({ publicKey: pub }); } catch (e) {}\n        if (callback) callback();\n      });\n      return;\n    }\n    var s = document.createElement('script');\n    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';\n    s.async = true;\n    s.onload = function () {\n      try { if (window.emailjs) window.emailjs.init({ publicKey: pub }); } catch (e) {}\n      if (callback) callback();\n    };\n    document.head.appendChild(s);\n  }\n\n  if (configured) {\n    loadEmailJs();\n  }\n\n  var formMount = $('[data-ch-mount=\"form\"]');\n  if (formMount) {\n    var warn = configured ? '' : '<div class=\"wb-ch-config-warning\">⚙️ <strong>Email sending is not configured yet.</strong><br>Enter your EmailJS Service ID, Template ID, and Public Key in the Inspector (Content or Advanced tab) to activate this form.</div>';\n\n    formMount.innerHTML =\n      warn +\n      '<div class=\"wb-ch-status\" data-ch-status></div>' +\n      '<form class=\"wb-ch-form\" novalidate>' +\n        '<div class=\"wb-ch-form-row\">' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-name\">Your Name *</label><input class=\"wb-ch-input\" id=\"ch-name\" name=\"from_name\" type=\"text\" placeholder=\"Jane Doe\" required></div>' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-email\">Your Email *</label><input class=\"wb-ch-input\" id=\"ch-email\" name=\"from_email\" type=\"email\" placeholder=\"jane@company.com\" required></div>' +\n        '</div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-subject\">Subject *</label><input class=\"wb-ch-input\" id=\"ch-subject\" name=\"subject\" type=\"text\" placeholder=\"Project Inquiry / Hire Request\" required></div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-message\">Message *</label><textarea class=\"wb-ch-textarea\" id=\"ch-message\" name=\"message\" placeholder=\"Tell me about your project, timeline, and budget…\" required></textarea></div>' +\n        '<button type=\"submit\" class=\"wb-ch-submit\" data-ch-submit><span aria-hidden=\"true\">✉️</span> Send Message</button>' +\n      '</form>';\n\n    var form = formMount.querySelector('form');\n    var statusEl = formMount.querySelector('[data-ch-status]');\n    var submitBtn = formMount.querySelector('[data-ch-submit]');\n\n    function setStatus(type, text) {\n      statusEl.className = 'wb-ch-status wb-ch-status--' + type;\n      statusEl.textContent = text;\n    }\n\n    form.addEventListener('submit', function (e) {\n      e.preventDefault();\n      if (!configured) {\n        setStatus('error', 'Email sending is not yet configured with EmailJS. Please add Service ID, Template ID, and Public Key in the Inspector.');\n        return;\n      }\n\n      var data = {\n        from_name: form.from_name.value.trim(),\n        from_email: form.from_email.value.trim(),\n        reply_to: form.from_email.value.trim(),\n        subject: form.subject.value.trim(),\n        message: form.message.value.trim(),\n        to_name: props.recipientName || 'Alex Morgan'\n      };\n\n      if (!data.from_name || !data.from_email || !data.subject || !data.message) {\n        setStatus('error', 'Please fill in all required fields before sending.');\n        return;\n      }\n\n      submitBtn.disabled = true;\n      setStatus('info', 'Sending your message…');\n\n      function executeSend() {\n        if (!window.emailjs) {\n          submitBtn.disabled = false;\n          setStatus('error', 'Could not load EmailJS SDK. Please check your internet connection.');\n          return;\n        }\n\n        window.emailjs.send(svc, tpl, data, pub)\n          .then(function () {\n            setStatus('success', '🎉 Thanks, ' + data.from_name + '! Your message was sent successfully. We will get back to you shortly.');\n            form.reset();\n            try {\n              fetch('api.php?action=submit_form', {\n                method: 'POST',\n                headers: { 'Content-Type': 'application/json' },\n                body: JSON.stringify({\n                  name: data.from_name,\n                  email: data.from_email,\n                  subject: data.subject,\n                  message: data.message,\n                  source: 'Contact & Hire Me (EmailJS)'\n                })\n              }).catch(function () {});\n            } catch (err) {}\n          })\n          .catch(function (err) {\n            console.error('EmailJS error:', err);\n            var errMsg = (err && (err.text || err.message)) ? (' (' + (err.text || err.message) + ')') : '';\n            setStatus('error', 'Failed to send message' + errMsg + '. Please verify your EmailJS Service ID, Template ID, and Public Key.');\n          })\n          .finally(function () {\n            submitBtn.disabled = false;\n          });\n      }\n\n      if (!window.emailjs) {\n        loadEmailJs(executeSend);\n      } else {\n        executeSend();\n      }\n    });\n  }\n\n  var contactMount = $('[data-ch-mount=\"contact\"]');\n  if (contactMount) {\n    var title = props.contactCardTitle || 'Other Ways to Reach Me';\n    var sub = props.contactCardSubtitle || '';\n    var showPhone = props.showPhone !== false && props.showPhone !== 'false';\n    var showViber = props.showViber !== false && props.showViber !== 'false';\n    var showWhatsapp = props.showWhatsapp !== false && props.showWhatsapp !== 'false';\n\n    var phone = (props.phoneNumber || '').trim();\n    var viber = (props.viberNumber || '').replace(/[^0-9]/g, '');\n    var whatsapp = (props.whatsappNumber || '').replace(/[^0-9]/g, '');\n\n    var links = [];\n\n    if (showPhone && phone) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"tel:' + esc(phone) + '\"><span class=\"wb-ch-contact-icon wb-ch-icon-phone\" aria-hidden=\"true\">📞</span><span class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">Call Me</span><span class=\"wb-ch-contact-value\">' + esc(phone) + '</span></span><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n    if (showViber && viber) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"viber://chat?number=' + esc(viber) + '\" target=\"_blank\" rel=\"noopener noreferrer\"><span class=\"wb-ch-contact-icon wb-ch-icon-viber\" aria-hidden=\"true\">💜</span><span class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">Viber</span><span class=\"wb-ch-contact-value\">Chat on Viber</span></span><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n    if (showWhatsapp && whatsapp) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"https://wa.me/' + esc(whatsapp) + '\" target=\"_blank\" rel=\"noopener noreferrer\"><span class=\"wb-ch-contact-icon wb-ch-icon-whatsapp\" aria-hidden=\"true\">💚</span><span class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">WhatsApp</span><span class=\"wb-ch-contact-value\">Message on WhatsApp</span></span><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n\n    contactMount.innerHTML =\n      '<h3 class=\"wb-ch-contact-title\">' + esc(title) + '</h3>' +\n      (sub ? '<p class=\"wb-ch-contact-sub\">' + esc(sub) + '</p>' : '') +\n      (links.length ? '<div class=\"wb-ch-contact-links\">' + links.join('') + '</div>' : '<div class=\"wb-ch-empty\">Add your phone, Viber, or WhatsApp number in the Inspector to show direct contact options.</div>');\n  }\n\n  el.__wbDestroy = function () {};\n}"
   }
 ]
