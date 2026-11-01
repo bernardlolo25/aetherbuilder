@@ -1,0 +1,253 @@
+🧩 AetherBuilder — AI Prompt Guide for Creating Custom Add-ons
+
+Copy-paste this guide (or the Master Prompt at the bottom) into any AI chat to generate a production-ready add-on JSON package compatible with AetherBuilder's Add-on Maker.
+
+⚙️ Engine Technical Specifications
+Output Format
+Return a single, strictly valid JSON object — no markdown fences, no trailing commas, no comments.
+The top-level keys must be exactly: id, name, category, icon, version, author, description, enabled, defaultProps, schema, template, customCss, customJs.
+📐 Property Types (Inspector Controls)
+type	Inspector Control	Notes
+text	Single-line text input	Use for titles, labels, short strings
+textarea	Multi-line text input	Use for body copy, descriptions
+number	Numeric input	Default value should be a number
+toggle	On/Off switch	Default value: true or false
+color	Color picker	Default value: hex string, e.g. "#6366f1"
+select	Dropdown list	Requires options: [{ "label": "...", "value": "..." }] on the field definition
+image-picker	Image URL text + Media Library button	Value is a URL string. User can pick from the Media Library
+page-link	"Select Created Page..." dropdown + custom URL fallback	Value is a URL string (e.g. "index.html", "?page=about", "#section-id", "https://...")
+repeater	Elementor-style repeatable item list with add/remove	Requires fields: [...] array. Items are stored as an array of objects. Supports nesting.
+
+IMPORTANT — page-link vs plain text for links: Always use "type": "page-link" for any field that stores a destination URL (nav links, button links, CTA links, sub-menu links). This gives the admin the "Select Created Page" dropdown that lists all pages built inside AetherBuilder, plus a free-text URL input for external links, anchors, or custom slugs. Never use plain "text" for link fields.
+
+📦 Repeater Fields — Nested Submenu / Children Support
+
+Repeaters support nested child repeaters. To create a navigation menu with dropdown submenus:
+
+json
+{
+  "key": "navItems",
+  "label": "Navigation Links",
+  "type": "repeater",
+  "fields": [
+    { "key": "label", "label": "Menu Label", "type": "text" },
+    { "key": "link",  "label": "Page / URL",  "type": "page-link" },
+    {
+      "key": "children",
+      "label": "Submenu (Dropdown Items)",
+      "type": "repeater",
+      "fields": [
+        { "key": "label", "label": "Sub-item Label", "type": "text" },
+        { "key": "link",  "label": "Sub-item Link",  "type": "page-link" }
+      ]
+    }
+  ]
+}
+
+In the Inspector, this renders as:
+
+Each nav item card has Label + Page Selector + a collapsible ↳ Submenu repeater.
+Sub-items also get their own Label and Page Selector dropdowns.
+🧩 Template Engine Syntax
+
+The template is rendered server-side and on the canvas using a recursive Handlebars-style compiler.
+
+Variables
+{{key}}           → Outputs the value of `key` from props
+{{@index}}        → 0-based index inside a loop
+{{@number}}       → 1-based index inside a loop (human-friendly)
+this              → In a primitive array loop, outputs the value itself
+Conditionals
+{{#if key}}...{{/if}}
+{{#if key}}...{{else}}...{{/if}}
+{{#unless key}}...{{/unless}}
+A value is truthy if it is non-empty, non-"false", non-"0", and (for arrays) has at least one item.
+Single-Level Loop
+{{#each items}}
+  <li>{{label}} — <a href="{{link}}">{{link}}</a></li>
+{{/each}}
+Nested Loop (NEW — Dropdown/Children Support)
+
+Nested {{#each}} inside another {{#each}} is fully supported:
+
+{{#each navItems}}
+  <li class="{{#if children}}has-dropdown{{/if}}">
+    <a href="{{link}}">{{label}} {{#if children}}<span class="caret">▾</span>{{/if}}</a>
+    {{#if children}}
+      <ul class="submenu">
+        {{#each children}}
+          <li><a href="{{link}}">{{label}}</a></li>
+        {{/each}}
+      </ul>
+    {{/if}}
+  </li>
+{{/each}}
+
+Inside a nested {{#each children}}, you can still access parent scope variables (e.g., the parent item's label or link) — the compiler walks up the scope chain automatically.
+
+Auto-JSON Parsing (NEW)
+
+If a prop value is a valid JSON string starting with [ or {, the compiler automatically parses it into an array/object before rendering. This means textarea fields containing raw JSON arrays are handled transparently.
+
+🖥️ Inspector Tab Assignment
+
+Every field item in schema.content or schema.style belongs to a tab:
+
+Schema Array	Inspector Tab
+schema.content	Content tab (text, links, repeaters, toggles)
+schema.style	Style tab (colors, typography, spacing)
+
+Put all link and navigation fields in schema.content. Put all colors, sizes, and visual style toggles in schema.style.
+
+🔌 Client JavaScript (customJs)
+Must define function onMount(el, props) { ... } (or the builder will warn you).
+el = the root DOM element of your widget instance.
+props = the resolved key/value object of all your widget's properties.
+The function is auto-called each time the widget renders on the canvas or public view.
+Use for: click handlers, counters, accordions, sliders, dropdown toggles.
+javascript
+function onMount(el, props) {
+  // Example: mobile hamburger toggle
+  var btn = el.querySelector('.mobile-toggle');
+  var drawer = el.querySelector('.mobile-drawer');
+  if (btn && drawer) {
+    btn.addEventListener('click', function() {
+      drawer.classList.toggle('is-open');
+    });
+  }
+}
+🎨 CSS Guidelines
+Scope all CSS rules under your widget's unique class: .wb-addon-YOUR_ID { ... }
+Use AetherBuilder CSS design tokens where appropriate:
+Token	Usage
+var(--radius-lg, 12px)	Border radius
+var(--bg-card, #131b2e)	Card / panel background
+var(--text-dim, #94a3b8)	Muted / secondary text
+var(--text-main, #f8fafc)	Primary text
+var(--border-subtle, rgba(255,255,255,0.08))	Borders and dividers
+var(--bg-elevated, #1e293b)	Elevated elements
+Use inline CSS custom properties for user-controlled colors:
+html
+<div class="wb-addon-my-widget" style="--accent: {{accentColor}}; --bg: {{bgColor}};">
+📦 Required JSON Schema
+json
+{
+  "id": "addon_unique_snake_case_id",
+  "name": "Widget Display Name",
+  "category": "addons",
+  "icon": "🧩",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Short 1–2 sentence description of what this widget does.",
+  "enabled": true,
+  "defaultProps": {
+    "title": "My Widget",
+    "accentColor": "#6366f1",
+    "showCta": true,
+    "ctaText": "Learn More",
+    "ctaLink": "index.html",
+    "navItems": [
+      {
+        "label": "Home",
+        "link": "index.html",
+        "children": []
+      },
+      {
+        "label": "Services",
+        "link": "#services",
+        "children": [
+          { "label": "Design", "link": "?page=design" },
+          { "label": "Development", "link": "?page=dev" }
+        ]
+      }
+    ]
+  },
+  "schema": {
+    "content": [
+      { "key": "title", "label": "Widget Title", "type": "text" },
+      {
+        "key": "navItems",
+        "label": "Navigation Links",
+        "type": "repeater",
+        "fields": [
+          { "key": "label", "label": "Menu Label", "type": "text" },
+          { "key": "link",  "label": "Page / URL",  "type": "page-link" },
+          {
+            "key": "children",
+            "label": "Submenu (Dropdown Items)",
+            "type": "repeater",
+            "fields": [
+              { "key": "label", "label": "Sub-item Label", "type": "text" },
+              { "key": "link",  "label": "Sub-item Link",  "type": "page-link" }
+            ]
+          }
+        ]
+      },
+      { "key": "showCta", "label": "Show Button", "type": "toggle" },
+      { "key": "ctaText", "label": "Button Label", "type": "text" },
+      { "key": "ctaLink", "label": "Button Destination", "type": "page-link" }
+    ],
+    "style": [
+      { "key": "accentColor", "label": "Accent Color", "type": "color" }
+    ]
+  },
+  "template": "<div class=\"wb-addon-unique-id\" style=\"--accent: {{accentColor}};\">{{title}}</div>",
+  "customCss": ".wb-addon-unique-id { padding: 24px; border-radius: var(--radius-lg, 12px); background: var(--bg-card, #131b2e); }",
+  "customJs": "function onMount(el, props) {\n  // your interactive JS here\n}"
+}
+📋 Master Copy-Paste Prompt
+
+Paste this into any AI, replacing [WIDGET IDEA]:
+
+You are an expert add-on developer for **AetherBuilder**, an Elementor-style visual web builder with a built-in Add-on Maker.
+Create a complete, production-ready custom Add-on JSON package for:
+**Widget Idea:** [WIDGET IDEA — e.g. "A responsive navbar with logo, multi-level dropdown submenus, a sticky toggle, and a CTA button"]
+### ⚙️ ENGINE RULES (follow exactly):
+**Output**: Return ONLY a single, strictly valid JSON object — no markdown code fences, no explanations.
+**Property Types**:
+- `text` → single-line text
+- `textarea` → multiline text
+- `number` → numeric
+- `toggle` → boolean (true/false)
+- `color` → hex color string
+- `select` → dropdown (add `options: [{label, value}]` on the field)
+- `image-picker` → image URL + media library button
+- `page-link` → "Select Created Page" dropdown + custom URL input (USE THIS FOR ALL LINKS, NEVER `text`)
+- `repeater` → Elementor-style repeatable list; add `fields: [...]` for item sub-fields; supports nesting for submenu/children
+**Nested Repeater for Submenus**:
+When creating navigation menus, ALWAYS use a nested repeater for children:
+```json
+{
+  "key": "navItems", "label": "Nav Items", "type": "repeater",
+  "fields": [
+    { "key": "label", "label": "Label", "type": "text" },
+    { "key": "link", "label": "Page / URL", "type": "page-link" },
+    {
+      "key": "children", "label": "Dropdown Items", "type": "repeater",
+      "fields": [
+        { "key": "label", "label": "Sub Label", "type": "text" },
+        { "key": "link", "label": "Sub Link", "type": "page-link" }
+      ]
+    }
+  ]
+}
+```
+**Template Syntax**:
+- `{{key}}` → variable
+- `{{#if key}}...{{else}}...{{/if}}` → conditional
+- `{{#unless key}}...{{/unless}}` → inverted conditional
+- `{{#each list}}...{{/each}}` → loop (use `{{@index}}`, `{{@number}}`, `{{this}}` for meta)
+- Nested `{{#each children}}...{{/each}}` INSIDE `{{#each navItems}}` is fully supported
+- Inside nested loops, parent scope variables are accessible automatically
+**CSS Rules**:
+- Scope ALL styles under `.wb-addon-YOUR_ID { ... }` to prevent style bleeding
+- Use design tokens: `var(--radius-lg, 12px)`, `var(--bg-card, #131b2e)`, `var(--text-dim, #94a3b8)`, `var(--border-subtle, rgba(255,255,255,0.08))`
+- Pass user colors as inline CSS vars: `style="--accent: {{accentColor}};"`
+**JavaScript** (`customJs`):
+- MUST define `function onMount(el, props) { ... }`
+- `el` = root DOM container of widget instance
+- `props` = resolved key/value properties
+- Use for: dropdown toggles, hamburger menus, accordions, counters, sliders
+**Schema Tabs**:
+- `schema.content` → Content tab (text, links, repeaters, images, toggles for visibility)
+- `schema.style` → Style tab (colors, sizes, spacing, font choices)

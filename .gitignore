@@ -1,0 +1,21 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large Archive Files & Duplicate Deployment Folders
+*.zip
+!aetherbuilder-update.zip
+dist_package/
+update_stage/
+elementor-builder*/
+
+# User Uploads & Backups (Preserve directory structure without committing heavy user media)
+data/backups/*
+!data/backups/.gitkeep
+assets/uploads/*
+!assets/uploads/.gitkeep
+
+# Logs & Temp files
+*.log
+temp_*

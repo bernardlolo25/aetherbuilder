@@ -1,0 +1,14 @@
+{
+  "name": "AetherBuilder",
+  "version": "2.5.1",
+  "release_date": "2026-10-31",
+  "min_php": "7.4",
+  "changelog": [
+    "Fixed: Visual repeater for Nav Links & Dropdowns in Navbar/Header and navigation add-ons",
+    "Fixed: Submenu builder now supports page selector dropdowns and URL inputs",
+    "Fixed: Full canvas containment preventing navbar overlaps in admin studio",
+    "Updated: Removed legacy institutional branding for fully generic deployments"
+  ],
+  "download_url": "aetherbuilder-update.zip",
+  "releaseDate": "2026-10-31"
+}
