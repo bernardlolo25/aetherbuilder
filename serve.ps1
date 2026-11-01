@@ -454,6 +454,25 @@ try {
                     $response.ContentLength64 = $buf.Length
                     $response.OutputStream.Write($buf, 0, $buf.Length)
                 }
+                elseif (($action -eq "upload_update_zip" -or $action -eq "apply_update") -and $request.HttpMethod -eq "POST") {
+                    $localZip = Join-Path $scriptDir "aetherbuilder-update.zip"
+                    if (Test-Path $localZip) {
+                        try {
+                            Add-Type -AssemblyName System.IO.Compression.FileSystem
+                            [System.IO.Compression.ZipFile]::ExtractToDirectory($localZip, $scriptDir, [System.IO.Compression.ZipArchiveMode]::Update)
+                            Write-Host "Localhost update unpacked successfully from aetherbuilder-update.zip"
+                            $resJson = '{"success":true,"message":"Update applied successfully on localhost!"}'
+                        } catch {
+                            Expand-Archive -Path $localZip -DestinationPath $scriptDir -Force
+                            $resJson = '{"success":true,"message":"Update applied successfully on localhost!"}'
+                        }
+                    } else {
+                        $resJson = '{"success":false,"error":"aetherbuilder-update.zip not found on local server"}'
+                    }
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
                 elseif ($action -eq "save_addons" -and $request.HttpMethod -eq "POST") {
                     $addonsFile = Join-Path $dataDir "addons.json"
                     $bodyBytes = New-Object byte[] $request.ContentLength64

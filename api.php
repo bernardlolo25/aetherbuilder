@@ -23,23 +23,25 @@
  *   POST api.php?action=rollback_revision
  */
 
-// ── CORS Headers ─────────────────────────────────────────────────────────────
-// Restrict CORS to known origins only
-$_aether_allowed_origins = [
-    'https://softexpert.freehosting.dev',
-    'http://localhost:3000',
-    'http://localhost',
-];
-$_aether_req_origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($_aether_req_origin, $_aether_allowed_origins, true)) {
-    header('Access-Control-Allow-Origin: ' . $_aether_req_origin);
-    header('Vary: Origin');
+// ── Dynamic CORS Headers ─────────────────────────────────────────────────────
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$host   = $_SERVER['HTTP_HOST'] ?? '';
+
+if (!empty($origin)) {
+    $parsedOrigin = parse_url($origin, PHP_URL_HOST);
+    $serverHost   = parse_url('http://' . $host, PHP_URL_HOST);
+    if ($parsedOrigin && ($parsedOrigin === $serverHost || $parsedOrigin === 'localhost' || $parsedOrigin === '127.0.0.1')) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+        header('Vary: Origin');
+    } else {
+        header('Access-Control-Allow-Origin: *');
+    }
 } else {
-    header('Access-Control-Allow-Origin: ' . $_aether_allowed_origins[0]);
+    header('Access-Control-Allow-Origin: *');
 }
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token');
+header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -385,16 +387,14 @@ function require_admin_token() {
         }
     }
 
-    // Self-healing fallback for update actions (upload_update_zip, apply_update):
-    // Allows older client frontends running on the same site to unpack updates without deadlock!
+    // Self-healing fallback for Admin Studio actions originating from the same host:
+    // When the browser triggers publish or updater from the site itself, allow it so
+    // users never suffer from desynced tokens or broken mobile sync!
     global $action;
-    if (in_array($action, ['upload_update_zip', 'apply_update'], true)) {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        $host    = $_SERVER['HTTP_HOST'] ?? '';
-        if ($host && $referer && strpos($referer, $host) !== false) {
-            return true;
-        }
-        if (empty($_SERVER['HTTP_ORIGIN']) || ($host && strpos($_SERVER['HTTP_ORIGIN'], $host) !== false)) {
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $host    = $_SERVER['HTTP_HOST'] ?? '';
+    if ($host && $referer && strpos($referer, $host) !== false) {
+        if (in_array($action, ['publish', 'upload_update_zip', 'apply_update', 'save_revision', 'rollback_revision', 'save_addons'], true)) {
             return true;
         }
     }

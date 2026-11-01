@@ -450,13 +450,19 @@ class BuilderState {
       });
       if (res.ok) {
         const result = await res.json();
-        console.log('✅ Multi-page publish live!', result);
+        console.log('✅ Multi-page publish live on server!', result);
         return true;
       } else {
-        console.warn('Publish API HTTP status:', res.status);
+        const errText = await res.text();
+        console.error('Publish API error HTTP ' + res.status + ':', errText);
+        alert('Server publish failed (HTTP ' + res.status + '). Changes are only saved on this device. Please check api.php permissions.');
+        return false;
       }
-    } catch (err) { console.log('Offline / static mode: LocalStorage updated.', err); }
-    return true;
+    } catch (err) {
+      console.warn('Network error while publishing to api.php:', err);
+      // Still allow local draft
+      return true;
+    }
   }
 
   getPublicSiteData() {

@@ -4547,6 +4547,16 @@ ${addonManager.getAllActiveJs()}
               <button class="topbar-btn topbar-btn-sm" id="btn-select-zip-file" style="margin: 0 auto;">Select ZIP File</button>
             </div>
 
+            <div style="margin-top: 14px; padding: 12px 14px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: #e2e8f0;">Already uploaded via FTP to root?</div>
+                <div style="font-size: 0.72rem; color: var(--text-dim);">Instant server-side unpack (no browser upload needed).</div>
+              </div>
+              <button type="button" class="topbar-btn topbar-btn-publish" id="btn-unpack-server-zip" style="padding: 6px 14px; font-size: 0.78rem; white-space: nowrap;">
+                <span>⚡</span> Unpack Server ZIP
+              </button>
+            </div>
+
             <div id="manual-file-selected-info" style="display:none; margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 0.82rem; justify-content: space-between; align-items: center;">
               <span id="selected-zip-name" style="color: #a5b4fc; font-weight: 600;">package.zip</span>
               <button class="topbar-btn topbar-btn-publish" id="btn-upload-manual-zip" style="padding: 6px 14px; font-size: 0.8rem;">
@@ -4783,6 +4793,40 @@ ${addonManager.getAllActiveJs()}
       if (nameLabel && selectedFile) nameLabel.textContent = selectedFile.name + ' (' + Math.round(selectedFile.size / 1024) + ' KB)';
       if (selectedInfo) selectedInfo.style.display = 'flex';
     }
+
+    // btn-unpack-server-zip click listener
+    const btnServerUnpack = modal.querySelector('#btn-unpack-server-zip');
+    btnServerUnpack?.addEventListener('click', async () => {
+      btnServerUnpack.disabled = true;
+      btnServerUnpack.innerHTML = '<span>⏳</span> Unpacking on server...';
+      try {
+        const res = await fetch('api.php?action=apply_update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Token': getAdminToken()
+          },
+          body: JSON.stringify({
+            download_url: 'aetherbuilder-update.zip',
+            backup: true
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          btnServerUnpack.innerHTML = '<span>✅</span> Installed!';
+          alert('Update successfully unpacked and applied! AetherBuilder will now reload.');
+          window.location.reload(true);
+        } else {
+          alert('Server unpack error: ' + (data.error || 'Failed to unpack server zip'));
+          btnServerUnpack.disabled = false;
+          btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
+        }
+      } catch (err) {
+        alert('Request failed. Check that aetherbuilder-update.zip is in your site root folder.');
+        btnServerUnpack.disabled = false;
+        btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
+      }
+    });
 
     btnUpload?.addEventListener('click', async () => {
       if (!selectedFile) return;
