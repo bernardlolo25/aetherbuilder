@@ -59,11 +59,12 @@ define('MAX_REVS',    20);
 
 $ALLOWED_EXT = ['jpg','jpeg','png','gif','webp','svg','mp4','webm','pdf','json','zip'];
 
-// Ensure required directories exist
-foreach ([DATA_DIR, UPLOADS_DIR, BACKUPS_DIR] as $dir) {
+// Ensure required directories exist with write permissions
+foreach ([DATA_DIR, UPLOADS_DIR, BACKUPS_DIR, DATA_DIR . '/revisions'] as $dir) {
     if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
+        @mkdir($dir, 0777, true);
     }
+    @chmod($dir, 0777);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -84,8 +85,44 @@ function read_json_file($path, $default = []) {
 
 function write_json_file($path, $data) {
     $dir = dirname($path);
-    if (!is_dir($dir)) @mkdir($dir, 0755, true);
-    return file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
+        @chmod($dir, 0777);
+    }
+    $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($encoded === false) return false;
+
+    // Reset file permissions if existing
+    if (file_exists($path)) {
+        @chmod($path, 0666);
+    }
+
+    // 1. Standard file_put_contents
+    $res = @file_put_contents($path, $encoded);
+    if ($res !== false) {
+        @chmod($path, 0666);
+        return $res;
+    }
+
+    // 2. Direct stream write
+    $fp = @fopen($path, 'wb');
+    if ($fp) {
+        $written = @fwrite($fp, $encoded);
+        @fclose($fp);
+        @chmod($path, 0666);
+        if ($written !== false) return $written;
+    }
+
+    // 3. Temp file atomic rename
+    $tmp = $dir . '/tmp_' . uniqid('', true) . '.json';
+    $tmpRes = @file_put_contents($tmp, $encoded);
+    if ($tmpRes !== false) {
+        @rename($tmp, $path);
+        @chmod($path, 0666);
+        return $tmpRes;
+    }
+
+    return false;
 }
 
 function get_request_body() {
@@ -274,7 +311,7 @@ function get_server_secret() {
         if (empty($cfg['admin_hash'])) {
             $cfg['admin_hash'] = '';
         }
-        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
         @chmod(CONFIG_FILE, 0600);
     }
     return $cfg['server_secret'];
@@ -295,7 +332,7 @@ function save_admin_hash_to_config($hash) {
         $cfg['server_secret'] = bin2hex(random_bytes(32));
     }
     $cfg['admin_hash'] = $hash;
-    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
     @chmod(CONFIG_FILE, 0600);
 }
 
@@ -423,7 +460,7 @@ function check_rate_limit($action_key, $max_per_window = 10, $window_seconds = 6
     foreach ($rl as $k => $v) {
         if (($now - $v['window_start']) > ($window_seconds * 2)) unset($rl[$k]);
     }
-    file_put_contents($rlFile, json_encode($rl), LOCK_EX);
+    file_put_contents($rlFile, json_encode($rl));
     if ($rl[$key]['count'] > $max_per_window) {
         http_response_code(429);
         header('Content-Type: application/json; charset=utf-8');
@@ -445,7 +482,7 @@ function get_server_secret() {
         if (empty($cfg['admin_hash'])) {
             $cfg['admin_hash'] = '';
         }
-        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
         @chmod(CONFIG_FILE, 0600);
     }
     return $cfg['server_secret'];
@@ -466,7 +503,7 @@ function save_admin_hash_to_config($hash) {
         $cfg['server_secret'] = bin2hex(random_bytes(32));
     }
     $cfg['admin_hash'] = $hash;
-    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT), LOCK_EX);
+    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
     @chmod(CONFIG_FILE, 0600);
 }
 
@@ -522,7 +559,7 @@ function check_rate_limit($action_key, $max_per_window = 5, $window_seconds = 60
     foreach ($rl as $k => $v) {
         if (($now - $v['window_start']) > ($window_seconds * 2)) unset($rl[$k]);
     }
-    file_put_contents($rlFile, json_encode($rl), LOCK_EX);
+    file_put_contents($rlFile, json_encode($rl));
     if ($rl[$key]['count'] > $max_per_window) {
         http_response_code(429);
         header('Content-Type: application/json; charset=utf-8');
@@ -587,10 +624,15 @@ if ($action === 'publish' && $method === 'POST') {
     if (!$body) send_json(400, ['error' => 'Empty body']);
     $decoded = @json_decode($body, true);
     if ($decoded === null) send_json(400, ['error' => 'Invalid JSON']);
-    if (write_json_file(DATA_DIR . '/site.json', $decoded) === false) {
-        send_json(500, ['error' => 'Failed to write site.json. Check folder permissions.']);
+    
+    $targetFile = DATA_DIR . '/site.json';
+    $writeRes = write_json_file($targetFile, $decoded);
+    if ($writeRes === false) {
+        $lastErr = error_get_last();
+        $msg = $lastErr ? $lastErr['message'] : 'Could not write to data/site.json. Ensure data/ folder has 777 write permissions.';
+        send_json(500, ['error' => $msg, 'target' => $targetFile]);
     }
-    send_json(200, ['ok' => true]);
+    send_json(200, ['ok' => true, 'success' => true]);
 }
 
 // ── GET: list_assets ─────────────────────────────────────────────────────────
