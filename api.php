@@ -43,6 +43,24 @@ if (!empty($origin)) {
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, Authorization');
 
+// Fatal Error & Exception Interceptor: guarantees clean JSON responses on shared hosts (no empty 500s!)
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode([
+            'success' => false,
+            'error'   => 'Server Error: ' . $err['message'] . ' in ' . basename($err['file']) . ' line ' . $err['line']
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+});
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -62,9 +80,9 @@ $ALLOWED_EXT = ['jpg','jpeg','png','gif','webp','svg','mp4','webm','pdf','json',
 // Ensure required directories exist with write permissions
 foreach ([DATA_DIR, UPLOADS_DIR, BACKUPS_DIR, DATA_DIR . '/revisions'] as $dir) {
     if (!is_dir($dir)) {
-        @mkdir($dir, 0777, true);
+        @mkdir($dir, 0755, true);
     }
-    @chmod($dir, 0777);
+    @chmod($dir, 0755);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -86,21 +104,21 @@ function read_json_file($path, $default = []) {
 function write_json_file($path, $data) {
     $dir = dirname($path);
     if (!is_dir($dir)) {
-        @mkdir($dir, 0777, true);
-        @chmod($dir, 0777);
+        @mkdir($dir, 0755, true);
+        @chmod($dir, 0755);
     }
     $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($encoded === false) return false;
 
     // Reset file permissions if existing
     if (file_exists($path)) {
-        @chmod($path, 0666);
+        @chmod($path, 0644);
     }
 
     // 1. Standard file_put_contents
     $res = @file_put_contents($path, $encoded);
     if ($res !== false) {
-        @chmod($path, 0666);
+        @chmod($path, 0644);
         return $res;
     }
 
@@ -109,7 +127,7 @@ function write_json_file($path, $data) {
     if ($fp) {
         $written = @fwrite($fp, $encoded);
         @fclose($fp);
-        @chmod($path, 0666);
+        @chmod($path, 0644);
         if ($written !== false) return $written;
     }
 
@@ -118,7 +136,7 @@ function write_json_file($path, $data) {
     $tmpRes = @file_put_contents($tmp, $encoded);
     if ($tmpRes !== false) {
         @rename($tmp, $path);
-        @chmod($path, 0666);
+        @chmod($path, 0644);
         return $tmpRes;
     }
 
@@ -481,94 +499,6 @@ function check_rate_limit($action_key, $max_per_window = 10, $window_seconds = 6
         exit;
     }
 }
-// ════════════════════════════════════════════════════════════════
-define('CONFIG_FILE', DATA_DIR . '/config.json');
-define('TOKEN_TTL',   28800); // 8 hours in seconds
-
-function get_server_secret() {
-    $cfg = [];
-    if (file_exists(CONFIG_FILE)) {
-        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    }
-    if (empty($cfg['server_secret'])) {
-        $cfg['server_secret'] = bin2hex(random_bytes(32));
-        if (empty($cfg['admin_hash'])) {
-            $cfg['admin_hash'] = '';
-        }
-        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
-        @chmod(CONFIG_FILE, 0600);
-    }
-    return $cfg['server_secret'];
-}
-
-function get_admin_hash_from_config() {
-    if (!file_exists(CONFIG_FILE)) return null;
-    $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    return $cfg['admin_hash'] ?? null;
-}
-
-function save_admin_hash_to_config($hash) {
-    $cfg = [];
-    if (file_exists(CONFIG_FILE)) {
-        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    }
-    if (empty($cfg['server_secret'])) {
-        $cfg['server_secret'] = bin2hex(random_bytes(32));
-    }
-    $cfg['admin_hash'] = $hash;
-    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
-    @chmod(CONFIG_FILE, 0600);
-}
-
-function generate_session_token() {
-    $secret  = get_server_secret();
-    $ts      = time();
-    $nonce   = bin2hex(random_bytes(8));
-    $payload = $ts . ':' . $nonce;
-    $sig     = hash_hmac('sha256', $payload, $secret);
-    return base64_encode($payload . ':' . $sig);
-}
-
-function validate_session_token($token) {
-    if (!$token) return false;
-    $decoded = @base64_decode($token, true);
-    if ($decoded === false) return false;
-    $parts = explode(':', $decoded, 3);
-    if (count($parts) !== 3) return false;
-    [$ts, $nonce, $sig] = $parts;
-    if (!ctype_digit($ts)) return false;
-    if ((time() - (int)$ts) > TOKEN_TTL) return false;
-    $secret   = get_server_secret();
-    $expected = hash_hmac('sha256', $ts . ':' . $nonce, $secret);
-    return hash_equals($expected, $sig);
-}
-
-
-// Simple file-based rate limiter (no MySQL needed)
-function check_rate_limit($action_key, $max_per_window = 5, $window_seconds = 60) {
-    $rlFile = DATA_DIR . '/ratelimit.json';
-    $rl     = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?: []) : [];
-    $ip     = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $key    = $action_key . ':' . md5($ip);
-    $now    = time();
-    if (!isset($rl[$key])) $rl[$key] = ['count' => 0, 'window_start' => $now];
-    if (($now - $rl[$key]['window_start']) > $window_seconds) {
-        $rl[$key] = ['count' => 0, 'window_start' => $now];
-    }
-    $rl[$key]['count']++;
-    // Prune old keys to keep file small
-    foreach ($rl as $k => $v) {
-        if (($now - $v['window_start']) > ($window_seconds * 2)) unset($rl[$k]);
-    }
-    file_put_contents($rlFile, json_encode($rl));
-    if ($rl[$key]['count'] > $max_per_window) {
-        http_response_code(429);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['error' => 'Too many requests. Please wait before trying again.', 'code' => 'RATE_LIMITED']);
-        exit;
-    }
-}
-// ═══════════════════════════════════════════════════════════════
 
 $action = isset($_GET['action']) ? trim($_GET['action']) : '';
 $method = $_SERVER['REQUEST_METHOD'];
