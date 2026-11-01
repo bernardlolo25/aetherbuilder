@@ -6,6 +6,7 @@ desktop.ini
 # Large Archive Files & Duplicate Deployment Folders
 *.zip
 !aetherbuilder-update.zip
+!aetherbuilder.zip
 dist_package/
 update_stage/
 elementor-builder*/
@@ -23,6 +24,12 @@ data/config.json
 data/ratelimit.json
 data/submissions.json
 data/site.json
+
+# Development & patch scripts (clean repo)
+patch_*.js
+clean_site_data.js
+fix_site_json.js
+find_and_restart.ps1
 
 # Logs & Temp files
 *.log
