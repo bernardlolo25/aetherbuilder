@@ -4702,13 +4702,14 @@ ${addonManager.getAllActiveJs()}
       } else {
         // Server-side local or direct install
         setProgress(25, 'Connecting to update channel & creating safety backup...');
+        // No X-Admin-Token header — InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
         const res = await fetch('api.php?action=apply_update', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json',
-          'X-Admin-Token': getAdminToken(), },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             download_url: manifest?.download_url || 'aetherbuilder-update.zip',
-            backup: chkBackup ? chkBackup.checked : true
+            backup: chkBackup ? chkBackup.checked : true,
+            admin_token: getAdminToken()
           })
         });
         setProgress(65, 'Unpacking core files & verifying integrity...');
@@ -4799,15 +4800,14 @@ ${addonManager.getAllActiveJs()}
       btnServerUnpack.disabled = true;
       btnServerUnpack.innerHTML = '<span>⏳</span> Unpacking on server...';
       try {
+        // No X-Admin-Token header — InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
         const res = await fetch('api.php?action=apply_update', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Token': getAdminToken()
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             download_url: 'aetherbuilder-update.zip',
-            backup: true
+            backup: true,
+            admin_token: getAdminToken()
           })
         });
         const data = await res.json();

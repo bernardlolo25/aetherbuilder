@@ -387,6 +387,19 @@ function get_client_token() {
     if (!empty($_POST['admin_token'])) {
         return trim($_POST['admin_token']);
     }
+    // 4b. JSON body — PHP does NOT populate $_POST for application/json requests.
+    //     apply_update / apply_update use this to avoid CORS preflight on custom headers.
+    $ct = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
+    if (strpos($ct, 'application/json') !== false) {
+        static $json_body_cache = null;
+        if ($json_body_cache === null) {
+            $raw = file_get_contents('php://input');
+            $json_body_cache = $raw ? (@json_decode($raw, true) ?: []) : [];
+        }
+        if (!empty($json_body_cache['admin_token'])) {
+            return trim($json_body_cache['admin_token']);
+        }
+    }
     // 5. Cookie
     if (!empty($_COOKIE['aether_token'])) {
         return trim($_COOKIE['aether_token']);
@@ -530,18 +543,6 @@ function validate_session_token($token) {
     return hash_equals($expected, $sig);
 }
 
-function require_admin_token() {
-    $token = $_SERVER['HTTP_X_ADMIN_TOKEN'] ?? '';
-    if (!validate_session_token($token)) {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'error' => 'Unauthorized. A valid admin session token is required.',
-            'code'  => 'TOKEN_REQUIRED'
-        ]);
-        exit;
-    }
-}
 
 // Simple file-based rate limiter (no MySQL needed)
 function check_rate_limit($action_key, $max_per_window = 5, $window_seconds = 60) {
