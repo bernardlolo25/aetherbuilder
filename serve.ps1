@@ -247,8 +247,10 @@ try {
                     $response.OutputStream.Write($buf, 0, $buf.Length)
                     $response.OutputStream.Flush()
                 }
-                elseif ($action -eq "login") {
-                    $resJson = @{ success = $true; message = "Local login authenticated" } | ConvertTo-Json
+                elseif ($action -eq "login" -or $action -eq "verify_session") {
+                    # Both login and verify_session return a dev token for localhost
+                    $devToken = "local_dev_token_" + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                    $resJson = @{ success = $true; token = $devToken; message = "Local session authenticated" } | ConvertTo-Json
                     $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
                     $response.ContentLength64 = $buf.Length
                     $response.OutputStream.Write($buf, 0, $buf.Length)
@@ -459,15 +461,18 @@ try {
                     if (Test-Path $localZip) {
                         try {
                             Add-Type -AssemblyName System.IO.Compression.FileSystem
-                            [System.IO.Compression.ZipFile]::ExtractToDirectory($localZip, $scriptDir, [System.IO.Compression.ZipArchiveMode]::Update)
+                            # $true = overwrite existing files (3rd param must be bool, NOT ZipArchiveMode — that was the bug!)
+                            [System.IO.Compression.ZipFile]::ExtractToDirectory($localZip, $scriptDir, $true)
                             Write-Host "Localhost update unpacked successfully from aetherbuilder-update.zip"
-                            $resJson = '{"success":true,"message":"Update applied successfully on localhost!"}'
+                            $resJson = '{"success":true,"message":"Update applied! Reload the page to see changes."}'
                         } catch {
+                            Write-Host "ZipFile fast-extract failed, falling back to Expand-Archive..."
                             Expand-Archive -Path $localZip -DestinationPath $scriptDir -Force
-                            $resJson = '{"success":true,"message":"Update applied successfully on localhost!"}'
+                            Write-Host "Expand-Archive completed."
+                            $resJson = '{"success":true,"message":"Update applied! Reload the page to see changes."}'
                         }
                     } else {
-                        $resJson = '{"success":false,"error":"aetherbuilder-update.zip not found on local server"}'
+                        $resJson = '{"success":false,"error":"aetherbuilder-update.zip not found in the project folder. Place it there first, then click Unpack again."}'
                     }
                     $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
                     $response.ContentLength64 = $buf.Length
