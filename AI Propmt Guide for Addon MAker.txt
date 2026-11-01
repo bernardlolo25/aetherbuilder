@@ -251,3 +251,41 @@ When creating navigation menus, ALWAYS use a nested repeater for children:
 **Schema Tabs**:
 - `schema.content` → Content tab (text, links, repeaters, images, toggles for visibility)
 - `schema.style` → Style tab (colors, sizes, spacing, font choices)
+- `schema.advanced` → Advanced tab (API keys, service IDs, credentials — developer-only settings that should not clutter Content/Style)
+
+🔐 schema.advanced — Advanced Inspector Tab (NEW)
+The Advanced tab in the Inspector is for sensitive or technical fields that shouldn't clutter the main Content or Style views. Use it for:
+- API keys, service IDs, tokens (e.g. EmailJS credentials)
+- Developer-only toggles or overrides
+- Third-party integration identifiers
+
+Fields defined in schema.advanced appear at the TOP of the Advanced tab, before the standard Section Settings controls (CSS class, z-index, animation). Their keys must also exist in defaultProps and in schema.content or as standalone fields (best practice: also list them in schema.content so they're always visible there too).
+
+json
+{
+  "schema": {
+    "content": [
+      { "key": "emailServiceId",  "label": "📧 EmailJS Service ID",  "type": "text" },
+      { "key": "emailTemplateId", "label": "📧 EmailJS Template ID", "type": "text" },
+      { "key": "emailPublicKey",  "label": "📧 EmailJS Public Key",  "type": "text" }
+    ],
+    "style": [
+      { "key": "accentColor", "label": "🎨 Accent Color", "type": "color" }
+    ],
+    "advanced": [
+      { "key": "emailServiceId",  "label": "📧 EmailJS Service ID",  "type": "text" },
+      { "key": "emailTemplateId", "label": "📧 EmailJS Template ID", "type": "text" },
+      { "key": "emailPublicKey",  "label": "📧 EmailJS Public Key",  "type": "text" }
+    ]
+  }
+}
+
+In customJs, read these values from the props object exactly like any other prop:
+javascript
+function onMount(el, props) {
+  var svc = (props.emailServiceId || '').trim();
+  var tpl = (props.emailTemplateId || '').trim();
+  var pub = (props.emailPublicKey || '').trim();
+  var configured = !!(svc && tpl && pub);
+  // ...
+}
