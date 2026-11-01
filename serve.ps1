@@ -458,6 +458,9 @@ try {
                 }
                 elseif (($action -eq "upload_update_zip" -or $action -eq "apply_update") -and $request.HttpMethod -eq "POST") {
                     $localZip = Join-Path $scriptDir "aetherbuilder-update.zip"
+                    if (-not (Test-Path $localZip)) {
+                        $localZip = Join-Path $scriptDir "aetherbuilder.zip"
+                    }
                     if (Test-Path $localZip) {
                         try {
                             Add-Type -AssemblyName System.IO.Compression.FileSystem

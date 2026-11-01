@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.5.1';
+export const APP_VERSION = '2.5.2';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -4810,10 +4810,18 @@ ${addonManager.getAllActiveJs()}
             admin_token: getAdminToken()
           })
         });
-        const data = await res.json();
-        if (data.success) {
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (jsonErr) {
+          const preview = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 180);
+          throw new Error('Server returned non-JSON response (HTTP ' + res.status + '): ' + (preview || 'Empty response'));
+        }
+
+        if (data && data.success) {
           btnServerUnpack.innerHTML = '<span>✅</span> Installed!';
-          alert('Update successfully unpacked and applied! AetherBuilder will now reload.');
+          alert('🎉 Update successfully unpacked and applied! AetherBuilder will now reload.');
           window.location.reload(true);
         } else {
           alert('Server unpack error: ' + (data.error || 'Failed to unpack server zip'));
@@ -4821,7 +4829,8 @@ ${addonManager.getAllActiveJs()}
           btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
         }
       } catch (err) {
-        alert('Request failed. Check that aetherbuilder-update.zip is in your site root folder.');
+        console.error('Server unpack error:', err);
+        alert('⚠️ Update Request Failed: ' + (err.message || 'Unknown network error') + '\n\nTip: Verify that aetherbuilder-update.zip (or aetherbuilder.zip) is uploaded directly into your site root folder (e.g. htdocs/).');
         btnServerUnpack.disabled = false;
         btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
       }

@@ -31,7 +31,7 @@ function copyRecursive(src, dest) {
 
 // 1. Core root files
 console.log('Copying core files...');
-['index.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', '.htaccess'].forEach(f => {
+['index.html', 'admin.html', 'public.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', 'sw.js', '.htaccess'].forEach(f => {
   const p = path.join(rootDir, f);
   if (fs.existsSync(p)) {
     fs.copyFileSync(p, path.join(stageDir, f));

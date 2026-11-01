@@ -22,7 +22,7 @@ function copyRecursive(src, dest) {
 }
 
 // Copy core files (including .htaccess for HTTPS redirect)
-['index.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', '.htaccess'].forEach(f => {
+['index.html', 'admin.html', 'public.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', 'sw.js', '.htaccess'].forEach(f => {
   const p = path.join(rootDir, f);
   if (fs.existsSync(p)) fs.copyFileSync(p, path.join(stageDir, f));
 });

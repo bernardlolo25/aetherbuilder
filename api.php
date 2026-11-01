@@ -158,7 +158,7 @@ function perform_core_update($zipFilePath, $createBackup = true) {
         $backupPath = BACKUPS_DIR . '/' . $backupName;
         $zipBackup = new ZipArchive();
         if ($zipBackup->open($backupPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            $filesToBackup = ['index.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico'];
+            $filesToBackup = ['index.html', 'admin.html', 'public.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', 'sw.js'];
             foreach ($filesToBackup as $bf) {
                 if (file_exists(ROOT . '/' . $bf)) {
                     $zipBackup->addFile(ROOT . '/' . $bf, $bf);
@@ -991,10 +991,25 @@ if ($action === 'apply_update' && $method === 'POST') {
     $localCandidates = [
         ROOT . '/' . ltrim($url, '/'),
         ROOT . '/aetherbuilder-update.zip',
+        ROOT . '/aetherbuilder.zip',
         ROOT . '/aetherbuilder-update-v' . AETHER_VERSION . '.zip',
         DATA_DIR . '/' . ltrim($url, '/'),
-        DATA_DIR . '/aetherbuilder-update.zip'
+        DATA_DIR . '/aetherbuilder-update.zip',
+        DATA_DIR . '/aetherbuilder.zip'
     ];
+    // Automatically discover ANY .zip file present in site root or data dir
+    foreach ([ROOT, DATA_DIR] as $scanDir) {
+        if (is_dir($scanDir)) {
+            $found = glob($scanDir . '/*.zip');
+            if (is_array($found)) {
+                foreach ($found as $fz) {
+                    if (!in_array($fz, $localCandidates, true)) {
+                        $localCandidates[] = $fz;
+                    }
+                }
+            }
+        }
+    }
     foreach ($localCandidates as $cand) {
         if ($isZipFile($cand)) {
             if (@copy($cand, $tempZip)) {
@@ -1043,7 +1058,7 @@ if ($action === 'apply_update' && $method === 'POST') {
         @unlink($tempZip);
         send_json(500, [
             'success' => false,
-            'error'   => 'Could not locate or download update package. Your hosting provider blocks outgoing downloads. Please switch to the "Manual ZIP Drop" tab in this modal, or place "aetherbuilder-update.zip" in your site folder.'
+            'error'   => 'Could not find a valid update ZIP package in site root (' . ROOT . '). Files currently in root: [' . implode(', ', array_map('basename', glob(ROOT . '/*') ?: [])) . ']. Please upload "aetherbuilder-update.zip" or "aetherbuilder.zip" directly into your site root (e.g. htdocs).'
         ]);
     }
 
