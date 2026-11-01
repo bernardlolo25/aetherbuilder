@@ -380,7 +380,7 @@ class AetherApp {
         <header class="builder-topbar">
           <div class="flex items-center gap-4">
             <div class="topbar-brand" id="topbar-brand-link" style="cursor: pointer;" title="AetherBuilder Studio (Click for System Info & Updates)">
-              <div class="topbar-logo-badge">⚡</div>
+              <img src="assets/logo.png" alt="AetherBuilder Logo" class="topbar-logo-img" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.06); padding: 2px;" />
               <div>
                 <span>AetherBuilder</span>
                 <span class="app-version-pill" id="app-version-badge" style="font-size: 0.72rem; color: var(--text-dim); margin-left: 4px; font-weight: 500;">v${APP_VERSION}</span>
@@ -4373,7 +4373,7 @@ ${addonManager.getAllActiveJs()}
       <div class="modal-box modal-wide animate-scale-in" style="max-width: 680px;">
         <div class="modal-header">
           <div class="modal-title flex items-center gap-2">
-            <span>⚡</span>
+            <img src="assets/logo.png" alt="AetherBuilder" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.08); padding: 2px;" />
             <span>AetherBuilder Update & System Hub</span>
           </div>
           <button class="tool-icon-btn" id="close-update-modal">✕</button>

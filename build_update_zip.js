@@ -40,6 +40,13 @@ if (fs.existsSync(path.join(rootDir, 'data', 'addons.json'))) {
   fs.copyFileSync(path.join(rootDir, 'data', 'addons.json'), path.join(stageData, 'addons.json'));
 }
 
+// Include system branding assets (logo)
+const stageAssets = path.join(stageDir, 'assets');
+fs.mkdirSync(stageAssets, { recursive: true });
+if (fs.existsSync(path.join(rootDir, 'assets', 'logo.png'))) {
+  fs.copyFileSync(path.join(rootDir, 'assets', 'logo.png'), path.join(stageAssets, 'logo.png'));
+}
+
 const outZipVersioned = path.join(rootDir, `aetherbuilder-update-v${ver}.zip`);
 const outZipGeneric = path.join(rootDir, 'aetherbuilder-update.zip');
 const outZipLegacy = path.join(rootDir, 'aetherbuilder-update-v2.5.0.zip');

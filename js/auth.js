@@ -176,10 +176,13 @@ export class Argon2Auth {
     modal.id = 'argon2-login-modal';
     modal.className = 'modal-overlay animate-fade-in';
     modal.innerHTML = `
-      <div class="modal-box animate-scale-in">
-        <div class="modal-header">
+      <div class="modal-box animate-scale-in" style="max-width: 440px;">
+        <div style="text-align: center; padding: 24px 20px 10px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06); border-top-left-radius: 12px; border-top-right-radius: 12px;">
+          <img src="assets/logo.png" alt="AetherBuilder" style="max-height: 84px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 16px rgba(99,102,241,0.25)); border-radius: 10px;" />
+        </div>
+        <div class="modal-header" style="padding-top: 14px;">
           <div class="modal-title">
-            <span style="font-size: 1.5rem;">🔐</span>
+            <span style="font-size: 1.3rem;">🔐</span>
             <div>
               <div>Admin Authentication</div>
               <div style="font-size: 0.75rem; color: var(--accent); font-weight: 500;">Argon2id Cryptographic Protection</div>
