@@ -57,7 +57,8 @@ const outZipLegacy = path.join(rootDir, 'aetherbuilder-update-v2.5.0.zip');
 
 // Use Windows tar.exe to create standard POSIX forward-slash (/) ZIP archives
 // Compatible across all Linux / Apache / PHP ZipArchive environments!
-execSync(`tar -a -c -f "${outZipVersioned}" -C "${stageDir}" .`, { stdio: 'inherit' });
+const items = fs.readdirSync(stageDir);
+execSync(`tar -a -c -f "${outZipVersioned}" -C "${stageDir}" ${items.join(' ')}`, { stdio: 'inherit' });
 fs.copyFileSync(outZipVersioned, outZipGeneric);
 fs.copyFileSync(outZipVersioned, outZipLegacy);
 

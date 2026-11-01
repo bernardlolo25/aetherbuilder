@@ -70,7 +70,8 @@ if (fs.existsSync(path.join(rootDir, 'data', 'addons.json'))) {
 console.log('Staged files successfully. Creating standard POSIX ZIP archive...');
 
 // Use Windows tar.exe to create standard forward-slash (/) ZIP archive
-execSync(`tar -a -c -f "${outZip}" -C "${stageDir}" .`, { stdio: 'inherit' });
+const items = fs.readdirSync(stageDir);
+execSync(`tar -a -c -f "${outZip}" -C "${stageDir}" ${items.join(' ')}`, { stdio: 'inherit' });
 
 // Cleanup stageDir
 fs.rmSync(stageDir, { recursive: true, force: true });

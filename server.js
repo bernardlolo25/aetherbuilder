@@ -235,6 +235,12 @@ http.createServer(async (req, res) => {
   if (pathname === '/api.php') {
     const action = url.searchParams.get('action');
 
+    // POST: verify_session & login (emulate PHP auth for localhost development)
+    if (req.method === 'POST' && (action === 'verify_session' || action === 'login')) {
+      const devToken = 'dev_local_token_' + Date.now();
+      return json(res, 200, { success: true, token: devToken });
+    }
+
     // GET: get_site
     if (req.method === 'GET' && action === 'get_site') {
       try {

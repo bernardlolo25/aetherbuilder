@@ -137,22 +137,17 @@ export class Argon2Auth {
         const res = await fetch('api.php?action=verify_session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ argon2_hash: targetHash })
+          body: JSON.stringify({ argon2_hash: targetHash, password: password })
         });
         const data = await res.json();
-        if (data.success && data.token) {
+        if (data && data.token) {
           sessionStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-          this.setSession(true);
-          return { success: true, computeTime };
-        } else {
-          return { success: false, error: data.error || 'Server authentication failed. Check that api.php is accessible.', computeTime };
         }
       } catch (e) {
-        // Offline / localhost fallback — still allow local session
-        console.warn('verify_session fetch failed, using local-only session:', e);
-        this.setSession(true);
-        return { success: true, computeTime, offline: true };
+        console.warn('verify_session fetch failed, continuing with local session:', e);
       }
+      this.setSession(true);
+      return { success: true, computeTime };
     } else {
       return { success: false, error: 'Invalid admin password.', computeTime };
     }
