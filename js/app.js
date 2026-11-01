@@ -4288,18 +4288,38 @@ ${addonManager.getAllActiveJs()}
   }
 
   // --------------------------------------------------------------------------
-  // WORDPRESS-STYLE 1-CLICK SYSTEM UPDATER
+  // WORDPRESS-STYLE 1-CLICK SYSTEM UPDATER (GITHUB-CONNECTED)
   // --------------------------------------------------------------------------
   async checkForUpdates() {
     try {
       const ts = Date.now();
       let manifest = null;
+
+      // 1. Check official GitHub repository channel first
+      const GITHUB_REPO = 'bernardlolo25/aetherbuilder';
+      const GITHUB_RAW_MANIFEST = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/version.json?_t=${ts}`;
+      const GITHUB_RAW_ZIP = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/aetherbuilder-update.zip?_t=${ts}`;
+
       try {
-        const res = await fetch(`version.json?_t=${ts}`, { cache: 'no-store' });
-        if (res.ok) {
-          manifest = await res.json();
+        const ghRes = await fetch(GITHUB_RAW_MANIFEST, { cache: 'no-store' });
+        if (ghRes.ok) {
+          manifest = await ghRes.json();
+          manifest.is_github = true;
+          manifest.github_zip_url = GITHUB_RAW_ZIP;
         }
-      } catch {}
+      } catch (ghErr) {
+        console.warn('GitHub update channel deferred:', ghErr);
+      }
+
+      // 2. Fallback to local version.json if GitHub is unreachable
+      if (!manifest) {
+        try {
+          const res = await fetch(`version.json?_t=${ts}`, { cache: 'no-store' });
+          if (res.ok) {
+            manifest = await res.json();
+          }
+        } catch {}
+      }
 
       if (!manifest) return;
 
@@ -4320,7 +4340,7 @@ ${addonManager.getAllActiveJs()}
         if (badge) {
           badge.style.color = '#10b981';
           badge.style.fontWeight = '700';
-          badge.title = `New version v${remoteVer} available! Click to update.`;
+          badge.title = `New version v${remoteVer} available on GitHub! Click to update.`;
         }
       }
     } catch (err) {
@@ -4559,29 +4579,53 @@ ${addonManager.getAllActiveJs()}
       if (statusMsg) statusMsg.textContent = text;
     };
 
-    setProgress(20, 'Connecting to update channel & creating safety backup...');
-
     try {
-      const res = await fetch('api.php?action=apply_update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          download_url: manifest?.download_url || 'aetherbuilder-update.zip',
-          backup: chkBackup ? chkBackup.checked : true
-        })
-      });
+      let data = null;
+      const downloadUrl = manifest?.github_zip_url || 
+        (manifest?.download_url?.startsWith('http') ? manifest.download_url : null);
 
-      setProgress(65, 'Unpacking core files & verifying integrity...');
-      const data = await res.json();
+      if (downloadUrl) {
+        // Client-side download from GitHub (bypasses hosting firewall / cURL restrictions!)
+        setProgress(25, `Downloading update package from GitHub (v${manifest.version || ''})...`);
+        const zipRes = await fetch(downloadUrl, { cache: 'no-store' });
+        if (!zipRes.ok) {
+          throw new Error(`Failed to download update from GitHub (HTTP ${zipRes.status})`);
+        }
+        const zipBlob = await zipRes.blob();
 
-      if (data.success) {
+        setProgress(65, 'Unpacking core files & verifying integrity on server...');
+        const formData = new FormData();
+        formData.append('update_zip', zipBlob, 'aetherbuilder-update.zip');
+        formData.append('backup', chkBackup ? (chkBackup.checked ? '1' : '0') : '1');
+
+        const postRes = await fetch('api.php?action=upload_update_zip', {
+          method: 'POST',
+          body: formData
+        });
+        data = await postRes.json();
+      } else {
+        // Server-side local or direct install
+        setProgress(25, 'Connecting to update channel & creating safety backup...');
+        const res = await fetch('api.php?action=apply_update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            download_url: manifest?.download_url || 'aetherbuilder-update.zip',
+            backup: chkBackup ? chkBackup.checked : true
+          })
+        });
+        setProgress(65, 'Unpacking core files & verifying integrity...');
+        data = await res.json();
+      }
+
+      if (data && data.success) {
         setProgress(100, 'Update complete! Refreshing AetherBuilder in 2 seconds...');
         this.canvas?.showToast('🎉 Core successfully updated! Reloading...', 'success');
         setTimeout(() => {
           window.location.reload(true);
         }, 1800);
       } else {
-        setProgress(100, 'Update paused: ' + (data.error || 'Server rejected update'));
+        setProgress(100, 'Update paused: ' + (data?.error || 'Server rejected update'));
         if (fill) fill.style.background = '#ef4444';
         if (btn) {
           btn.disabled = false;
@@ -4589,7 +4633,8 @@ ${addonManager.getAllActiveJs()}
         }
       }
     } catch (err) {
-      setProgress(100, 'Network error. Try Manual ZIP Drop.');
+      console.error('Update execution failed:', err);
+      setProgress(100, 'Update failed: ' + (err.message || 'Network error'));
       if (fill) fill.style.background = '#ef4444';
       if (btn) {
         btn.disabled = false;
