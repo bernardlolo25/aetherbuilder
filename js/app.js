@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.6.1';
+export const APP_VERSION = '2.6.2';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -4734,6 +4734,9 @@ ${addonManager.getAllActiveJs()}
 
       if (changelogList && Array.isArray(manifest.changelog)) {
         changelogList.innerHTML = manifest.changelog.map(item => `<li>${item}</li>`).join('');
+        // Scroll changelog back to top so newest/most important items show first
+        const changelogCard = changelogList.closest('.update-changelog-card');
+        if (changelogCard) changelogCard.scrollTop = 0;
       }
 
       if (updateBtn) {

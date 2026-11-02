@@ -2811,8 +2811,9 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 18px;
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
+  scroll-behavior: smooth;
 }
 .update-changelog-card h4 {
   font-size: 0.85rem;
