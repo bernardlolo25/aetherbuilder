@@ -709,20 +709,22 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   position: relative;
 }
 
-/* Sticky Search & Filter Header */
+/* Sticky Search & Filter Header (Sticks directly below the sticky tabs) */
 .repeater-search-bar {
+  position: -webkit-sticky;
   position: sticky;
-  top: -16px; /* Offset the 16px padding of .sidebar-content-area */
-  z-index: 15;
-  background: var(--bg-surface, #0f172a);
-  margin: -6px -16px 6px -16px;
+  top: calc(-16px + var(--insp-tabs-h, 55px));
+  z-index: 20;
+  background: var(--bg-panel);
+  margin: 0 -16px 8px -16px;
   padding: 10px 16px 8px 16px;
-  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .repeater-search-input-wrap {

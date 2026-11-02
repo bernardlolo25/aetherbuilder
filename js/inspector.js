@@ -99,6 +99,19 @@ export class InspectorPanel {
     });
 
     this.renderFields(activeEl, widgetDef);
+
+    // Measure and set sticky tabs height for subsequent sticky elements (.repeater-search-bar)
+    const updateStickyTabsOffset = () => {
+      const tabsWrap = this.container.querySelector('.inspector-tabs-wrap');
+      if (tabsWrap) {
+        const h = tabsWrap.offsetHeight || 55;
+        this.container.style.setProperty('--insp-tabs-h', `${h}px`);
+      }
+    };
+    updateStickyTabsOffset();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(updateStickyTabsOffset);
+    }
   }
 
   renderFields(activeEl, widgetDef) {
