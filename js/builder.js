@@ -1435,19 +1435,34 @@ export class BuilderCanvas {
     modal.id = 'add-section-modal';
     modal.className = 'modal-overlay animate-fade-in';
 
-    const widgetsHtml = Object.entries(WIDGET_REGISTRY)
-      .map(
-        ([type, w]) => `
-      <div class="widget-card add-widget-card ${w.isAddon ? 'is-addon-widget' : ''}" data-widget="${type}">
-        <div class="widget-card-icon">${w.icon || '🧩'}</div>
-        <div class="widget-card-name" style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">
-          <span>${w.name}</span>
-          ${w.isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.22);color:#a5b4fc;padding:1px 5px;border-radius:4px;font-weight:700;">Add-on</span>' : ''}
-        </div>
-        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">${w.description || ''}</div>
-      </div>
-    `
-      )
+    const entries = Object.entries(WIDGET_REGISTRY);
+    const totalCount = entries.length;
+    const addonCount = entries.filter(([_, w]) => w.isAddon).length;
+    const coreCount = totalCount - addonCount;
+
+    const widgetsHtml = entries
+      .map(([type, w]) => {
+        const isAddon = !!w.isAddon;
+        const cat = w.category || (isAddon ? 'addons' : 'general');
+        const desc = w.description || '';
+        const name = w.name || type;
+        return `
+          <div class="widget-card add-widget-card ${isAddon ? 'is-addon-widget' : ''}" 
+               data-widget="${type}"
+               data-name="${name.toLowerCase()}"
+               data-category="${cat.toLowerCase()}"
+               data-desc="${desc.toLowerCase()}"
+               data-is-addon="${isAddon ? '1' : '0'}"
+               title="${name}: ${desc}">
+            <div class="widget-card-icon">${w.icon || '🧩'}</div>
+            <div class="widget-card-name" style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">
+              <span>${name}</span>
+              ${isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.22);color:#a5b4fc;padding:1px 5px;border-radius:4px;font-weight:700;">Add-on</span>' : ''}
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; line-height: 1.35;">${desc}</div>
+          </div>
+        `;
+      })
       .join('');
 
     modal.innerHTML = `
@@ -1456,11 +1471,42 @@ export class BuilderCanvas {
           <div class="modal-title">
             <span>➕</span> Add Element to Canvas
           </div>
-          <button class="tool-icon-btn" id="close-add-modal">✕</button>
+          <button class="tool-icon-btn" id="close-add-modal" title="Close (Esc)">✕</button>
         </div>
-        <div class="modal-body">
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; max-height: 480px; overflow-y: auto; padding: 4px;">
+        <div class="modal-body add-section-modal-body">
+          <!-- Search & Filter Controls -->
+          <div class="add-section-toolbar">
+            <div class="add-section-search-row">
+              <div class="add-section-search-wrap">
+                <span class="add-section-search-icon">🔍</span>
+                <input 
+                  type="text" 
+                  id="add-section-search-input" 
+                  class="add-section-search-input" 
+                  placeholder="Search widgets & add-ons by name or keyword (e.g. contact, hero, chat, pricing)..." 
+                  autocomplete="off" 
+                  spellcheck="false" 
+                />
+                <button type="button" id="add-section-search-clear" class="add-section-search-clear" style="display:none;" title="Clear search">✕</button>
+              </div>
+              <span id="add-section-status-badge" class="add-section-status-badge">${totalCount} items</span>
+            </div>
+            <div class="add-section-filter-pills">
+              <button type="button" class="add-section-pill active" data-filter="all">All (${totalCount})</button>
+              <button type="button" class="add-section-pill" data-filter="addons">🧩 Add-ons (${addonCount})</button>
+              <button type="button" class="add-section-pill" data-filter="core">⚡ Core Widgets (${coreCount})</button>
+            </div>
+          </div>
+
+          <!-- Grid of Elements -->
+          <div id="add-section-grid" class="add-section-grid">
             ${widgetsHtml}
+            <div id="add-section-empty" class="add-section-empty" style="display:none;">
+              <div style="font-size:2.2rem;margin-bottom:8px;">🔍</div>
+              <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px;">No elements match "<span id="add-section-empty-term"></span>"</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">Try searching with another keyword like <em>contact</em>, <em>hero</em>, <em>chat</em>, or <em>slider</em>.</div>
+              <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn">Reset Search</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1468,19 +1514,155 @@ export class BuilderCanvas {
 
     document.body.appendChild(modal);
 
-    modal.querySelector('#close-add-modal').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.remove();
+    // Elements & Filter Logic
+    const searchInput = modal.querySelector('#add-section-search-input');
+    const clearBtn = modal.querySelector('#add-section-search-clear');
+    const statusBadge = modal.querySelector('#add-section-status-badge');
+    const filterPills = modal.querySelectorAll('.add-section-pill');
+    const cards = modal.querySelectorAll('.add-widget-card');
+    const emptyState = modal.querySelector('#add-section-empty');
+    const emptyTerm = modal.querySelector('#add-section-empty-term');
+    const resetBtn = modal.querySelector('#add-section-reset-btn');
+
+    let activeFilter = 'all';
+
+    const filterElements = () => {
+      const query = (searchInput.value || '').trim().toLowerCase();
+      clearBtn.style.display = query ? 'flex' : 'none';
+
+      let visibleCount = 0;
+      const visibleCards = [];
+
+      cards.forEach((card) => {
+        const isAddon = card.getAttribute('data-is-addon') === '1';
+        const name = card.getAttribute('data-name') || '';
+        const cat = card.getAttribute('data-category') || '';
+        const desc = card.getAttribute('data-desc') || '';
+        const widgetType = card.getAttribute('data-widget') || '';
+
+        // Category/tab filter
+        let matchesTab = true;
+        if (activeFilter === 'addons' && !isAddon) matchesTab = false;
+        if (activeFilter === 'core' && isAddon) matchesTab = false;
+
+        // Query search
+        let matchesQuery = true;
+        if (query) {
+          const haystack = `${name} ${cat} ${desc} ${widgetType} ${isAddon ? 'addon add-on plugin' : 'core widget'}`;
+          matchesQuery = haystack.includes(query);
+        }
+
+        if (matchesTab && matchesQuery) {
+          card.style.display = '';
+          visibleCount++;
+          visibleCards.push(card);
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Update badge
+      if (query) {
+        statusBadge.textContent = `${visibleCount} found`;
+        statusBadge.classList.add('has-filter');
+      } else if (activeFilter === 'addons') {
+        statusBadge.textContent = `${visibleCount} add-ons`;
+        statusBadge.classList.remove('has-filter');
+      } else if (activeFilter === 'core') {
+        statusBadge.textContent = `${visibleCount} core widgets`;
+        statusBadge.classList.remove('has-filter');
+      } else {
+        statusBadge.textContent = `${visibleCount} items`;
+        statusBadge.classList.remove('has-filter');
+      }
+
+      // Empty state
+      if (visibleCount === 0) {
+        emptyState.style.display = 'flex';
+        if (emptyTerm) emptyTerm.textContent = query || activeFilter;
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      return visibleCards;
+    };
+
+    searchInput.addEventListener('input', filterElements);
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.focus();
+      filterElements();
     });
 
-    modal.querySelectorAll('.add-widget-card').forEach((card) => {
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        activeFilter = 'all';
+        filterPills.forEach((p) => p.classList.toggle('active', p.getAttribute('data-filter') === 'all'));
+        searchInput.focus();
+        filterElements();
+      });
+    }
+
+    filterPills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        filterPills.forEach((p) => p.classList.remove('active'));
+        pill.classList.add('active');
+        activeFilter = pill.getAttribute('data-filter') || 'all';
+        filterElements();
+      });
+    });
+
+    // Enter key selects first visible card
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const visibleCards = filterElements();
+        if (visibleCards.length > 0) {
+          visibleCards[0].click();
+        }
+      }
+    });
+
+    // Keyboard and modal closing
+    const closeModal = () => {
+      modal.remove();
+      document.removeEventListener('keydown', onKeydown);
+    };
+
+    const onKeydown = (e) => {
+      if (e.key === 'Escape') {
+        if (searchInput.value) {
+          searchInput.value = '';
+          filterElements();
+        } else {
+          closeModal();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKeydown);
+
+    modal.querySelector('#close-add-modal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    cards.forEach((card) => {
       card.addEventListener('click', () => {
         const type = card.getAttribute('data-widget');
         state.addSection(type, insertAtIndex, beforeSectionId);
-        modal.remove();
-        this.showToast(`Added ${WIDGET_REGISTRY[type].name} to page`, 'success');
+        closeModal();
+        this.showToast(`Added ${WIDGET_REGISTRY[type]?.name || type} to page`, 'success');
       });
     });
+
+    // Auto-focus search input with short timeout for smooth rendering
+    setTimeout(() => {
+      try {
+        searchInput.focus();
+      } catch (err) {}
+    }, 60);
   }
 
   showToast(message, type = 'info') {

@@ -1409,7 +1409,170 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
 }
 
 .modal-box.modal-wide {
-  max-width: 860px;
+  max-width: 880px;
+  max-height: 90vh;
+}
+
+/* Add Section Modal Toolbar & Live Search Bar */
+.add-section-modal-body {
+  padding: 16px 20px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  min-height: 0;
+  max-height: calc(90vh - 80px);
+}
+
+.add-section-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  flex-shrink: 0;
+}
+
+.add-section-search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-section-search-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.add-section-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.95rem;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.add-section-search-input {
+  width: 100%;
+  padding: 9px 34px 9px 36px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.add-section-search-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  background: rgba(30, 41, 59, 1);
+}
+
+.add-section-search-input::placeholder {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.add-section-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.add-section-search-clear:hover {
+  background: rgba(239, 68, 68, 0.7);
+}
+
+.add-section-status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.add-section-status-badge.has-filter {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.add-section-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-section-pill {
+  border: 1px solid var(--border-subtle);
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.add-section-pill:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.add-section-pill.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+.add-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.widget-card.add-widget-card {
+  cursor: pointer;
+}
+
+.add-section-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 42px 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .modal-header {
@@ -3008,5 +3171,30 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   .inspector-form select,
   .sidebar-tab-btn {
     min-height: 36px !important;
+  }
+
+  /* Add Section Modal Mobile Adjustments */
+  .modal-box.modal-wide {
+    max-width: 95vw !important;
+    max-height: 92vh !important;
+  }
+  .add-section-modal-body {
+    padding: 12px 14px 14px !important;
+    max-height: calc(92vh - 70px) !important;
+  }
+  .add-section-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 8px !important;
+    max-height: 52vh !important;
+  }
+  .add-section-search-row {
+    flex-wrap: wrap !important;
+  }
+  .add-section-status-badge {
+    display: none !important;
+  }
+  .add-section-pill {
+    padding: 4px 10px !important;
+    font-size: 0.72rem !important;
   }
 }
