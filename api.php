@@ -165,6 +165,38 @@ function unique_filename($dir, $base, $ext) {
 }
 
 
+/**
+ * Smart Merge for Add-ons: Preserves all user-created and custom-installed addons
+ * while updating or appending official system addons from the incoming update package.
+ */
+function merge_addons_json_content($dest, $incomingContent) {
+    if (!file_exists($dest)) {
+        return $incomingContent;
+    }
+    $existingRaw = @file_get_contents($dest);
+    $existingList = $existingRaw ? @json_decode($existingRaw, true) : [];
+    $incomingList = @json_decode($incomingContent, true);
+
+    if (!is_array($existingList) || !is_array($incomingList)) {
+        return $incomingContent;
+    }
+
+    $mergedMap = [];
+    // 1. Keep all existing addons (including user-created & custom installed ones)
+    foreach ($existingList as $item) {
+        if (!empty($item['id'])) {
+            $mergedMap[$item['id']] = $item;
+        }
+    }
+    // 2. Add or update incoming official system addons
+    foreach ($incomingList as $item) {
+        if (!empty($item['id'])) {
+            $mergedMap[$item['id']] = $item;
+        }
+    }
+    return json_encode(array_values($mergedMap), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+}
+
 function perform_core_update($zipFilePath, $createBackup = true) {
     if (!class_exists('ZipArchive')) {
         return ['success' => false, 'error' => 'PHP ZipArchive extension is not enabled on this server.'];
@@ -265,6 +297,10 @@ function perform_core_update($zipFilePath, $createBackup = true) {
         // Most reliable extraction: read file content by index $i (immune to slash differences)
         $content = $zip->getFromIndex($i);
         if ($content !== false) {
+            // Smart Merge: protect client custom addons in data/addons.json
+            if ($rel === 'data/addons.json') {
+                $content = merge_addons_json_content($dest, $content);
+            }
             $written = @file_put_contents($dest, $content);
             if ($written !== false) {
                 $extracted++;

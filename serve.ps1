@@ -465,7 +465,26 @@ try {
                         try {
                             Add-Type -AssemblyName System.IO.Compression.FileSystem
                             # $true = overwrite existing files (3rd param must be bool, NOT ZipArchiveMode — that was the bug!)
+                            # Smart backup existing addons.json to preserve user custom addons
+                            $addonsFile = Join-Path $dataDir "addons.json"
+                            $existingAddons = if (Test-Path $addonsFile) { Get-Content -Raw $addonsFile | ConvertFrom-Json } else { @() }
+
                             [System.IO.Compression.ZipFile]::ExtractToDirectory($localZip, $scriptDir, $true)
+
+                            # Smart merge addons: preserve existing custom addons while taking incoming updates
+                            if ($existingAddons -and $existingAddons.Count -gt 0 -and (Test-Path $addonsFile)) {
+                                try {
+                                    $newAddons = Get-Content -Raw $addonsFile | ConvertFrom-Json
+                                    $mergedMap = @{}
+                                    foreach ($a in $existingAddons) { if ($a.id) { $mergedMap[$a.id] = $a } }
+                                    foreach ($a in $newAddons) { if ($a.id) { $mergedMap[$a.id] = $a } }
+                                    $mergedList = @($mergedMap.Values)
+                                    ($mergedList | ConvertTo-Json -Depth 10) | Set-Content -Path $addonsFile -Encoding UTF8
+                                    Write-Host "Smart merged $( $mergedList.Count ) addons preserving user custom creations"
+                                } catch {
+                                    Write-Host "Addon merge notice: $_"
+                                }
+                            }
                             Write-Host "Localhost update unpacked successfully from aetherbuilder-update.zip"
                             $resJson = '{"success":true,"message":"Update applied! Reload the page to see changes."}'
                         } catch {

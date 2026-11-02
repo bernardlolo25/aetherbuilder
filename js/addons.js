@@ -746,6 +746,22 @@ class AddonManager {
       if (raw) localAddons = JSON.parse(raw);
     } catch {}
 
+    // SMART MERGE: If both server and local cache exist, preserve any user-created custom addons!
+    if (serverAddons && Array.isArray(serverAddons) && localAddons && Array.isArray(localAddons)) {
+      const serverMap = new Map(serverAddons.map(a => [a.id, a]));
+      let hasCustom = false;
+      localAddons.forEach(loc => {
+        if (loc && loc.id && !serverMap.has(loc.id)) {
+          serverAddons.push(loc);
+          hasCustom = true;
+        }
+      });
+      if (hasCustom) {
+        this.addons = serverAddons;
+        this.save(true); // Automatically sync recovered user addons back to server!
+      }
+    }
+
     // Choose best source
     let source = serverAddons && serverAddons.length > 0 ? serverAddons : localAddons;
 

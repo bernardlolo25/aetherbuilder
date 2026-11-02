@@ -994,10 +994,7 @@ class AetherApp {
             <!-- Live Canvas Frame Rendered Here -->
           </section>
 
-          <!-- Floating Publish Button (pinned on left side of preview canvas) -->
-          <button class="floating-publish-btn" id="btn-floating-publish" title="Publish changes live to website">
-            <span>🚀</span> Publish Live
-          </button>
+
         </main>
       </div>
     `;
@@ -2750,11 +2747,11 @@ class AetherApp {
     // Publish to Live Public View (Handles both topbar & floating buttons)
     const handlePublish = async () => {
       const topbarBtn = document.getElementById('btn-publish');
-      const floatBtn  = document.getElementById('btn-floating-publish');
+      
 
       const setPublishState = (disabled, text) => {
         if (topbarBtn) { topbarBtn.disabled = disabled; topbarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> ${text}`; }
-        if (floatBtn)  { floatBtn.disabled  = disabled; floatBtn.innerHTML  = `<span>${disabled ? '⏳' : '🚀'}</span> ${text}`; }
+        
       };
 
       setPublishState(true, 'Publishing...');
@@ -2764,7 +2761,7 @@ class AetherApp {
     };
 
     document.getElementById('btn-publish')?.addEventListener('click', handlePublish);
-    document.getElementById('btn-floating-publish')?.addEventListener('click', handlePublish);
+    
 
     // Sync / Pull Latest from Server
     const btnSync = document.getElementById('btn-sync-server');
