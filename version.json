@@ -1,9 +1,11 @@
 {
   "name": "AetherBuilder",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "release_date": "2026-11-02",
   "min_php": "7.4",
   "changelog": [
+    "Fix: Add Section modal layout broken on InfinityFree/shared hosting due to CSS cache — all critical layout styles are now inline in JS (no longer depends on CSS file being fresh)",
+    "Fix: Filter pill active state now applied via inline style as well as CSS class (works on hosts with cached old CSS)",
     "New: Real-time search & filter box in Add New Section modal — search by name, keyword, or category",
     "New: Quick-filter pills in Add Section modal — All / Add-ons / Core Widgets tabs",
     "New: Enter key selects first match; Escape clears search, second Escape closes modal",
@@ -17,9 +19,8 @@
     "UX: Inspector tabs bar now sticky when scrolling controls",
     "UX: Repeater search/filter bar sticks flush below sticky inspector tabs",
     "UX: Removed redundant floating Publish button — single Publish button in topbar",
-    "Fix: EmailJS fields moved to Advanced tab only in Contact addon (v1.0.3)",
-    "Fix: Viber deep-link corrected to viber://chat?number= mobile protocol",
-    "Fix: EmailJS upgraded to 4-argument send() API"
+    "Fix: EmailJS fields moved to Advanced tab only in Contact addon",
+    "Fix: Viber deep-link corrected to viber://chat?number= mobile protocol"
   ],
   "download_url": "aetherbuilder-update.zip",
   "releaseDate": "2026-11-02"

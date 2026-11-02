@@ -1473,39 +1473,40 @@ export class BuilderCanvas {
           </div>
           <button class="tool-icon-btn" id="close-add-modal" title="Close (Esc)">✕</button>
         </div>
-        <div class="modal-body add-section-modal-body">
+        <div class="modal-body add-section-modal-body" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:12px;min-height:0;max-height:calc(90vh - 80px);overflow:hidden;">
           <!-- Search & Filter Controls -->
-          <div class="add-section-toolbar">
-            <div class="add-section-search-row">
-              <div class="add-section-search-wrap">
-                <span class="add-section-search-icon">🔍</span>
+          <div class="add-section-toolbar" style="display:flex;flex-direction:column;gap:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(51,65,85,0.7);border-radius:10px;padding:12px 14px;flex-shrink:0;">
+            <div class="add-section-search-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="add-section-search-wrap" style="position:relative;flex:1;display:flex;align-items:center;">
+                <span style="position:absolute;left:12px;font-size:0.95rem;pointer-events:none;opacity:0.7;">🔍</span>
                 <input 
                   type="text" 
                   id="add-section-search-input" 
                   class="add-section-search-input" 
                   placeholder="Search widgets & add-ons by name or keyword (e.g. contact, hero, chat, pricing)..." 
                   autocomplete="off" 
-                  spellcheck="false" 
+                  spellcheck="false"
+                  style="width:100%;padding:9px 34px 9px 36px;background:rgba(30,41,59,0.85);border:1px solid rgba(51,65,85,0.7);border-radius:7px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;box-sizing:border-box;"
                 />
-                <button type="button" id="add-section-search-clear" class="add-section-search-clear" style="display:none;" title="Clear search">✕</button>
+                <button type="button" id="add-section-search-clear" class="add-section-search-clear" style="display:none;position:absolute;right:8px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:0.75rem;cursor:pointer;align-items:center;justify-content:center;" title="Clear search">✕</button>
               </div>
-              <span id="add-section-status-badge" class="add-section-status-badge">${totalCount} items</span>
+              <span id="add-section-status-badge" class="add-section-status-badge" style="font-size:0.75rem;font-weight:600;color:rgba(148,163,184,0.9);background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:20px;white-space:nowrap;border:1px solid rgba(255,255,255,0.08);flex-shrink:0;">${totalCount} items</span>
             </div>
-            <div class="add-section-filter-pills">
-              <button type="button" class="add-section-pill active" data-filter="all">All (${totalCount})</button>
-              <button type="button" class="add-section-pill" data-filter="addons">🧩 Add-ons (${addonCount})</button>
-              <button type="button" class="add-section-pill" data-filter="core">⚡ Core Widgets (${coreCount})</button>
+            <div class="add-section-filter-pills" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="add-section-pill active" data-filter="all" style="border:1px solid rgba(99,102,241,1);background:rgba(99,102,241,1);color:#fff;font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">All (${totalCount})</button>
+              <button type="button" class="add-section-pill" data-filter="addons" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">🧩 Add-ons (${addonCount})</button>
+              <button type="button" class="add-section-pill" data-filter="core" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">⚡ Core Widgets (${coreCount})</button>
             </div>
           </div>
 
           <!-- Grid of Elements -->
-          <div id="add-section-grid" class="add-section-grid">
+          <div id="add-section-grid" class="add-section-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;max-height:460px;overflow-y:auto;padding:4px;">
             ${widgetsHtml}
-            <div id="add-section-empty" class="add-section-empty" style="display:none;">
+            <div id="add-section-empty" class="add-section-empty" style="display:none;grid-column:1/-1;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:42px 16px;background:rgba(15,23,42,0.4);border:1px dashed rgba(51,65,85,0.7);border-radius:10px;">
               <div style="font-size:2.2rem;margin-bottom:8px;">🔍</div>
               <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px;">No elements match "<span id="add-section-empty-term"></span>"</div>
-              <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">Try searching with another keyword like <em>contact</em>, <em>hero</em>, <em>chat</em>, or <em>slider</em>.</div>
-              <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn">Reset Search</button>
+              <div style="font-size:0.8rem;color:rgba(148,163,184,0.7);margin-bottom:14px;">Try searching with another keyword like <em>contact</em>, <em>hero</em>, <em>chat</em>, or <em>slider</em>.</div>
+              <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.8);color:#fff;cursor:pointer;font-size:0.82rem;">Reset Search</button>
             </div>
           </div>
         </div>
@@ -1599,7 +1600,13 @@ export class BuilderCanvas {
       resetBtn.addEventListener('click', () => {
         searchInput.value = '';
         activeFilter = 'all';
-        filterPills.forEach((p) => p.classList.toggle('active', p.getAttribute('data-filter') === 'all'));
+        filterPills.forEach((p) => {
+          const isAll = p.getAttribute('data-filter') === 'all';
+          p.classList.toggle('active', isAll);
+          p.style.background = isAll ? 'rgba(99,102,241,1)' : 'rgba(30,41,59,0.6)';
+          p.style.color = isAll ? '#fff' : 'rgba(148,163,184,0.9)';
+          p.style.borderColor = isAll ? 'rgba(99,102,241,1)' : 'rgba(51,65,85,0.7)';
+        });
         searchInput.focus();
         filterElements();
       });
@@ -1607,8 +1614,16 @@ export class BuilderCanvas {
 
     filterPills.forEach((pill) => {
       pill.addEventListener('click', () => {
-        filterPills.forEach((p) => p.classList.remove('active'));
+        filterPills.forEach((p) => {
+          p.classList.remove('active');
+          p.style.background = 'rgba(30,41,59,0.6)';
+          p.style.color = 'rgba(148,163,184,0.9)';
+          p.style.borderColor = 'rgba(51,65,85,0.7)';
+        });
         pill.classList.add('active');
+        pill.style.background = 'rgba(99,102,241,1)';
+        pill.style.color = '#fff';
+        pill.style.borderColor = 'rgba(99,102,241,1)';
         activeFilter = pill.getAttribute('data-filter') || 'all';
         filterElements();
       });
