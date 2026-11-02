@@ -417,6 +417,12 @@ class AetherApp {
               </div>
             </div>
 
+            <!-- Mobile Sidebar Drawer Toggle Button (visible on mobile <= 768px) -->
+            <button type="button" class="mobile-drawer-btn" id="btn-mobile-sidebar-toggle" title="Toggle Studio Panel">
+              <span>☰</span>
+              <span>Edit</span>
+            </button>
+
             <!-- WordPress-style Update Available pill -->
             <div id="update-indicator-pill" class="update-available-pill" style="display:none;" title="A newer version is ready! Click to install update.">
               <span>⚡</span>
@@ -501,6 +507,8 @@ class AetherApp {
 
         <!-- 2. Builder Workspace (Sidebar + Canvas) -->
         <main class="builder-body">
+          <!-- Mobile Drawer Backdrop Overlay -->
+          <div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop"></div>
           <!-- Left Sidebar (Widgets & Inspector - Resizable & Slidable) -->
           <aside class="builder-sidebar" id="builder-sidebar">
             <!-- Sidebar Resizer Handle -->
@@ -520,6 +528,8 @@ class AetherApp {
                 <button type="button" class="sidebar-tab-btn" data-side-tab="addons">🧩 Add-ons</button>
               </div>
               <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">›</button>
+              <!-- Mobile Close Button -->
+              <button type="button" class="mobile-sidebar-close-btn" id="btn-mobile-sidebar-close" title="Close Panel">✕</button>
             </div>
 
             <div class="sidebar-content-area" id="sidebar-tab-content">
@@ -955,6 +965,17 @@ class AetherApp {
                   </button>
                   <input type="file" id="addon-file-picker" accept=".json" style="display:none;" />
                 </div>
+
+                <!-- Quick Toggle for Built-in Chatbot Assistant -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.78rem;">
+                  <span style="display:flex;align-items:center;gap:6px;color:var(--text-main,#f8fafc);font-weight:600;">
+                    <span>💬</span> Built-in Assistant
+                  </span>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
+                    <input type="checkbox" id="addons-quick-toggle-chatbot" style="cursor:pointer;accent-color:var(--primary,#6366f1);" />
+                    <span id="addons-quick-chatbot-label" style="font-size:0.72rem;font-weight:700;color:var(--primary-light,#818cf8);">Active</span>
+                  </label>
+                </div>
                 </div>
 
                 <div id="installed-addons-list" style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
@@ -966,6 +987,10 @@ class AetherApp {
 
           <!-- Canvas Viewport Center -->
           <section class="builder-canvas-viewport mode-desktop" id="builder-canvas-container">
+            <!-- Mobile Floating Action Button to Open Drawer -->
+            <button type="button" class="mobile-canvas-drawer-fab" id="btn-mobile-fab" title="Open Studio Controls">
+              <span>☰</span>
+            </button>
             <!-- Live Canvas Frame Rendered Here -->
           </section>
 
@@ -981,6 +1006,7 @@ class AetherApp {
     this.renderWidgetTray();
     this.initSidebarTabs();
     this.initSidebarResizer();
+    this.initMobileSidebar();
 
     // Initialize Canvas & Inspector
     const canvasContainer = document.getElementById('builder-canvas-container');
@@ -1818,7 +1844,45 @@ class AetherApp {
         tabsContainer.dispatchEvent(new Event('scroll'));
       }
     });
+  }
 
+  // --------------------------------------------------------------------------
+  // MOBILE SIDEBAR DRAWER CONTROLLER (< 768px)
+  // --------------------------------------------------------------------------
+  initMobileSidebar() {
+    const toggleBtn = document.getElementById('btn-mobile-sidebar-toggle');
+    const fabBtn = document.getElementById('btn-mobile-fab');
+    const closeBtn = document.getElementById('btn-mobile-sidebar-close');
+    const backdrop = document.getElementById('mobile-sidebar-backdrop');
+
+    const openDrawer = () => {
+      document.body.classList.add('mobile-sidebar-open');
+    };
+    const closeDrawer = () => {
+      document.body.classList.remove('mobile-sidebar-open');
+    };
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('mobile-sidebar-open');
+      });
+    }
+    if (fabBtn) {
+      fabBtn.addEventListener('click', openDrawer);
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeDrawer);
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', closeDrawer);
+    }
+
+    // Auto-open drawer when an element is selected on mobile screens
+    state.subscribe((_, action) => {
+      if (action === 'selection' && state.activeElementId && window.innerWidth <= 768) {
+        openDrawer();
+      }
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -1839,6 +1903,37 @@ class AetherApp {
 
     const btnUpload = document.getElementById('btn-upload-addon-pkg');
     const filePicker = document.getElementById('addon-file-picker');
+
+    // Quick Toggle for Built-in Chatbot Assistant
+    const quickCb = document.getElementById('addons-quick-toggle-chatbot');
+    const quickLabel = document.getElementById('addons-quick-chatbot-label');
+    const updateQuickCbUI = () => {
+      if (!quickCb) return;
+      const curCb = state.siteSettings.chatbot || DEFAULT_CHATBOT_CONFIG;
+      const isEnabled = curCb.enabled !== false;
+      quickCb.checked = isEnabled;
+      if (quickLabel) {
+        quickLabel.textContent = isEnabled ? 'Active' : 'Disabled';
+        quickLabel.style.color = isEnabled ? 'var(--primary-light, #818cf8)' : 'var(--text-muted, #94a3b8)';
+      }
+    };
+    updateQuickCbUI();
+
+    if (quickCb) {
+      quickCb.addEventListener('change', (e) => {
+        const curCb = state.siteSettings.chatbot || DEFAULT_CHATBOT_CONFIG;
+        state.setSiteSetting('chatbot', { ...curCb, enabled: e.target.checked });
+        updateQuickCbUI();
+        this.canvas?.showToast(e.target.checked ? '💬 Built-in Assistant enabled' : 'Built-in Assistant disabled', 'info');
+        const siteCb = document.getElementById('site-chatbot-enable');
+        if (siteCb) siteCb.checked = e.target.checked;
+      });
+    }
+
+    const siteCb = document.getElementById('site-chatbot-enable');
+    if (siteCb) {
+      siteCb.addEventListener('change', updateQuickCbUI);
+    }
     if (btnUpload && filePicker) {
       btnUpload.addEventListener('click', () => filePicker.click());
       filePicker.addEventListener('change', (e) => {
