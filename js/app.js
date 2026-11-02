@@ -940,7 +940,8 @@ class AetherApp {
 
               <!-- Add-ons & Widget Plugins Panel -->
               <div id="tab-addons-panel" style="display: none; padding-bottom: 24px;">
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="addons-header-sticky">
+                  <div style="font-weight: 700; font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
                   <span>🧩 Add-ons &amp; Plugins</span>
                   <span style="font-size: 0.72rem; color: #a5b4fc; background: rgba(99,102,241,0.15); padding: 3px 8px; border-radius: 12px; font-weight: 700;">Extensible</span>
                 </div>
@@ -954,8 +955,9 @@ class AetherApp {
                   </button>
                   <input type="file" id="addon-file-picker" accept=".json" style="display:none;" />
                 </div>
+                </div>
 
-                <div id="installed-addons-list" style="display:flex;flex-direction:column;gap:12px;">
+                <div id="installed-addons-list" style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
                   <!-- Rendered dynamically -->
                 </div>
               </div>
