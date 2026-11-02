@@ -55,11 +55,13 @@ export class InspectorPanel {
           </div>
         </div>
 
-        <!-- Inspector Tabs -->
-        <div class="inspector-tabs">
-          <button class="inspector-tab-btn ${this.currentTab === 'content' ? 'active' : ''}" data-tab="content">Content</button>
-          <button class="inspector-tab-btn ${this.currentTab === 'style' ? 'active' : ''}" data-tab="style">Style</button>
-          <button class="inspector-tab-btn ${this.currentTab === 'advanced' ? 'active' : ''}" data-tab="advanced">Advanced</button>
+        <!-- Inspector Tabs (Sticky Header) -->
+        <div class="inspector-tabs-wrap">
+          <div class="inspector-tabs">
+            <button class="inspector-tab-btn ${this.currentTab === 'content' ? 'active' : ''}" data-tab="content">Content</button>
+            <button class="inspector-tab-btn ${this.currentTab === 'style' ? 'active' : ''}" data-tab="style">Style</button>
+            <button class="inspector-tab-btn ${this.currentTab === 'advanced' ? 'active' : ''}" data-tab="advanced">Advanced</button>
+          </div>
         </div>
 
         <!-- Inspector Form Body -->
@@ -87,6 +89,12 @@ export class InspectorPanel {
         tabBtns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         this.renderFields(activeEl, widgetDef);
+
+        // Reset scroll position to top when switching tabs
+        const scrollParent = this.container.closest('.sidebar-content-area');
+        if (scrollParent) {
+          scrollParent.scrollTop = 0;
+        }
       });
     });
 
