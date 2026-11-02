@@ -1,19 +1,26 @@
 {
   "name": "AetherBuilder",
-  "version": "2.5.2",
-  "release_date": "2026-11-01",
+  "version": "2.6.0",
+  "release_date": "2026-11-02",
   "min_php": "7.4",
   "changelog": [
-    "Security: Server-side session token validation — all admin endpoints now require a signed token",
-    "Security: CORS restricted from wildcard (*) to a domain allowlist",
-    "Security: Rate limiting on form submissions (3/min) and login attempts (10/min)",
-    "Security: data/config.json, data/ratelimit.json blocked from web access via .htaccess",
-    "Security: HTTPS redirect enforced via .htaccess",
-    "Added: verify_session, validate_token, and save_admin_hash API endpoints",
-    "Fixed: Visual repeater for Nav Links & Dropdowns in Navbar/Header and navigation add-ons",
-    "Fixed: Submenu builder now supports page selector dropdowns and URL inputs",
-    "Updated: Official AetherBuilder logo applied across admin UI and login modal"
+    "New: Real-time search & filter box in Add New Section modal — search by name, keyword, or category",
+    "New: Quick-filter pills in Add Section modal — All / Add-ons / Core Widgets tabs",
+    "New: Enter key selects first match; Escape clears search, second Escape closes modal",
+    "New: Mobile-friendly admin studio — slide-over drawer sidebar for phones and tablets",
+    "New: Mobile topbar toggle, FAB button, and backdrop overlay for sidebar on mobile",
+    "New: Built-in Chatbot Assistant quick-toggle in Add-ons panel header",
+    "New: Custom Live Chat Add-on (Tawk.to, Crisp, WhatsApp float, custom embed)",
+    "New: Contact & Hire Me Add-on (EmailJS, Viber, WhatsApp, Phone call)",
+    "New: Smart non-destructive addon merger on updates — user-created addons are preserved",
+    "UX: Create Add-On and Install buttons now sticky at top of Add-ons panel",
+    "UX: Inspector tabs bar now sticky when scrolling controls",
+    "UX: Repeater search/filter bar sticks flush below sticky inspector tabs",
+    "UX: Removed redundant floating Publish button — single Publish button in topbar",
+    "Fix: EmailJS fields moved to Advanced tab only in Contact addon (v1.0.3)",
+    "Fix: Viber deep-link corrected to viber://chat?number= mobile protocol",
+    "Fix: EmailJS upgraded to 4-argument send() API"
   ],
   "download_url": "aetherbuilder-update.zip",
-  "releaseDate": "2026-11-01"
+  "releaseDate": "2026-11-02"
 }
