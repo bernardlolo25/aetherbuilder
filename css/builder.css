@@ -1050,7 +1050,7 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 36px 20px 80px;
+  padding: 0 0 80px;
   position: relative;
   z-index: 10;
   transform: translateZ(0); /* Creates containing block for position:fixed children — traps them inside canvas */
@@ -1068,7 +1068,7 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   transition: max-width var(--transition-normal), border var(--transition-normal);
 }
 
@@ -1098,6 +1098,17 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   min-height: auto !important;
   background: transparent !important;
   border: none !important;
+}
+
+/* Ensure the first section on canvas is always flush at the top — matching public view */
+.canvas-frame > .canvas-section-wrapper:first-child {
+  margin-top: 0 !important;
+}
+.canvas-frame > .canvas-section-wrapper.widget-type-navbar:first-child,
+.canvas-frame > .canvas-section-wrapper.is-sticky-section:first-child {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  top: 0 !important;
 }
 .canvas-section-wrapper.widget-type-footer {
   padding: 0;
@@ -1163,9 +1174,9 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   padding: 0 !important;
 }
 
-/* Desktop mode: Full edge-to-edge canvas filling the entire admin workspace */
+/* Desktop mode: Full edge-to-edge canvas filling the entire admin workspace — flush at top (0px space above header) */
 .builder-canvas-viewport.mode-desktop {
-  padding: 36px 0 100px 0 !important;
+  padding: 0 0 100px 0 !important;
   align-items: stretch;
 }
 
@@ -3204,10 +3215,10 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
     transform: scale(0.94);
   }
 
-  /* Canvas viewport takes 100% width on mobile */
+  /* Canvas viewport takes 100% width on mobile — flush at top */
   .builder-canvas-viewport {
     width: 100% !important;
-    padding: 10px 6px !important;
+    padding: 0 0 80px !important;
   }
   .builder-canvas-viewport .canvas-frame {
     width: 100% !important;

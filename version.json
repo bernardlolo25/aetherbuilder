@@ -1,9 +1,10 @@
 {
   "name": "AetherBuilder",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "release_date": "2026-11-02",
   "min_php": "7.4",
   "changelog": [
+    "Fix: Remove 36px viewport top padding in desktop editor mode so header section is 100% flush at the top with 0px space, exactly matching public view",
     "Fix: Update modal Install Update button pinned in sticky footer — never cut off or hidden on any laptop screen",
     "Fix: Topbar responsive layout on 1366x768 screens — all tool icons protected from squishing with min-width and flex-shrink:0",
     "Fix: Changelog in Update Hub now scrolls to top automatically so newest fixes show first",
