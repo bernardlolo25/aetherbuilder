@@ -39,6 +39,7 @@
   font-size: 1.15rem;
   color: var(--text-main);
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .topbar-logo-badge {
@@ -59,6 +60,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 /* Device Viewport Selector */
@@ -69,6 +72,7 @@
   border-radius: var(--radius-sm);
   padding: 3px;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .device-btn {
@@ -103,6 +107,9 @@
 .tool-icon-btn {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  flex-shrink: 0;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -128,6 +135,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .security-badge {
@@ -3011,6 +3019,47 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
 .mobile-sidebar-backdrop,
 .mobile-sidebar-close-btn {
   display: none !important;
+}
+
+/* Responsive Topbar on Laptop & Compact Desktop Screens (1024px to 1400px, e.g. 1366x768) */
+@media (max-width: 1400px) {
+  .builder-topbar {
+    padding: 0 10px !important;
+    gap: 8px !important;
+  }
+  .topbar-actions {
+    gap: 6px !important;
+  }
+  .topbar-btn-sm {
+    padding: 5px 8px !important;
+    font-size: 0.78rem !important;
+    gap: 4px !important;
+  }
+  .device-btn {
+    padding: 4px 7px !important;
+    font-size: 0.76rem !important;
+  }
+}
+
+@media (max-width: 1320px) {
+  /* Gracefully collapse text labels on center secondary buttons into icons so topbar never overflows */
+  .topbar-controls-center .topbar-btn-sm span:not(:first-child) {
+    display: none !important;
+  }
+  .topbar-controls-center .topbar-btn-sm {
+    padding: 6px 10px !important;
+    min-width: 34px !important;
+    justify-content: center !important;
+  }
+  .security-badge span:last-child {
+    display: none !important;
+  }
+  .security-badge {
+    padding: 5px 8px !important;
+  }
+  .topbar-brand span:first-of-type {
+    font-size: 1.05rem !important;
+  }
 }
 
 @media (max-width: 768px) {

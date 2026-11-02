@@ -1,9 +1,11 @@
 {
   "name": "AetherBuilder",
-  "version": "2.6.2",
+  "version": "2.6.3",
   "release_date": "2026-11-02",
   "min_php": "7.4",
   "changelog": [
+    "Fix: Update modal Install Update button pinned in sticky footer — never cut off or hidden on any laptop screen",
+    "Fix: Topbar responsive layout on 1366x768 screens — all tool icons protected from squishing with min-width and flex-shrink:0",
     "Fix: Changelog in Update Hub now scrolls to top automatically so newest fixes show first",
     "Fix: Changelog card height increased (240px) to show more items at once",
     "Fix: Add Section modal grid layout broken on shared hosting - critical styles now inline in JS",

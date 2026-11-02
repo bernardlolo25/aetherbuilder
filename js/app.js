@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.6.2';
+export const APP_VERSION = '2.6.3';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -4549,7 +4549,7 @@ ${addonManager.getAllActiveJs()}
     modal.className = 'modal-overlay animate-fade-in';
 
     modal.innerHTML = `
-      <div class="modal-box modal-wide animate-scale-in" style="max-width: 680px;">
+      <div class="modal-box modal-wide animate-scale-in" style="max-width: 680px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;">
         <div class="modal-header">
           <div class="modal-title flex items-center gap-2">
             <img src="assets/logo.png" alt="AetherBuilder" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.08); padding: 2px;" />
@@ -4557,7 +4557,7 @@ ${addonManager.getAllActiveJs()}
           </div>
           <button class="tool-icon-btn" id="close-update-modal">✕</button>
         </div>
-        <div class="modal-body" style="padding: 20px 24px;">
+        <div class="modal-body" style="padding: 16px 22px; overflow-y: auto; flex: 1; max-height: calc(88vh - 130px); min-height: 0;">
           <!-- System Status Bar -->
           <div class="update-system-checks" id="update-system-checks">
             <div class="update-check-item">
@@ -4587,21 +4587,21 @@ ${addonManager.getAllActiveJs()}
 
           <!-- Tab 1: 1-Click Auto Update -->
           <div id="tab-auto-content" class="update-tab-content">
-            <div class="update-changelog-card">
+            <div class="update-changelog-card" style="max-height: 150px; overflow-y: auto;">
               <h4>📋 What's in this Release</h4>
               <ul class="update-changelog-list" id="update-changelog-list">
                 <li>Loading release notes...</li>
               </ul>
             </div>
 
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #a7f3d0; display: flex; align-items: flex-start; gap: 8px;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.82rem; color: #a7f3d0; display: flex; align-items: flex-start; gap: 8px;">
               <span>🛡️</span>
               <div>
                 <strong>Zero-Risk Data Guarantee:</strong> Updating will overwrite system files only. Your published pages, layout drafts, uploaded media in <code>assets/uploads/</code>, and custom add-ons will <strong>NEVER</strong> be overwritten or deleted.
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">
                 <input type="checkbox" id="chk-auto-backup" checked style="accent-color: var(--primary);">
                 Create pre-update safety backup in <code>data/backups/</code>
@@ -4617,13 +4617,6 @@ ${addonManager.getAllActiveJs()}
                 <span id="update-status-msg">Initializing update...</span>
                 <span id="update-percent-text">0%</span>
               </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-              <button class="topbar-btn" id="btn-cancel-update" style="background: rgba(255,255,255,0.06);">Close</button>
-              <button class="topbar-btn topbar-btn-publish" id="btn-start-auto-update" style="padding: 10px 20px; font-size: 0.88rem; font-weight: 700;">
-                <span>⚡</span> Install Update Now
-              </button>
             </div>
           </div>
 
@@ -4670,6 +4663,14 @@ ${addonManager.getAllActiveJs()}
           </div>
 
         </div>
+
+        <!-- Pinned Sticky Modal Footer: ALWAYS visible on all screen sizes -->
+        <div class="modal-footer" id="update-modal-footer" style="padding: 12px 22px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0; z-index: 10;">
+          <button class="topbar-btn" id="btn-cancel-update" style="background: rgba(255,255,255,0.08); font-size: 0.84rem; padding: 8px 16px;">Close</button>
+          <button class="topbar-btn topbar-btn-publish" id="btn-start-auto-update" style="padding: 9px 22px; font-size: 0.88rem; font-weight: 700; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
+            <span>⚡</span> Install Update Now
+          </button>
+        </div>
       </div>
     `;
 
@@ -4687,6 +4688,8 @@ ${addonManager.getAllActiveJs()}
         modal.querySelector('#tab-auto-content').style.display = tab === 'auto' ? 'block' : 'none';
         modal.querySelector('#tab-manual-content').style.display = tab === 'manual' ? 'block' : 'none';
         modal.querySelector('#tab-backups-content').style.display = tab === 'backups' ? 'block' : 'none';
+        const autoBtn = modal.querySelector('#btn-start-auto-update');
+        if (autoBtn) autoBtn.style.display = tab === 'auto' ? 'inline-flex' : 'none';
         if (tab === 'backups') this.loadBackupsList(modal);
       });
     });
