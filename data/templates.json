@@ -11,121 +11,7 @@
       "addon_interactive_faq_accordion",
       "addon_appointment_calendar"
     ],
-    "sections": [
-      {
-        "id": "summit_nav",
-        "widgetType": "navbar",
-        "props": {
-          "brandText": "USPF MCLE Summit 2026",
-          "brandIcon": "⚖️",
-          "sticky": true,
-          "ctaText": "Register Now",
-          "ctaLink": "#register",
-          "links": [
-            {
-              "label": "Keynotes",
-              "url": "#keynotes"
-            },
-            {
-              "label": "Materials",
-              "url": "#materials"
-            },
-            {
-              "label": "Booking",
-              "url": "#booking"
-            },
-            {
-              "label": "FAQs",
-              "url": "#faqs"
-            }
-          ]
-        }
-      },
-      {
-        "id": "summit_hero",
-        "widgetType": "hero",
-        "props": {
-          "badgeText": "🏛️ 24th National Mandatory Continuing Legal Education Summit",
-          "title": "Advancing Jurisprudence, Constitutional Rule & Trial Practice",
-          "highlightWord": "Jurisprudence",
-          "description": "Official 36-unit accredited compliance program hosted by University of Southern Philippines Foundation College of Law for members of the Philippine Bar.",
-          "primaryBtnText": "Reserve Your Seat",
-          "primaryBtnLink": "#booking",
-          "secondaryBtnText": "View Publications",
-          "secondaryBtnLink": "#materials"
-        }
-      },
-      {
-        "id": "summit_ecommerce",
-        "widgetType": "addon_ecommerce_grid",
-        "props": {
-          "headline": "Conference Handbooks & Digital Syllabus Packages",
-          "subheadline": "Order official bench manuals, supreme court jurisprudence digests, and module passes.",
-          "currencySymbol": "₱",
-          "accentColor": "#10b981",
-          "products": [
-            {
-              "id": "p1",
-              "name": "Supreme Court 2026 Benchbook & Resolutions",
-              "category": "Books",
-              "price": 2850,
-              "originalPrice": 3500,
-              "badge": "Required Reading",
-              "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
-              "desc": "Official hardbound compilation of recent landmark en banc rulings and procedural guidelines."
-            },
-            {
-              "id": "p2",
-              "name": "Complete 36-Credit Unit Hybrid Pass",
-              "category": "Passes",
-              "price": 9500,
-              "originalPrice": 12000,
-              "badge": "Accredited",
-              "image": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
-              "desc": "All-inclusive delegate badge covering in-person lectures, catered luncheon, and digital certificates."
-            }
-          ]
-        }
-      },
-      {
-        "id": "summit_booking",
-        "widgetType": "addon_appointment_calendar",
-        "props": {
-          "headline": "Delegate Slot Reservation & Evaluation Timetable",
-          "subheadline": "Select your seminar attendance session to reserve your verified seat in the plenary hall.",
-          "consultationFee": "₱2,500/Module",
-          "accentColor": "#f59e0b"
-        }
-      },
-      {
-        "id": "summit_faq",
-        "widgetType": "addon_interactive_faq_accordion",
-        "props": {
-          "headline": "Convention Regulations & Certificate FAQs",
-          "subheadline": "Answers to attendance logging, Supreme Court compliance certificates, and payment options.",
-          "accentColor": "#38bdf8",
-          "faqs": [
-            {
-              "q": "How are synchronous attendance credits monitored?",
-              "a": "Timed QR check-in and biometric verification ensure verified attendance per Supreme Court resolution."
-            },
-            {
-              "q": "When are official compliance certificates issued?",
-              "a": "Digitally hashed certificates are sent to registered Bar roll emails within 3 working days."
-            }
-          ]
-        }
-      },
-      {
-        "id": "summit_footer",
-        "widgetType": "footer",
-        "props": {
-          "brandText": "USPF MCLE Program Office",
-          "brandDesc": "Accredited provider of Mandatory Continuing Legal Education under Supreme Court B.M. No. 850.",
-          "copyright": "© 2026 University of Southern Philippines Foundation. All Rights Reserved."
-        }
-      }
-    ]
+    "sections": []
   },
   {
     "id": "ecommerce_law_store",
@@ -137,88 +23,7 @@
     "requiredAddons": [
       "addon_ecommerce_grid"
     ],
-    "sections": [
-      {
-        "id": "store_nav",
-        "widgetType": "navbar",
-        "props": {
-          "brandText": "LexLibro Publications",
-          "brandIcon": "🛍️",
-          "sticky": true,
-          "ctaText": "View Cart",
-          "ctaLink": "#cart",
-          "links": [
-            {
-              "label": "Textbooks",
-              "url": "#books"
-            },
-            {
-              "label": "Reviewers",
-              "url": "#reviewers"
-            },
-            {
-              "label": "Delivery Policy",
-              "url": "#policy"
-            }
-          ]
-        }
-      },
-      {
-        "id": "store_hero",
-        "widgetType": "hero",
-        "props": {
-          "badgeText": "📚 Official Legal Treatises & Materials",
-          "title": "Comprehensive Law Handbooks & Practitioner Guides",
-          "highlightWord": "Practitioner",
-          "description": "Direct orders with nationwide courier delivery and instant PDF syllabus downloads.",
-          "primaryBtnText": "Shop Collection",
-          "primaryBtnLink": "#store-grid",
-          "secondaryBtnText": "Digital Passes",
-          "secondaryBtnLink": "#store-grid"
-        }
-      },
-      {
-        "id": "store_grid_sec",
-        "widgetType": "addon_ecommerce_grid",
-        "props": {
-          "headline": "Featured Publications & Study Handbooks",
-          "subheadline": "Order print volumes and electronic modules.",
-          "currencySymbol": "₱",
-          "accentColor": "#10b981",
-          "products": [
-            {
-              "id": "b1",
-              "name": "Criminal Procedure & Remedial Law Manual",
-              "category": "Handbooks",
-              "price": 1950,
-              "originalPrice": 2400,
-              "badge": "Top Seller",
-              "image": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
-              "desc": "Step-by-step litigation guidelines with sample pleadings and direct examination scripts."
-            },
-            {
-              "id": "b2",
-              "name": "Corporate Governance & Securities Digest",
-              "category": "Books",
-              "price": 2350,
-              "originalPrice": 2800,
-              "badge": "New Edition",
-              "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
-              "desc": "Updated commentary on Revised Corporation Code and SEC circulars."
-            }
-          ]
-        }
-      },
-      {
-        "id": "store_footer",
-        "widgetType": "footer",
-        "props": {
-          "brandText": "LexLibro Publications",
-          "brandDesc": "Dedicated to legal scholarship and professional compliance education.",
-          "copyright": "© 2026 LexLibro. Protected by Argon2id Cryptography."
-        }
-      }
-    ]
+    "sections": []
   },
   {
     "id": "admin_mcle_portal",
@@ -230,56 +35,7 @@
     "requiredAddons": [
       "addon_admin_login_gate"
     ],
-    "sections": [
-      {
-        "id": "portal_nav",
-        "widgetType": "navbar",
-        "props": {
-          "brandText": "USPF Faculty Gate",
-          "brandIcon": "🛡️",
-          "sticky": true,
-          "ctaText": "Help Desk",
-          "ctaLink": "mailto:admin@uspf-mcle.edu.ph",
-          "links": [
-            {
-              "label": "Security Guidelines",
-              "url": "#security"
-            },
-            {
-              "label": "Accreditation",
-              "url": "#accreditation"
-            }
-          ]
-        }
-      },
-      {
-        "id": "portal_gate_sec",
-        "widgetType": "addon_admin_login_gate",
-        "props": {
-          "title": "Faculty & Administrator Studio Access",
-          "subtitle": "Authorized personnel only. Enter master Argon2 password to open visual page builder.",
-          "icon": "🛡️",
-          "placeholder": "Enter Master Admin Password...",
-          "buttonText": "Authenticate & Open Studio",
-          "displayMode": "card",
-          "accentColor": "#6366f1",
-          "cardBg": "rgba(15, 23, 42, 0.9)",
-          "textColor": "#ffffff",
-          "borderRadius": 18,
-          "glassBlur": 20,
-          "showShortcutHint": true
-        }
-      },
-      {
-        "id": "portal_footer",
-        "widgetType": "footer",
-        "props": {
-          "brandText": "USPF Law Security",
-          "brandDesc": "Protected by Client-Side WebAssembly Argon2id memory-hard cryptographic hashing.",
-          "copyright": "© 2026 USPF Law Administration."
-        }
-      }
-    ]
+    "sections": []
   },
   {
     "id": "legal_podcast_briefing",
@@ -291,48 +47,7 @@
     "requiredAddons": [
       "addon_audio_podcast_player"
     ],
-    "sections": [
-      {
-        "id": "pod_nav",
-        "widgetType": "navbar",
-        "props": {
-          "brandText": "LawBrief Podcast",
-          "brandIcon": "🎙️",
-          "sticky": true,
-          "ctaText": "Subscribe",
-          "ctaLink": "#listen",
-          "links": [
-            {
-              "label": "Episodes",
-              "url": "#episodes"
-            },
-            {
-              "label": "Lecturers",
-              "url": "#lecturers"
-            }
-          ]
-        }
-      },
-      {
-        "id": "pod_audio_sec",
-        "widgetType": "addon_audio_podcast_player",
-        "props": {
-          "episodeTitle": "Supreme Court Resolution No. 24-08 Briefing",
-          "speaker": "Dean Antonio Morales · USPF College of Law",
-          "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-          "accentColor": "#ec4899"
-        }
-      },
-      {
-        "id": "pod_footer",
-        "widgetType": "footer",
-        "props": {
-          "brandText": "LawBrief Audio",
-          "brandDesc": "Accredited legal audio briefings for busy practitioners on the go.",
-          "copyright": "© 2026 LawBrief Media Works."
-        }
-      }
-    ]
+    "sections": []
   },
   {
     "id": "consultation_booking_hub",
@@ -345,71 +60,7 @@
       "addon_appointment_calendar",
       "addon_interactive_faq_accordion"
     ],
-    "sections": [
-      {
-        "id": "book_nav",
-        "widgetType": "navbar",
-        "props": {
-          "brandText": "Aether Legal Consult",
-          "brandIcon": "📅",
-          "sticky": true,
-          "ctaText": "Book Slot",
-          "ctaLink": "#book",
-          "links": [
-            {
-              "label": "Services",
-              "url": "#services"
-            },
-            {
-              "label": "Calendar",
-              "url": "#calendar"
-            },
-            {
-              "label": "Questions",
-              "url": "#faqs"
-            }
-          ]
-        }
-      },
-      {
-        "id": "book_cal_sec",
-        "widgetType": "addon_appointment_calendar",
-        "props": {
-          "headline": "Schedule Mandatory Compliance Evaluation",
-          "subheadline": "Select your preferred consultation window with our accredited compliance officers.",
-          "consultationFee": "₱1,500",
-          "accentColor": "#f59e0b"
-        }
-      },
-      {
-        "id": "book_faq_sec",
-        "widgetType": "addon_interactive_faq_accordion",
-        "props": {
-          "headline": "Consultation & Booking Policy",
-          "subheadline": "Learn about rescheduling, required documentation, and certificate generation.",
-          "accentColor": "#38bdf8",
-          "faqs": [
-            {
-              "q": "What credentials must be brought to consultation?",
-              "a": "Please have your IBP Roll Number and previous certificate copies ready for evaluation."
-            },
-            {
-              "q": "Can sessions be rescheduled?",
-              "a": "Yes, reschedules can be made up to 24 hours prior to your booked slot without penalty."
-            }
-          ]
-        }
-      },
-      {
-        "id": "book_footer",
-        "widgetType": "footer",
-        "props": {
-          "brandText": "Aether Legal Consult",
-          "brandDesc": "Trusted partner for legal compliance, judicial reviews, and seminar logistics.",
-          "copyright": "© 2026 Aether Legal Tech."
-        }
-      }
-    ]
+    "sections": []
   },
   {
     "id": "saas",
