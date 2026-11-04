@@ -1,0 +1,926 @@
+[
+  {
+    "id": "legal_conference_summit",
+    "name": "MCLE National Convention & Summit",
+    "category": "Legal & Summit",
+    "thumbnail": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
+    "description": "Comprehensive legal conference portal featuring keynote banners, seminar syllabus store, delegate booking calendar, and real-time FAQ accordion.",
+    "price": 0,
+    "requiredAddons": [
+      "addon_ecommerce_grid",
+      "addon_interactive_faq_accordion",
+      "addon_appointment_calendar"
+    ],
+    "sections": [
+      {
+        "id": "summit_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "USPF MCLE Summit 2026",
+          "brandIcon": "⚖️",
+          "sticky": true,
+          "ctaText": "Register Now",
+          "ctaLink": "#register",
+          "links": [
+            {
+              "label": "Keynotes",
+              "url": "#keynotes"
+            },
+            {
+              "label": "Materials",
+              "url": "#materials"
+            },
+            {
+              "label": "Booking",
+              "url": "#booking"
+            },
+            {
+              "label": "FAQs",
+              "url": "#faqs"
+            }
+          ]
+        }
+      },
+      {
+        "id": "summit_hero",
+        "widgetType": "hero",
+        "props": {
+          "badgeText": "🏛️ 24th National Mandatory Continuing Legal Education Summit",
+          "title": "Advancing Jurisprudence, Constitutional Rule & Trial Practice",
+          "highlightWord": "Jurisprudence",
+          "description": "Official 36-unit accredited compliance program hosted by University of Southern Philippines Foundation College of Law for members of the Philippine Bar.",
+          "primaryBtnText": "Reserve Your Seat",
+          "primaryBtnLink": "#booking",
+          "secondaryBtnText": "View Publications",
+          "secondaryBtnLink": "#materials"
+        }
+      },
+      {
+        "id": "summit_ecommerce",
+        "widgetType": "addon_ecommerce_grid",
+        "props": {
+          "headline": "Conference Handbooks & Digital Syllabus Packages",
+          "subheadline": "Order official bench manuals, supreme court jurisprudence digests, and module passes.",
+          "currencySymbol": "₱",
+          "accentColor": "#10b981",
+          "products": [
+            {
+              "id": "p1",
+              "name": "Supreme Court 2026 Benchbook & Resolutions",
+              "category": "Books",
+              "price": 2850,
+              "originalPrice": 3500,
+              "badge": "Required Reading",
+              "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
+              "desc": "Official hardbound compilation of recent landmark en banc rulings and procedural guidelines."
+            },
+            {
+              "id": "p2",
+              "name": "Complete 36-Credit Unit Hybrid Pass",
+              "category": "Passes",
+              "price": 9500,
+              "originalPrice": 12000,
+              "badge": "Accredited",
+              "image": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+              "desc": "All-inclusive delegate badge covering in-person lectures, catered luncheon, and digital certificates."
+            }
+          ]
+        }
+      },
+      {
+        "id": "summit_booking",
+        "widgetType": "addon_appointment_calendar",
+        "props": {
+          "headline": "Delegate Slot Reservation & Evaluation Timetable",
+          "subheadline": "Select your seminar attendance session to reserve your verified seat in the plenary hall.",
+          "consultationFee": "₱2,500/Module",
+          "accentColor": "#f59e0b"
+        }
+      },
+      {
+        "id": "summit_faq",
+        "widgetType": "addon_interactive_faq_accordion",
+        "props": {
+          "headline": "Convention Regulations & Certificate FAQs",
+          "subheadline": "Answers to attendance logging, Supreme Court compliance certificates, and payment options.",
+          "accentColor": "#38bdf8",
+          "faqs": [
+            {
+              "q": "How are synchronous attendance credits monitored?",
+              "a": "Timed QR check-in and biometric verification ensure verified attendance per Supreme Court resolution."
+            },
+            {
+              "q": "When are official compliance certificates issued?",
+              "a": "Digitally hashed certificates are sent to registered Bar roll emails within 3 working days."
+            }
+          ]
+        }
+      },
+      {
+        "id": "summit_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "USPF MCLE Program Office",
+          "brandDesc": "Accredited provider of Mandatory Continuing Legal Education under Supreme Court B.M. No. 850.",
+          "copyright": "© 2026 University of Southern Philippines Foundation. All Rights Reserved."
+        }
+      }
+    ]
+  },
+  {
+    "id": "ecommerce_law_store",
+    "name": "Legal Bookstore & MCLE Modules Store",
+    "category": "E-Commerce",
+    "thumbnail": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+    "description": "Clean, high-converting product storefront layout featuring shopping cart drawer, merchandise badges, and instant checkout trigger.",
+    "price": 0,
+    "requiredAddons": [
+      "addon_ecommerce_grid"
+    ],
+    "sections": [
+      {
+        "id": "store_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "LexLibro Publications",
+          "brandIcon": "🛍️",
+          "sticky": true,
+          "ctaText": "View Cart",
+          "ctaLink": "#cart",
+          "links": [
+            {
+              "label": "Textbooks",
+              "url": "#books"
+            },
+            {
+              "label": "Reviewers",
+              "url": "#reviewers"
+            },
+            {
+              "label": "Delivery Policy",
+              "url": "#policy"
+            }
+          ]
+        }
+      },
+      {
+        "id": "store_hero",
+        "widgetType": "hero",
+        "props": {
+          "badgeText": "📚 Official Legal Treatises & Materials",
+          "title": "Comprehensive Law Handbooks & Practitioner Guides",
+          "highlightWord": "Practitioner",
+          "description": "Direct orders with nationwide courier delivery and instant PDF syllabus downloads.",
+          "primaryBtnText": "Shop Collection",
+          "primaryBtnLink": "#store-grid",
+          "secondaryBtnText": "Digital Passes",
+          "secondaryBtnLink": "#store-grid"
+        }
+      },
+      {
+        "id": "store_grid_sec",
+        "widgetType": "addon_ecommerce_grid",
+        "props": {
+          "headline": "Featured Publications & Study Handbooks",
+          "subheadline": "Order print volumes and electronic modules.",
+          "currencySymbol": "₱",
+          "accentColor": "#10b981",
+          "products": [
+            {
+              "id": "b1",
+              "name": "Criminal Procedure & Remedial Law Manual",
+              "category": "Handbooks",
+              "price": 1950,
+              "originalPrice": 2400,
+              "badge": "Top Seller",
+              "image": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+              "desc": "Step-by-step litigation guidelines with sample pleadings and direct examination scripts."
+            },
+            {
+              "id": "b2",
+              "name": "Corporate Governance & Securities Digest",
+              "category": "Books",
+              "price": 2350,
+              "originalPrice": 2800,
+              "badge": "New Edition",
+              "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
+              "desc": "Updated commentary on Revised Corporation Code and SEC circulars."
+            }
+          ]
+        }
+      },
+      {
+        "id": "store_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "LexLibro Publications",
+          "brandDesc": "Dedicated to legal scholarship and professional compliance education.",
+          "copyright": "© 2026 LexLibro. Protected by Argon2id Cryptography."
+        }
+      }
+    ]
+  },
+  {
+    "id": "admin_mcle_portal",
+    "name": "Faculty Access & Argon2 Login Portal",
+    "category": "Security & Portal",
+    "thumbnail": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
+    "description": "Secure portal landing page integrated with WebAssembly Argon2id cryptographic password authentication.",
+    "price": 0,
+    "requiredAddons": [
+      "addon_admin_login_gate"
+    ],
+    "sections": [
+      {
+        "id": "portal_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "USPF Faculty Gate",
+          "brandIcon": "🛡️",
+          "sticky": true,
+          "ctaText": "Help Desk",
+          "ctaLink": "mailto:admin@uspf-mcle.edu.ph",
+          "links": [
+            {
+              "label": "Security Guidelines",
+              "url": "#security"
+            },
+            {
+              "label": "Accreditation",
+              "url": "#accreditation"
+            }
+          ]
+        }
+      },
+      {
+        "id": "portal_gate_sec",
+        "widgetType": "addon_admin_login_gate",
+        "props": {
+          "title": "Faculty & Administrator Studio Access",
+          "subtitle": "Authorized personnel only. Enter master Argon2 password to open visual page builder.",
+          "icon": "🛡️",
+          "placeholder": "Enter Master Admin Password...",
+          "buttonText": "Authenticate & Open Studio",
+          "displayMode": "card",
+          "accentColor": "#6366f1",
+          "cardBg": "rgba(15, 23, 42, 0.9)",
+          "textColor": "#ffffff",
+          "borderRadius": 18,
+          "glassBlur": 20,
+          "showShortcutHint": true
+        }
+      },
+      {
+        "id": "portal_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "USPF Law Security",
+          "brandDesc": "Protected by Client-Side WebAssembly Argon2id memory-hard cryptographic hashing.",
+          "copyright": "© 2026 USPF Law Administration."
+        }
+      }
+    ]
+  },
+  {
+    "id": "legal_podcast_briefing",
+    "name": "Legal Insights Audio & Lecture Bar",
+    "category": "Media & Audio",
+    "thumbnail": "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80",
+    "description": "Broadcast lecture episodes and jurisprudence audio briefings with streaming player and speaker credentials.",
+    "price": 0,
+    "requiredAddons": [
+      "addon_audio_podcast_player"
+    ],
+    "sections": [
+      {
+        "id": "pod_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "LawBrief Podcast",
+          "brandIcon": "🎙️",
+          "sticky": true,
+          "ctaText": "Subscribe",
+          "ctaLink": "#listen",
+          "links": [
+            {
+              "label": "Episodes",
+              "url": "#episodes"
+            },
+            {
+              "label": "Lecturers",
+              "url": "#lecturers"
+            }
+          ]
+        }
+      },
+      {
+        "id": "pod_audio_sec",
+        "widgetType": "addon_audio_podcast_player",
+        "props": {
+          "episodeTitle": "Supreme Court Resolution No. 24-08 Briefing",
+          "speaker": "Dean Antonio Morales · USPF College of Law",
+          "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+          "accentColor": "#ec4899"
+        }
+      },
+      {
+        "id": "pod_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "LawBrief Audio",
+          "brandDesc": "Accredited legal audio briefings for busy practitioners on the go.",
+          "copyright": "© 2026 LawBrief Media Works."
+        }
+      }
+    ]
+  },
+  {
+    "id": "consultation_booking_hub",
+    "name": "Consultation & Seminar Booking Hub",
+    "category": "Booking & Schedule",
+    "thumbnail": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80",
+    "description": "Interactive appointment calendar with slot picker, morning/afternoon schedules, and searchable FAQ accordions.",
+    "price": 0,
+    "requiredAddons": [
+      "addon_appointment_calendar",
+      "addon_interactive_faq_accordion"
+    ],
+    "sections": [
+      {
+        "id": "book_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "Aether Legal Consult",
+          "brandIcon": "📅",
+          "sticky": true,
+          "ctaText": "Book Slot",
+          "ctaLink": "#book",
+          "links": [
+            {
+              "label": "Services",
+              "url": "#services"
+            },
+            {
+              "label": "Calendar",
+              "url": "#calendar"
+            },
+            {
+              "label": "Questions",
+              "url": "#faqs"
+            }
+          ]
+        }
+      },
+      {
+        "id": "book_cal_sec",
+        "widgetType": "addon_appointment_calendar",
+        "props": {
+          "headline": "Schedule Mandatory Compliance Evaluation",
+          "subheadline": "Select your preferred consultation window with our accredited compliance officers.",
+          "consultationFee": "₱1,500",
+          "accentColor": "#f59e0b"
+        }
+      },
+      {
+        "id": "book_faq_sec",
+        "widgetType": "addon_interactive_faq_accordion",
+        "props": {
+          "headline": "Consultation & Booking Policy",
+          "subheadline": "Learn about rescheduling, required documentation, and certificate generation.",
+          "accentColor": "#38bdf8",
+          "faqs": [
+            {
+              "q": "What credentials must be brought to consultation?",
+              "a": "Please have your IBP Roll Number and previous certificate copies ready for evaluation."
+            },
+            {
+              "q": "Can sessions be rescheduled?",
+              "a": "Yes, reschedules can be made up to 24 hours prior to your booked slot without penalty."
+            }
+          ]
+        }
+      },
+      {
+        "id": "book_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "Aether Legal Consult",
+          "brandDesc": "Trusted partner for legal compliance, judicial reviews, and seminar logistics.",
+          "copyright": "© 2026 Aether Legal Tech."
+        }
+      }
+    ]
+  },
+  {
+    "id": "saas",
+    "name": "SaaS Launchpad Pro",
+    "category": "Startup & Tech",
+    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80",
+    "description": "High-converting technology landing page with animated stats, feature carousel, and pricing table.",
+    "price": 0,
+    "requiredAddons": [],
+    "sections": [
+      {
+        "id": "sec_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "AetherStudio",
+          "brandIcon": "⚡",
+          "floating": true,
+          "sticky": true,
+          "logoType": "icon",
+          "logoImageUrl": "",
+          "logoLink": "#",
+          "logoWidth": 38,
+          "showBrandText": true,
+          "ctaText": "Get Started",
+          "ctaLink": "#pricing",
+          "links": [
+            {
+              "label": "Features",
+              "url": "#features"
+            },
+            {
+              "label": "Metrics",
+              "url": "#stats"
+            },
+            {
+              "label": "Gallery",
+              "url": "#gallery"
+            },
+            {
+              "label": "Showcase",
+              "url": "#slider"
+            },
+            {
+              "label": "Pricing",
+              "url": "#pricing"
+            },
+            {
+              "label": "FAQ",
+              "url": "#faq"
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_hero",
+        "widgetType": "hero",
+        "props": {
+          "badgeText": "🚀 Next-Gen Visual Web Engine",
+          "title": "Craft Extraordinary Digital Experiences with Ease",
+          "highlightWord": "Extraordinary",
+          "description": "The ultra-responsive, Elementor-grade web builder with cryptographic Argon2 protection, live reactive components, and instant publishing.",
+          "primaryBtnText": "Start Building Free",
+          "primaryBtnLink": "#features",
+          "secondaryBtnText": "Explore Showcase",
+          "secondaryBtnLink": "#slider"
+        }
+      },
+      {
+        "id": "sec_divider_1",
+        "widgetType": "divider",
+        "props": {
+          "style": "glow",
+          "badgeText": "CAPABILITIES"
+        }
+      },
+      {
+        "id": "sec_counters",
+        "widgetType": "counter",
+        "props": {
+          "badge": "PROVEN TRACTION",
+          "title": "Battle-Tested Global Scale",
+          "subtitle": "Real-time metrics demonstrating rock-solid infrastructure and worldwide creator trust.",
+          "stats": [
+            {
+              "icon": "⚡",
+              "target": 99.9,
+              "prefix": "",
+              "suffix": "%",
+              "label": "Uptime SLA",
+              "decimals": 1
+            },
+            {
+              "icon": "👥",
+              "target": 140,
+              "prefix": "",
+              "suffix": "K+",
+              "label": "Active Creators",
+              "decimals": 0
+            },
+            {
+              "icon": "🌍",
+              "target": 82,
+              "prefix": "",
+              "suffix": "+",
+              "label": "Global PoPs",
+              "decimals": 0
+            },
+            {
+              "icon": "⭐",
+              "target": 4.95,
+              "prefix": "",
+              "suffix": "/5",
+              "label": "Customer CSAT",
+              "decimals": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_divider_features",
+        "widgetType": "divider",
+        "props": {
+          "style": "glow",
+          "badgeText": "CORE PILLARS"
+        }
+      },
+      {
+        "id": "sec_features",
+        "widgetType": "features_grid",
+        "props": {
+          "badge": "ENGINE ARCHITECTURE",
+          "title": "Built for High-Velocity Web Creation",
+          "subtitle": "Combine fluid visual freedom with cryptographic defense and sub-millisecond responsiveness.",
+          "cards": [
+            {
+              "icon": "⚡",
+              "title": "Sub-millisecond Canvas",
+              "desc": "Every edit, color shift, and layout tweak updates the live virtual tree instantly with zero stutter or lag."
+            },
+            {
+              "icon": "🔐",
+              "title": "Argon2id Wasm Defense",
+              "desc": "Cryptographically shielded admin portal backed by memory-hard WebAssembly Argon2 password verification."
+            },
+            {
+              "icon": "📱",
+              "title": "Pixel-Accurate Device Views",
+              "desc": "Simulate Desktop, Tablet (768px), and Mobile (390px) viewports with realistic chassis previewing."
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_button_cta",
+        "widgetType": "button",
+        "props": {
+          "text": "Launch AetherBuilder Studio",
+          "link": "?view=admin",
+          "targetBlank": false,
+          "btnStyle": "glow",
+          "size": "large",
+          "alignment": "center",
+          "icon": "⚡",
+          "iconPosition": "right",
+          "subtext": "Argon2id Encrypted • Zero Software Installation Needed"
+        }
+      },
+      {
+        "id": "sec_slider",
+        "widgetType": "slider",
+        "props": {
+          "autoPlay": true,
+          "autoPlayInterval": 4000,
+          "showSlideButtons": true,
+          "slides": [
+            {
+              "bgImage": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
+              "title": "Quantum Cloud Infrastructure",
+              "desc": "High-concurrency edge clusters designed to withstand massive traffic spikes without latency.",
+              "showButton": true,
+              "btnText": "Explore Cloud Architecture",
+              "btnLink": "#features",
+              "btnStyle": "primary",
+              "btnTargetBlank": false
+            },
+            {
+              "bgImage": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+              "title": "Cryptographic Argon2 Suite",
+              "desc": "State-of-the-art password verification preventing credential stuffing and brute-force attacks.",
+              "showButton": true,
+              "btnText": "Argon2 Security Audit",
+              "btnLink": "#stats",
+              "btnStyle": "glow",
+              "btnTargetBlank": false
+            },
+            {
+              "bgImage": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80",
+              "title": "Instant Production Export",
+              "desc": "Generate standalone static packages with 100% clean HTML/CSS with one click.",
+              "showButton": true,
+              "btnText": "Explore Pricing Plans",
+              "btnLink": "#pricing",
+              "btnStyle": "primary",
+              "btnTargetBlank": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_text_image",
+        "widgetType": "text_image",
+        "props": {
+          "badge": "Unmatched Simplicity",
+          "title": "Drag, Drop, and Publish Without Code Limits",
+          "body": "Eliminate tedious back-and-forth between design mockups and codebases. Build, tweak, test animations, and publish directly to visitors.",
+          "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+          "imagePosition": "right",
+          "features": [
+            "WYSIWYG live editing with double-click inline text modification",
+            "Full component inspector with Content, Style, and Advanced tabs",
+            "Responsive device viewports with fluid mobile breakpoints",
+            "Integrated filterable gallery with full-screen lightbox modal"
+          ],
+          "btnText": "Start Building Free",
+          "btnLink": "#pricing"
+        }
+      },
+      {
+        "id": "sec_gallery",
+        "widgetType": "gallery",
+        "props": {
+          "filterAllLabel": "All Masterpieces",
+          "images": [
+            {
+              "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+              "title": "Aura Neon Flow",
+              "category": "Abstract",
+              "tag": "Vibrant"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80",
+              "title": "Microchip Matrix",
+              "category": "Technology",
+              "tag": "Hardware"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80",
+              "title": "Prismatic Geometry",
+              "category": "Abstract",
+              "tag": "3D Art"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80",
+              "title": "Creator Studio Desk",
+              "category": "Workspace",
+              "tag": "Design"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+              "title": "Cryptographic Security",
+              "category": "Technology",
+              "tag": "Argon2"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+              "title": "Mobile App Wireframe",
+              "category": "Workspace",
+              "tag": "Mobile"
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_divider_2",
+        "widgetType": "divider",
+        "props": {
+          "style": "wave"
+        }
+      },
+      {
+        "id": "sec_pricing",
+        "widgetType": "pricing",
+        "props": {
+          "tiers": [
+            {
+              "name": "Community",
+              "price": "$0",
+              "period": "/ forever",
+              "featured": false,
+              "features": [
+                "1 Live Published Project",
+                "Standard Argon2 Hashing",
+                "Core Widgets Suite",
+                "Community Support"
+              ],
+              "btnText": "Start Free"
+            },
+            {
+              "name": "Studio Creator",
+              "price": "$29",
+              "period": "/ month",
+              "featured": true,
+              "badge": "Popular",
+              "features": [
+                "Unlimited Projects",
+                "Argon2id Wasm Cryptography",
+                "Full Lightbox & Carousel",
+                "1-Click JSON/HTML Export",
+                "Global Edge Delivery"
+              ],
+              "btnText": "Claim 14-Day Trial"
+            },
+            {
+              "name": "Enterprise Matrix",
+              "price": "$99",
+              "period": "/ month",
+              "featured": false,
+              "features": [
+                "Custom Argon2 Parameters",
+                "Multi-tenant Permissions",
+                "Dedicated Uptime SLA",
+                "White-Label Branding"
+              ],
+              "btnText": "Contact Enterprise"
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_faq",
+        "widgetType": "faq",
+        "props": {
+          "items": [
+            {
+              "question": "How does the Argon2 password hashing protect my builder?",
+              "answer": "Argon2 is the winner of the Password Hashing Competition (PHC). It uses memory-hard functions that resist GPU and ASIC cracking attacks. When you log in, hash-wasm runs the cryptographic verification via WebAssembly right inside your browser!"
+            },
+            {
+              "question": "Can I export the website to host on any server?",
+              "answer": "Yes! AetherBuilder provides 1-click HTML & JSON export. You can download the static files and host them on Cloudflare Pages, Netlify, Vercel, AWS S3, or any standard Apache/Nginx web server."
+            },
+            {
+              "question": "Does the public view load quickly for visitors?",
+              "answer": "Absolutely. The public view is stripped of all editor overhead. It renders lightweight, semantic HTML with CSS variables and lazy-loaded media for blazing 99+ Google Lighthouse scores."
+            }
+          ]
+        }
+      },
+      {
+        "id": "sec_contact",
+        "widgetType": "contact",
+        "props": {
+          "title": "Ready to Transform Your Web Building Experience?",
+          "subtitle": "Join thousands of creators using AetherBuilder to design, preview, and deploy breathtaking web pages.",
+          "btnText": "Send Inquiry"
+        }
+      },
+      {
+        "id": "sec_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "AetherStudio",
+          "brandDesc": "The next-generation visual web engine empowering designers and developers to build at lightspeed.",
+          "copyright": "© 2026 AetherBuilder Studio Inc. Protected by Argon2id Cryptography."
+        }
+      }
+    ]
+  },
+  {
+    "id": "portfolio",
+    "name": "Creative Studio & Portfolio",
+    "category": "Portfolio",
+    "thumbnail": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80",
+    "description": "Sleek dark portfolio featuring visual gallery, interactive lightbox, and animated credentials.",
+    "price": 0,
+    "requiredAddons": [],
+    "sections": [
+      {
+        "id": "p_nav",
+        "widgetType": "navbar",
+        "props": {
+          "brandText": "Studio Lumen",
+          "brandIcon": "💎",
+          "sticky": true,
+          "ctaText": "Hire Studio",
+          "ctaLink": "#contact",
+          "links": [
+            {
+              "label": "Works",
+              "url": "#gallery"
+            },
+            {
+              "label": "Milestones",
+              "url": "#stats"
+            },
+            {
+              "label": "Stories",
+              "url": "#slider"
+            },
+            {
+              "label": "Connect",
+              "url": "#contact"
+            }
+          ]
+        }
+      },
+      {
+        "id": "p_hero",
+        "widgetType": "hero",
+        "props": {
+          "badgeText": "✦ Design & Engineering Agency",
+          "title": "We Shape Brands That Command Undivided Attention",
+          "highlightWord": "Command",
+          "description": "A boutique visual studio crafting bespoke digital artifacts, interactive identities, and award-winning websites.",
+          "primaryBtnText": "View Portfolio",
+          "primaryBtnLink": "#gallery",
+          "secondaryBtnText": "Get in Touch",
+          "secondaryBtnLink": "#contact"
+        }
+      },
+      {
+        "id": "p_divider",
+        "widgetType": "divider",
+        "props": {
+          "style": "glow",
+          "badgeText": "PORTFOLIO"
+        }
+      },
+      {
+        "id": "p_gallery",
+        "widgetType": "gallery",
+        "props": {
+          "filterAllLabel": "All Projects",
+          "images": [
+            {
+              "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+              "title": "Chromatica Identity",
+              "category": "Branding",
+              "tag": "Visual"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80",
+              "title": "Cybernetics UI",
+              "category": "Product",
+              "tag": "Interface"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80",
+              "title": "Synesthesia Motion",
+              "category": "3D Art",
+              "tag": "Motion"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80",
+              "title": "Nordic Architecture",
+              "category": "Branding",
+              "tag": "Space"
+            }
+          ]
+        }
+      },
+      {
+        "id": "p_counters",
+        "widgetType": "counter",
+        "props": {
+          "stats": [
+            {
+              "icon": "🏆",
+              "target": 38,
+              "prefix": "",
+              "suffix": "+",
+              "label": "Design Awards",
+              "decimals": 0
+            },
+            {
+              "icon": "🌟",
+              "target": 100,
+              "prefix": "",
+              "suffix": "%",
+              "label": "Client Satisfaction",
+              "decimals": 0
+            },
+            {
+              "icon": "💼",
+              "target": 210,
+              "prefix": "",
+              "suffix": "+",
+              "label": "Shipped Launches",
+              "decimals": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "p_contact",
+        "widgetType": "contact",
+        "props": {
+          "title": "Let’s Create Something Iconic Together",
+          "subtitle": "Book our studio for upcoming quarter projects or digital consultations.",
+          "btnText": "Start Consultation"
+        }
+      },
+      {
+        "id": "p_footer",
+        "widgetType": "footer",
+        "props": {
+          "brandText": "Studio Lumen",
+          "brandDesc": "High-concept creative studio combining typography, geometry, and code.",
+          "copyright": "© 2026 Studio Lumen. Protected by Argon2id."
+        }
+      }
+    ]
+  }
+]

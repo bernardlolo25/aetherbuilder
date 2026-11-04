@@ -1,0 +1,6 @@
+{
+  "name": "USPF Site Builder",
+  "description": "A website builder for USPF MCLE Program. Create pages for face-to-face and synchronous online legal education.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

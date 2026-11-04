@@ -1,0 +1,33 @@
+{
+  "name": "USPF Site Builder",
+  "version": "2.9.0",
+  "release_date": "2026-11-03",
+  "min_php": "7.4",
+  "changelog": [
+    "New: Customizable Splash Screen & Pre-loader Settings in Site Settings (⚙️) — full control over loading title, sub-caption, toggle visibility, and live mini-preview",
+    "Fix: Resolved black screen bug in Admin Studio & Public View caused by loader z-index conflicts; initial loader auto-dismisses immediately",
+    "Fix: Added Argon2 login modal loader dismissal ensuring security prompts are always visible above any overlay",
+    "Fix: Resilient activeData fallback to default templates preventing blank canvas on fresh or unseeded installations",
+    "Fix: Synchronized AddonManager.init with api.php get_addons response format",
+    "Fix: Populated missing sections in data/templates.json for SaaS and Portfolio starter templates",
+    "Security & Privacy: Dedicated Developer Tab (🔒 Developer) protected by separate WebAssembly Argon2id cryptographic master gate",
+    "Security: Hidden Remote Add-on Feed URL completely from the public Add-on Store modal, managed exclusively in Developer Hub",
+    "New: Free Template Store (📋 Templates) featuring 100% free layouts with auto-detected required add-ons and 1-click auto-install",
+    "New: Developer Hub management controls for remote feed synchronization, master testing key generation, and canvas-to-template conversion",
+    "Fix: Unparsed Handlebars template tags in Add-on Store live previews resolved with scope-aware compiler",
+    "New: Admin Portal & Argon2 Login Gate add-on widget with customizable styles and WebAssembly Argon2id verification",
+    "Fix: Revisions & 1-Click Rollback system automatically archiving immutable site snapshots on Publish Live",
+    "Fix: Automated canvas template backup to Media Library (assets/uploads/template_live_canvas.json) on every Publish Live",
+    "Fix: Cross-device admin synchronization — automatically loads latest published canvas from server/media",
+    "Fix: Zero top padding in desktop editor mode so header section is 100% flush at the top with 0px space",
+    "Fix: Update modal Install Update button pinned in sticky footer",
+    "Fix: Topbar responsive layout on 1366x768 screens — all tool icons protected from squishing",
+    "Fix: Add Section modal real-time search & filter with instant pill tabs",
+    "New: Mobile-friendly admin studio with slide-over drawer sidebar",
+    "New: Custom Live Chat Add-on (Tawk.to, Crisp, WhatsApp float, custom embed)",
+    "New: Contact & Hire Me Add-on (EmailJS, Viber, WhatsApp, Phone)",
+    "New: Smart non-destructive addon merger on updates"
+  ],
+  "download_url": "aetherbuilder-update.zip",
+  "releaseDate": "2026-11-03"
+}
