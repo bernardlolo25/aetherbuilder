@@ -10,7 +10,7 @@ self.addEventListener('activate', (event) => {
 // Handle incoming push notifications
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'USPF Site Builder',
+    title: 'AetherBuilder',
     body: 'You have a new update.',
     icon: '/favicon.png',
     url: '/'
