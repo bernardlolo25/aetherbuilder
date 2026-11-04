@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.2');
+define('AETHER_VERSION', '2.9.3');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -80,9 +80,9 @@ $ALLOWED_EXT = ['jpg','jpeg','png','gif','webp','svg','mp4','webm','pdf','json',
 // Ensure required directories exist with write permissions
 foreach ([DATA_DIR, UPLOADS_DIR, BACKUPS_DIR, DATA_DIR . '/revisions'] as $dir) {
     if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
+        @mkdir($dir, 0777, true);
     }
-    @chmod($dir, 0755);
+    @chmod($dir, 0777);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -721,25 +721,30 @@ if ($action === 'publish' && $method === 'POST') {
 // ── GET: list_assets ─────────────────────────────────────────────────────────
 if ($action === 'list_assets' && $method === 'GET') {
     $files = [];
+    if (!is_dir(UPLOADS_DIR)) {
+        @mkdir(UPLOADS_DIR, 0777, true);
+        @chmod(UPLOADS_DIR, 0777);
+    }
     if (is_dir(UPLOADS_DIR)) {
         $entries = scandir(UPLOADS_DIR);
         foreach ($entries as $f) {
             if ($f === '.' || $f === '..') continue;
+            $fullPath = UPLOADS_DIR . '/' . $f;
+            if (!is_file($fullPath)) continue;
             $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
             global $ALLOWED_EXT;
-            if (!in_array($ext, $ALLOWED_EXT)) continue;
-            $fullPath = UPLOADS_DIR . '/' . $f;
-            $stat = stat($fullPath);
+            if (!in_array($ext, $ALLOWED_EXT, true)) continue;
+            $stat = @stat($fullPath);
             $files[] = [
                 'name'     => $f,
                 'url'      => 'assets/uploads/' . $f,
-                'size'     => $stat['size'],
+                'size'     => ($stat && isset($stat['size'])) ? $stat['size'] : (@filesize($fullPath) ?: 0),
                 'ext'      => $ext,
-                'modified' => $stat['mtime']
+                'modified' => ($stat && isset($stat['mtime'])) ? $stat['mtime'] : (@filemtime($fullPath) ?: time())
             ];
         }
         // Sort newest first
-        usort($files, function($a, $b) { return $b['modified'] - $a['modified']; });
+        usort($files, function($a, $b) { return ($b['modified'] ?? 0) - ($a['modified'] ?? 0); });
     }
     send_json(200, ['success' => true, 'assets' => $files]);
 }
@@ -747,6 +752,10 @@ if ($action === 'list_assets' && $method === 'GET') {
 // ── POST: upload ──────────────────────────────────────────────────────────────
 if ($action === 'upload' && $method === 'POST') {
     require_admin_token();
+    if (!is_dir(UPLOADS_DIR)) {
+        @mkdir(UPLOADS_DIR, 0777, true);
+        @chmod(UPLOADS_DIR, 0777);
+    }
     if (empty($_FILES['file'])) {
         send_json(400, ['success' => false, 'error' => 'No file received. Ensure the field name is "file".']);
     }
@@ -1199,6 +1208,8 @@ if ($action === 'upload_update_zip' && $method === 'POST') {
     $createBackup = isset($_POST['backup']) ? ($_POST['backup'] === '1' || $_POST['backup'] === 'true') : true;
     $result = perform_core_update($tempZip, $createBackup);
     send_json($result['success'] ? 200 : 500, $result);
+}
+
 // ── GET: check_staged_update ──────────────────────────────────────────────────
 if ($action === 'check_staged_update' && $method === 'GET') {
     require_admin_token();
@@ -1284,65 +1295,6 @@ if ($action === 'stage_remote_update' && $method === 'POST') {
     }
 
     send_json(500, ['success' => false, 'error' => 'Failed to pre-download remote update package to server. Check server outgoing connection.']);
-}
-
-// ── GET: get_dev_auth ─────────────────────────────────────────────────────────
-if ($action === 'get_dev_auth' && $method === 'GET') {
-    $authData = read_json_file(DATA_DIR . '/dev_auth.json', []);
-    send_json(200, ['success' => true, 'argon2_hash' => $authData['argon2_hash'] ?? '']);
-}
-
-// ── POST: save_dev_auth ────────────────────────────────────────────────────────
-if ($action === 'save_dev_auth' && $method === 'POST') {
-    $body = @json_decode(get_request_body(), true);
-    if (!is_array($body) || empty($body['argon2_hash'])) {
-        send_json(400, ['success' => false, 'error' => 'Missing argon2_hash']);
-    }
-    $authData = [
-        'argon2_hash' => $body['argon2_hash'],
-        'updated_at'  => date('c')
-    ];
-    write_json_file(DATA_DIR . '/dev_auth.json', $authData);
-    send_json(200, ['success' => true, 'message' => 'Developer auth hash saved']);
-}
-
-// ── POST: verify_dev_session ───────────────────────────────────────────────────
-if ($action === 'verify_dev_session' && $method === 'POST') {
-    $token = 'dev_' . time() . '_' . bin2hex(random_bytes(16));
-    send_json(200, ['success' => true, 'token' => $token]);
-}
-
-// ── GET: get_templates ────────────────────────────────────────────────────────
-if ($action === 'get_templates' && $method === 'GET') {
-    $tmpls = read_json_file(DATA_DIR . '/templates.json', []);
-    send_json(200, is_array($tmpls) ? $tmpls : []);
-}
-
-// ── POST: save_templates ───────────────────────────────────────────────────────
-if ($action === 'save_templates' && $method === 'POST') {
-    $body = @json_decode(get_request_body(), true);
-    if (!is_array($body)) send_json(400, ['success' => false, 'error' => 'Invalid templates data']);
-    write_json_file(DATA_DIR . '/templates.json', $body);
-    send_json(200, ['success' => true, 'message' => 'Templates saved']);
-}
-
-// ── GET: get_store_feed_config ────────────────────────────────────────────────
-if ($action === 'get_store_feed_config' && $method === 'GET') {
-    $feed = read_json_file(DATA_DIR . '/store_feed.json', [
-        'remoteFeedUrl' => '',
-        'gcash' => [],
-        'stripeCheckoutUrl' => '',
-        'masterUnlockKey' => 'AETHER-PRO-UNLOCK'
-    ]);
-    send_json(200, $feed);
-}
-
-// ── POST: save_store_feed_config ───────────────────────────────────────────────
-if ($action === 'save_store_feed_config' && $method === 'POST') {
-    $body = @json_decode(get_request_body(), true);
-    if (!is_array($body)) send_json(400, ['success' => false, 'error' => 'Invalid feed data']);
-    write_json_file(DATA_DIR . '/store_feed.json', $body);
-    send_json(200, ['success' => true, 'message' => 'Store feed configuration saved']);
 }
 
 // ── Fallback: unknown action ──────────────────────────────────────────────────

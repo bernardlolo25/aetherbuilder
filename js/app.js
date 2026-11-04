@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.2';
+export const APP_VERSION = '2.9.3';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -1603,7 +1603,7 @@ class AetherApp {
       }
       try {
         formData.append('admin_token', getAdminToken());
-        const res = await fetch('api.php?action=upload', { method: 'POST', headers: { 'X-Admin-Token': getAdminToken() }, body: formData });
+        const res = await fetch('api.php?action=upload', { method: 'POST', body: formData });
         const result = await res.json();
         if (result.success) {
           uploaded++;
@@ -3042,6 +3042,10 @@ git push -u origin main</textarea>
           if (item.path === 'data/dev_auth.json') {
             fileContent = JSON.stringify({ argon2_hash: devAuth.getStoredHash(), updated_at: new Date().toISOString() }, null, 2);
           } else if (item.path === 'data/templates.json') {
+            if (!templateStore.templates || templateStore.templates.length === 0) {
+              resultsLog.push(`⚠️ Skipped ${item.name} — in-memory templates is empty, refusing to overwrite`);
+              continue;
+            }
             fileContent = JSON.stringify(templateStore.templates, null, 2);
           } else if (item.path === 'data/store_feed.json') {
             const feedRes = await fetch(`${apiBase}?action=get_store_feed_config&_t=${Date.now()}`);
@@ -3055,7 +3059,7 @@ git push -u origin main</textarea>
           const pushRes = await devAuth.pushFileToGitHub(
             item.path,
             fileContent,
-            `Core update: sync ${item.path} via AetherBuilder Developer Hub [v2.9.0]`,
+            `Core update: sync ${item.path} via AetherBuilder Developer Hub [v${APP_VERSION}]`,
             pat
           );
           resultsLog.push(`✓ ${item.name} (${item.path})`);

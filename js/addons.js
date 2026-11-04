@@ -1103,7 +1103,7 @@ export class AddonMaker {
         </div>
 
         <!-- Wizard Navigation Tabs -->
-        <div style="display:flex;gap:4px;padding:8px 20px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border-subtle);overflow-x:auto;">
+        <div class="maker-tabs-bar" style="display:flex;gap:4px;padding:8px 20px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border-subtle);overflow-x:auto;">
           <button type="button" class="maker-tab-btn active" data-tab="meta">1. 📝 Identity &amp; Info</button>
           <button type="button" class="maker-tab-btn" data-tab="props">2. ⚙️ Props &amp; Controls</button>
           <button type="button" class="maker-tab-btn" data-tab="template">3. 📄 HTML Template</button>
@@ -1116,7 +1116,7 @@ export class AddonMaker {
         <div class="modal-body" style="flex:1;overflow-y:auto;padding:20px;">
           <!-- TAB 1: META & IDENTITY -->
           <div id="maker-tab-meta" class="maker-tab-pane active">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="maker-meta-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
               <span style="font-weight:700;font-size:0.95rem;color:#fff;">Widget Information &amp; Manifest</span>
               <div style="display:flex;align-items:center;gap:8px;">
                 <label style="font-size:0.78rem;font-weight:600;color:#f1f5f9;">⚡ Load Starter Preset:</label>
@@ -1359,6 +1359,7 @@ export class AddonMaker {
         }
         fieldsArray.forEach((sf, si) => {
           const sfRow = document.createElement('div');
+          sfRow.className = 'maker-subfield-row';
           sfRow.style.cssText = 'display:grid;grid-template-columns:1.2fr 1.2fr 1.2fr 28px;gap:6px;align-items:start;padding:6px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(99,102,241,0.15);border-radius:6px;';
           sfRow.innerHTML = `
             <div>
@@ -1430,6 +1431,7 @@ export class AddonMaker {
         wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0;';
 
         const row = document.createElement('div');
+        row.className = 'maker-prop-row';
         row.style.cssText = 'display:grid;grid-template-columns:1.5fr 1.5fr 1fr 1fr 1.5fr 36px;gap:8px;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:' + (prop.type === 'repeater' ? '8px 8px 0 0' : '8px') + ';';
         row.innerHTML = `
           <div>

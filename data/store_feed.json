@@ -1,0 +1,19 @@
+{
+  "remoteFeedUrl": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder/main/data/addons.json",
+  "githubRepo": "bernardlolo25/aetherbuilder",
+  "githubBranch": "main",
+  "remoteSecurityUrl": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder/main/data/dev_auth.json",
+  "autoPushSecurityToGithub": true,
+  "autoPullMasterSecurityFromGithub": true,
+  "githubPat": "",
+  "lastSynced": null,
+  "gcash": {
+    "accountName": "MCLE Program Office",
+    "accountNumber": "0917-888-5678",
+    "qrImageUrl": ""
+  },
+  "stripeCheckoutUrl": "",
+  "paypalEmail": "admin@uspf-mcle.edu.ph",
+  "masterUnlockKey": "AETHER-PRO-UNLOCK"
+}
+
