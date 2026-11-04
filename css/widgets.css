@@ -4363,70 +4363,6 @@
   align-items: center;
   justify-content: center;
 }
-/* Image shape variants via data-shape attribute */
-.wb-reg-img-options-grid[data-shape="landscape"] .wb-reg-img-option-img {
-  aspect-ratio: 16 / 9;
-  max-width: 220px;
-}
-.wb-reg-img-options-grid[data-shape="portrait"] .wb-reg-img-option-img {
-  aspect-ratio: 3 / 4;
-  max-width: 110px;
-}
-.wb-reg-img-options-grid[data-shape="wide"] .wb-reg-img-option-img {
-  aspect-ratio: 4 / 3;
-  max-width: 180px;
-}
-/* Vertical listing layout */
-.wb-reg-img-options-grid[data-layout="vertical"] {
-  flex-direction: column;
-  align-items: stretch;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option {
-  flex-direction: row;
-  max-width: 100%;
-  gap: 14px;
-  align-items: center;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-img {
-  width: auto;
-  flex-shrink: 0;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-label {
-  text-align: left;
-  flex: 1;
-}
-/* Image shape variants via data-shape attribute */
-.wb-reg-img-options-grid[data-shape="landscape"] .wb-reg-img-option-img {
-  aspect-ratio: 16 / 9;
-  max-width: 220px;
-}
-.wb-reg-img-options-grid[data-shape="portrait"] .wb-reg-img-option-img {
-  aspect-ratio: 3 / 4;
-  max-width: 110px;
-}
-.wb-reg-img-options-grid[data-shape="wide"] .wb-reg-img-option-img {
-  aspect-ratio: 4 / 3;
-  max-width: 180px;
-}
-/* Vertical listing layout */
-.wb-reg-img-options-grid[data-layout="vertical"] {
-  flex-direction: column;
-  align-items: stretch;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option {
-  flex-direction: row;
-  max-width: 100%;
-  gap: 14px;
-  align-items: center;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-img {
-  width: auto;
-  flex-shrink: 0;
-}
-.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-label {
-  text-align: left;
-  flex: 1;
-}
 .wb-reg-img-option-img img {
   width: 100%;
   height: 100%;
@@ -4444,9 +4380,134 @@
   line-height: 1.4;
 }
 
+/* ── Image Shape Variants via data-shape ────────────────────────────────── */
+.wb-reg-img-options-grid[data-shape="fit"] .wb-reg-img-option-img,
+.wb-reg-img-options-grid[data-shape="auto"] .wb-reg-img-option-img {
+  aspect-ratio: auto;
+  max-width: 100%;
+}
+.wb-reg-img-options-grid[data-shape="banner"] .wb-reg-img-option-img {
+  aspect-ratio: 3 / 1;
+  max-width: 100%;
+}
+.wb-reg-img-options-grid[data-shape="landscape"] .wb-reg-img-option-img {
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+}
+.wb-reg-img-options-grid[data-shape="wide"] .wb-reg-img-option-img {
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+}
+.wb-reg-img-options-grid[data-shape="portrait"] .wb-reg-img-option-img {
+  aspect-ratio: 3 / 4;
+  max-width: 120px;
+}
+.wb-reg-img-options-grid[data-shape="square"] .wb-reg-img-option-img {
+  aspect-ratio: 1 / 1;
+  max-width: 150px;
+}
+
+/* Horizontal mode wider cards for landscape/banner/fit */
+.wb-reg-img-options-grid:not([data-layout="vertical"])[data-shape="landscape"] .wb-reg-img-option,
+.wb-reg-img-options-grid:not([data-layout="vertical"])[data-shape="banner"] .wb-reg-img-option,
+.wb-reg-img-options-grid:not([data-layout="vertical"])[data-shape="wide"] .wb-reg-img-option,
+.wb-reg-img-options-grid:not([data-layout="vertical"])[data-shape="fit"] .wb-reg-img-option {
+  min-width: 180px;
+  max-width: 320px;
+}
+
+/* ── Vertical Listing Layout (Image Prioritized / Near-Fit) ─────────────── */
+.wb-reg-img-options-grid[data-layout="vertical"] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 48px 10px 14px;
+  position: relative;
+  gap: 16px;
+  min-height: 80px;
+}
+.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-radio {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-img {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 140px;
+  max-width: calc(100% - 120px);
+  min-height: 68px;
+  max-height: 180px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 6px;
+  overflow: hidden;
+}
+.wb-reg-img-options-grid[data-layout="vertical"][data-shape="landscape"] .wb-reg-img-option-img {
+  aspect-ratio: 16 / 9;
+  max-width: min(440px, calc(100% - 120px));
+}
+.wb-reg-img-options-grid[data-layout="vertical"][data-shape="banner"] .wb-reg-img-option-img {
+  aspect-ratio: 3 / 1;
+  max-width: min(520px, calc(100% - 120px));
+}
+.wb-reg-img-options-grid[data-layout="vertical"][data-shape="fit"] .wb-reg-img-option-img,
+.wb-reg-img-options-grid[data-layout="vertical"][data-shape="auto"] .wb-reg-img-option-img {
+  aspect-ratio: auto;
+  max-width: calc(100% - 120px);
+}
+.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-img img {
+  width: 100%;
+  height: 100%;
+  max-height: 172px;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+.wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-label {
+  flex: 0 0 auto;
+  max-width: 110px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main, #e2e8f0);
+  text-align: right;
+  margin-left: auto;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 @media (max-width: 640px) {
   .wb-reg-img-options-grid { gap: 8px; }
   .wb-reg-img-option { min-width: 100px; padding: 10px; }
+  .wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option {
+    padding: 8px 40px 8px 10px;
+    gap: 10px;
+  }
+  .wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-img {
+    max-width: calc(100% - 90px);
+    max-height: 120px;
+    min-height: 50px;
+  }
+  .wb-reg-img-options-grid[data-layout="vertical"] .wb-reg-img-option-label {
+    max-width: 80px;
+    font-size: 0.78rem;
+  }
 }
 
 /* ==========================================================================

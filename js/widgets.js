@@ -3357,7 +3357,7 @@ export const WIDGET_REGISTRY = {
           return `
             <div class="${colClass}">
               <label class="wb-reg-label">${f.label || 'Choose Option'}${reqStar}</label>
-              <div class="wb-reg-img-options-grid" data-shape="${f.imageShape || 'square'}" data-layout="${f.listLayout || 'horizontal'}">${optItems}</div>
+              <div class="wb-reg-img-options-grid" data-shape="${f.imageShape || (f.listLayout === 'vertical' ? 'fit' : 'square')}" data-layout="${f.listLayout || 'horizontal'}">${optItems}</div>
             </div>`;
         }
 

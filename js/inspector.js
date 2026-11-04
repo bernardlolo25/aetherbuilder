@@ -1143,10 +1143,10 @@ export class InspectorPanel {
     shapeRow.innerHTML = `<span class="fb-row-label" style="min-width:110px;">Image Shape</span>`;
     const shapeSelect = document.createElement('select');
     shapeSelect.className = 'fb-select';
-    [['square','Square (1:1)'],['landscape','Landscape (16:9)'],['wide','Wide (4:3)'],['portrait','Portrait (3:4)']].forEach(([v,l]) => {
+    [['fit','Fit / Natural (Max Image Priority)'],['landscape','Landscape (16:9)'],['banner','Banner / Card (3:1)'],['wide','Wide (4:3)'],['square','Square (1:1)'],['portrait','Portrait (3:4)']].forEach(([v,l]) => {
       const o = document.createElement('option');
       o.value = v; o.textContent = l;
-      if ((f.imageShape || 'square') === v) o.selected = true;
+      if ((f.imageShape || (f.listLayout === 'vertical' ? 'fit' : 'square')) === v) o.selected = true;
       shapeSelect.appendChild(o);
     });
     shapeSelect.addEventListener('change', e => { f.imageShape = e.target.value; save(); });
