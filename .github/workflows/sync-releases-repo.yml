@@ -30,7 +30,10 @@ jobs:
             exit 0
           fi
 
-          echo "🚀 Synchronizing core update package to bernardlolo25/aetherbuilder-releases..."
+          # Read version dynamically from version.json
+          VERSION=$(python3 -c "import json; print(json.load(open('version.json'))['version'])")
+          echo "📦 Syncing AetherBuilder v${VERSION} to public releases channel..."
+
           git config --global user.name "Bernard Lolo"
           git config --global user.email "mr.softexpert@gmail.com"
 
@@ -38,10 +41,17 @@ jobs:
           rm -rf "$TARGET_DIR"
           git clone "https://x-access-token:${RELEASE_TOKEN}@github.com/bernardlolo25/aetherbuilder-releases.git" "$TARGET_DIR"
 
+          # Always copy the generic and versioned zip
           cp version.json "$TARGET_DIR/version.json"
           cp aetherbuilder-update.zip "$TARGET_DIR/aetherbuilder-update.zip"
-          if [ -f "aetherbuilder-update-v2.9.0.zip" ]; then
-            cp aetherbuilder-update-v2.9.0.zip "$TARGET_DIR/aetherbuilder-update-v2.9.0.zip"
+
+          # Copy versioned zip if it exists
+          VERSIONED_ZIP="aetherbuilder-update-v${VERSION}.zip"
+          if [ -f "$VERSIONED_ZIP" ]; then
+            cp "$VERSIONED_ZIP" "$TARGET_DIR/$VERSIONED_ZIP"
+            echo "✅ Copied $VERSIONED_ZIP"
+          else
+            echo "ℹ️  No versioned zip found for v${VERSION}, skipping."
           fi
 
           cd "$TARGET_DIR"
@@ -49,7 +59,7 @@ jobs:
           if git diff-index --quiet HEAD --; then
             echo "✅ Public releases channel is already up to date."
           else
-            git commit -m "release: automated sync of $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            git commit -m "release: AetherBuilder v${VERSION} — synced $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push origin main
-            echo "🎉 Successfully pushed latest core update package to aetherbuilder-releases!"
+            echo "🎉 Successfully pushed AetherBuilder v${VERSION} to aetherbuilder-releases!"
           fi
