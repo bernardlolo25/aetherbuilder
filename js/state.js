@@ -128,6 +128,11 @@ class BuilderState {
         caption: '',
         subcaption: 'Initializing modules & layout engine',
         showSubcaption: true
+      },
+      templateAutosave: {
+        enabled: true,
+        templateName: 'live_canvas',
+        maxBackups: 5
       }
     };
 
@@ -538,21 +543,12 @@ class BuilderState {
     }
 
     // Automatically save current canvas as a JSON template to Media Library Assets
-    try {
-      const jsonContent = JSON.stringify(payload, null, 2);
-      const blob = new Blob([jsonContent], { type: 'application/json' });
-      const file = new File([blob], 'template_live_canvas.json', { type: 'application/json' });
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('overwrite', '1');
-      await fetch('api.php?action=upload', {
-        method: 'POST',
-        headers: { 'X-Admin-Token': _getAdminToken() },
-        body: formData
-      });
-      console.log('✅ Canvas template automatically saved to media library: assets/uploads/template_live_canvas.json');
-    } catch (err) {
-      console.warn('Could not auto-upload canvas template to media:', err);
+    if (this.isTemplateAutosaveEnabled()) {
+      try {
+        await this.saveTemplateToMedia();
+      } catch (err) {
+        console.warn('Could not auto-upload canvas template to media:', err);
+      }
     }
 
     return true;
@@ -873,6 +869,114 @@ class BuilderState {
       return false;
     } catch (err) { console.error('Import error:', err); return false; }
   }
+
+  // ── Template Autosave & Backup Helpers ─────────────────────────────────────
+  getPublishPayload() {
+    return {
+      publishedAt:   new Date().toISOString(),
+      currentPageId: this.currentPageId,
+      pages:         this.pages,
+      siteSettings:  this.siteSettings
+    };
+  }
+
+  getTemplateBackupName() {
+    const raw = this.siteSettings?.templateAutosave?.templateName || '';
+    const clean = raw.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+    return clean || 'live_canvas';
+  }
+
+  getTemplateMaxBackups() {
+    return Math.max(1, parseInt(this.siteSettings?.templateAutosave?.maxBackups, 10) || 5);
+  }
+
+  isTemplateAutosaveEnabled() {
+    return this.siteSettings?.templateAutosave?.enabled !== false;
+  }
+
+  async pruneTemplateBackups(maxAllowed = 5) {
+    try {
+      const res = await fetch('api.php?action=list_assets&_t=' + Date.now());
+      if (!res.ok) return { total: 0, deleted: 0 };
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.assets)) return { total: 0, deleted: 0 };
+
+      // Find all template json files in media uploads (template_*.json)
+      const templateAssets = data.assets.filter(a =>
+        a.ext === 'json' &&
+        /^template_/i.test(a.name)
+      );
+
+      const limit = Math.max(1, parseInt(maxAllowed, 10) || 5);
+      let deletedCount = 0;
+
+      // Note: list_assets is already sorted newest first by 'modified'
+      if (templateAssets.length > limit) {
+        const toDelete = templateAssets.slice(limit);
+        for (const item of toDelete) {
+          try {
+            await fetch('api.php?action=delete_asset', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: item.name, admin_token: _getAdminToken() })
+            });
+            deletedCount++;
+            console.log(`🧹 Pruned old template backup: ${item.name}`);
+          } catch (e) {
+            console.warn('Failed to prune template asset:', item.name, e);
+          }
+        }
+      }
+
+      return {
+        total: Math.max(0, templateAssets.length - deletedCount),
+        deleted: deletedCount
+      };
+    } catch (err) {
+      console.warn('Error pruning template backups:', err);
+      return { total: 0, deleted: 0 };
+    }
+  }
+
+  async saveTemplateToMedia(customName = null) {
+    const tName = customName || this.getTemplateBackupName();
+    const maxBackups = this.getTemplateMaxBackups();
+    const payload = this.getPublishPayload();
+    const jsonContent = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const now = new Date();
+    const timeStamp = now.toISOString().replace(/[-:T]/g, '').slice(0, 15);
+    const fileName = `template_${tName}_${timeStamp}.json`;
+
+    // 1. Upload timestamped snapshot without CORS preflight headers
+    const file = new File([blob], fileName, { type: 'application/json' });
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('admin_token', _getAdminToken());
+    await fetch('api.php?action=upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    // 2. Also save/update the canonical pointer file (e.g. template_${tName}.json)
+    const canonName = `template_${tName}.json`;
+    const canonFile = new File([blob], canonName, { type: 'application/json' });
+    const canonFormData = new FormData();
+    canonFormData.append('file', canonFile);
+    canonFormData.append('overwrite', '1');
+    canonFormData.append('admin_token', _getAdminToken());
+    await fetch('api.php?action=upload', {
+      method: 'POST',
+      body: canonFormData
+    });
+
+    // 3. Prune older backups if exceeded maxBackups limit
+    await this.pruneTemplateBackups(maxBackups);
+
+    console.log(`✅ Template snapshot saved to Media Library: assets/uploads/${fileName}`);
+    return { fileName, canonName };
+  }
+
 }
 
 export const state = new BuilderState();

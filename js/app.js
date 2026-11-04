@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.5';
+export const APP_VERSION = '2.9.6';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -928,6 +928,63 @@ class AetherApp {
                       </div>
                       <input type="range" id="site-global-bg-opacity" min="0" max="95" step="5" value="50" style="width:100%;cursor:pointer;margin-top:4px;" />
                       <div style="font-size:0.68rem;color:var(--text-dim);margin-top:2px;">Darkens the background image so text on sections remains clear.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Template Autosave & Media Backups -->
+                <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span>💾</span> Template Autosave &amp; Media Backups</span>
+                    <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
+                      <input type="checkbox" id="site-template-autosave-enable" checked style="cursor:pointer;" />
+                      <span>Enable Autosave</span>
+                    </label>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4;">
+                    Automatically saves canvas JSON snapshots into your Media Library on <em>Publish Live</em>. Older snapshots rotate automatically when the backup limit is reached.
+                  </div>
+
+                  <div id="site-template-autosave-controls" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <label class="prop-label" style="font-size:0.75rem;margin:0;">Current Template Name / Prefix</label>
+                        <span style="font-size:0.68rem;color:var(--accent-light,#38bdf8);font-family:monospace;" id="site-template-filename-preview">template_live_canvas.json</span>
+                      </div>
+                      <input type="text" id="site-template-name-input" placeholder="e.g. portfolio_landing, mcle_seminar, v1" style="font-size:0.78rem;" />
+                      <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">
+                        Name your template so you can easily recognize and switch between different designs in the Media Library.
+                      </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;">
+                      <div>
+                        <label class="prop-label" style="font-size:0.75rem;">Max Backups in Media</label>
+                        <select id="site-template-limit-select" style="font-size:0.78rem;width:100%;">
+                          <option value="1">1 (Keep latest only - auto replace)</option>
+                          <option value="3">3 Backups</option>
+                          <option value="5" selected>5 Backups (Recommended)</option>
+                          <option value="10">10 Backups</option>
+                          <option value="20">20 Backups</option>
+                          <option value="50">50 Backups</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="prop-label" style="font-size:0.75rem;">Existing Backups</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                          <span id="site-template-count-badge" style="font-size:0.74rem;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);">Checking...</span>
+                          <button type="button" id="btn-prune-templates-now" class="btn btn-sm" style="font-size:0.7rem;padding:4px 8px;color:#fca5a5;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:4px;cursor:pointer;" title="Enforce limit & delete oldest templates now">🧹 Clean</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                      <button type="button" id="btn-save-template-now-site" class="btn btn-sm" style="flex:1;font-size:0.75rem;padding:6px 10px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+                        💾 Save Snapshot to Media
+                      </button>
+                      <button type="button" id="btn-open-media-templates-site" class="btn btn-sm" style="font-size:0.75rem;padding:6px 10px;background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid var(--border-subtle);border-radius:6px;cursor:pointer;">
+                        📁 Browse Templates
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -3648,6 +3705,112 @@ git push -u origin main</textarea>
       });
     }
 
+    // Template Autosave & Backup Settings Wiring
+    const tAutosaveEnable = document.getElementById('site-template-autosave-enable');
+    const tNameInput = document.getElementById('site-template-name-input');
+    const tLimitSelect = document.getElementById('site-template-limit-select');
+    const tPreviewBadge = document.getElementById('site-template-filename-preview');
+    const btnPruneNow = document.getElementById('btn-prune-templates-now');
+    const btnSaveNowSite = document.getElementById('btn-save-template-now-site');
+    const btnBrowseSite = document.getElementById('btn-open-media-templates-site');
+
+    const updateTemplateAutosaveSetting = (key, value) => {
+      const cur = state.siteSettings.templateAutosave || { enabled: true, templateName: 'live_canvas', maxBackups: 5 };
+      const updated = { ...cur, [key]: value };
+      state.setSiteSetting('templateAutosave', updated);
+    };
+
+    if (tAutosaveEnable) {
+      tAutosaveEnable.addEventListener('change', (e) => {
+        updateTemplateAutosaveSetting('enabled', e.target.checked);
+        const controls = document.getElementById('site-template-autosave-controls');
+        if (controls) controls.style.opacity = e.target.checked ? '1' : '0.5';
+        this.canvas?.showToast(e.target.checked ? '💾 Template autosave enabled' : 'Template autosave disabled', 'info');
+      });
+    }
+
+    if (tNameInput) {
+      tNameInput.addEventListener('input', (e) => {
+        const clean = e.target.value.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+        updateTemplateAutosaveSetting('templateName', clean);
+        if (tPreviewBadge) {
+          tPreviewBadge.textContent = `template_${clean || 'live_canvas'}.json`;
+        }
+      });
+    }
+
+    if (tLimitSelect) {
+      tLimitSelect.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 5;
+        updateTemplateAutosaveSetting('maxBackups', val);
+        this.refreshTemplateBackupsCounter();
+        this.canvas?.showToast(`Max template backups set to ${val}`, 'info');
+      });
+    }
+
+    if (btnPruneNow) {
+      btnPruneNow.addEventListener('click', async () => {
+        btnPruneNow.disabled = true;
+        btnPruneNow.textContent = '...';
+        const max = state.getTemplateMaxBackups();
+        const res = await state.pruneTemplateBackups(max);
+        btnPruneNow.disabled = false;
+        btnPruneNow.textContent = '🧹 Clean';
+        await this.refreshTemplateBackupsCounter();
+        if (res && res.deleted > 0) {
+          this.canvas?.showToast(`🧹 Cleaned up ${res.deleted} older template backup(s) to match the limit of ${max}!`, 'success');
+        } else {
+          this.canvas?.showToast(`All backups are within the limit (${max}) — nothing to prune.`, 'info');
+        }
+      });
+    }
+
+    if (btnSaveNowSite) {
+      btnSaveNowSite.addEventListener('click', async () => {
+        btnSaveNowSite.disabled = true;
+        btnSaveNowSite.textContent = 'Saving...';
+        try {
+          const res = await state.saveTemplateToMedia();
+          await this.refreshTemplateBackupsCounter();
+          this.canvas?.showToast(`💾 Snapshot saved to Media: ${res.fileName}`, 'success');
+        } catch (err) {
+          this.canvas?.showToast('Failed to save snapshot to Media Library', 'error');
+        } finally {
+          btnSaveNowSite.disabled = false;
+          btnSaveNowSite.textContent = '💾 Save Snapshot to Media';
+        }
+      });
+    }
+
+    if (btnBrowseSite) {
+      btnBrowseSite.addEventListener('click', () => {
+        if (typeof window.openMediaLibrary === 'function') {
+          window.openMediaLibrary(async (selectedUrl) => {
+            if (selectedUrl && /\.json$/i.test(selectedUrl)) {
+              if (confirm(`Load this template snapshot onto your canvas?\n\nFile: ${selectedUrl}`)) {
+                try {
+                  const fetchUrl = selectedUrl.replace(/^\/+/, '');
+                  const r = await fetch(`${fetchUrl}?_t=${Date.now()}`);
+                  if (r.ok) {
+                    const txt = await r.text();
+                    if (state.importJSON(txt)) {
+                      await state.saveAndPublish();
+                      this.canvas?.render();
+                      this.canvas?.showToast('✅ Template successfully loaded onto canvas!', 'success');
+                    }
+                  }
+                } catch (e) {
+                  this.canvas?.showToast('Failed to load selected template', 'error');
+                }
+              }
+            } else if (selectedUrl) {
+              this.canvas?.showToast('Selected file is not a JSON template', 'warning');
+            }
+          });
+        }
+      });
+    }
+
     // Chatbot Flowchart Editor Modal
     document.getElementById('btn-edit-chatbot-flow')?.addEventListener('click', () => {
       this.showChatbotFlowModal();
@@ -3661,6 +3824,24 @@ git push -u origin main</textarea>
     });
 
     this.syncSiteSettingsInputs();
+  }
+
+  async refreshTemplateBackupsCounter() {
+    const badge = document.getElementById('site-template-count-badge');
+    if (!badge) return;
+    try {
+      const res = await fetch('api.php?action=list_assets&_t=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.assets)) {
+          const count = data.assets.filter(a => a.ext === 'json' && /^template_/i.test(a.name)).length;
+          const max = state.getTemplateMaxBackups();
+          badge.textContent = `${count} / ${max} Backups`;
+          badge.style.color = count >= max ? '#fbbf24' : '#a5b4fc';
+          badge.style.borderColor = count >= max ? 'rgba(251,191,36,0.3)' : 'rgba(99,102,241,0.25)';
+        }
+      }
+    } catch {}
   }
 
   updateGlobalBgPreview(bgConfig) {
@@ -3741,6 +3922,22 @@ git push -u origin main</textarea>
       const el = document.getElementById(id);
       if (el && el.value !== val) el.value = val;
     });
+
+    // Template Autosave & Backup settings sync
+    const tCfg = s.templateAutosave || { enabled: true, templateName: 'live_canvas', maxBackups: 5 };
+    const tEnableEl = document.getElementById('site-template-autosave-enable');
+    if (tEnableEl) tEnableEl.checked = tCfg.enabled !== false;
+
+    const tNameEl = document.getElementById('site-template-name-input');
+    if (tNameEl) tNameEl.value = tCfg.templateName || 'live_canvas';
+
+    const tPreviewEl = document.getElementById('site-template-filename-preview');
+    if (tPreviewEl) tPreviewEl.textContent = `template_${tCfg.templateName || 'live_canvas'}.json`;
+
+    const tLimitEl = document.getElementById('site-template-limit-select');
+    if (tLimitEl) tLimitEl.value = String(tCfg.maxBackups || 5);
+
+    this.refreshTemplateBackupsCounter();
 
     const cbEnableEl = document.getElementById('site-chatbot-enable');
     if (cbEnableEl) cbEnableEl.checked = cb.enabled !== false;
@@ -4089,24 +4286,9 @@ git push -u origin main</textarea>
 
     // Save Template directly to Media Library Assets
     modal.querySelector('#btn-save-media-template')?.addEventListener('click', async () => {
-      const title = (state.pageSettings?.pageTitle || 'site').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-      const fileName = `template_${title}_${Date.now()}.json`;
-      const blob = new Blob([jsonContent], { type: 'application/json' });
-      const file = new File([blob], fileName, { type: 'application/json' });
-      const formData = new FormData();
-      formData.append('file', file);
       try {
-        const res = await fetch('api.php?action=upload', {
-          method: 'POST',
-          headers: { 'X-Admin-Token': getAdminToken() },
-          body: formData
-        });
-        const result = await res.json();
-        if (result.success) {
-          this.canvas.showToast(`📁 Template saved to Media Library Assets (${fileName})`, 'success');
-        } else {
-          this.canvas.showToast(`Failed to save template: ${result.error || 'Server error'}`, 'error');
-        }
+        const res = await state.saveTemplateToMedia();
+        this.canvas.showToast(`📁 Template saved to Media Library Assets (${res.fileName})`, 'success');
       } catch (err) {
         this.canvas.showToast('Error saving template to Media Library', 'error');
       }
