@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.6');
+define('AETHER_VERSION', '2.9.7');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -812,6 +812,46 @@ if ($action === 'delete_asset' && $method === 'POST') {
     if (!file_exists($target)) send_json(404, ['success' => false, 'error' => 'File not found']);
     @unlink($target);
     send_json(200, ['success' => true, 'message' => 'Asset deleted.']);
+}
+
+// ── POST: rename_asset ───────────────────────────────────────────────────────
+if ($action === 'rename_asset' && $method === 'POST') {
+    require_admin_token();
+    $body    = @json_decode(get_request_body(), true) ?: [];
+    $oldName = isset($body['old_name']) ? safe_basename($body['old_name']) : '';
+    $newName = isset($body['new_name']) ? safe_basename($body['new_name']) : '';
+    if (!$oldName || !$newName) send_json(400, ['success' => false, 'error' => 'Missing old or new filename.']);
+
+    $oldExt = strtolower(pathinfo($oldName, PATHINFO_EXTENSION));
+    $newExt = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
+    if (!$newExt) {
+        $newName .= '.' . $oldExt;
+        $newExt = $oldExt;
+    }
+
+    global $ALLOWED_EXT;
+    if (!in_array($newExt, $ALLOWED_EXT, true)) {
+        send_json(400, ['success' => false, 'error' => 'Disallowed file extension: ' . htmlspecialchars($newExt)]);
+    }
+
+    $source = UPLOADS_DIR . '/' . $oldName;
+    $dest   = UPLOADS_DIR . '/' . $newName;
+
+    if (!file_exists($source)) send_json(404, ['success' => false, 'error' => 'Source file not found: ' . htmlspecialchars($oldName)]);
+    if (file_exists($dest) && strtolower($source) !== strtolower($dest)) {
+        send_json(400, ['success' => false, 'error' => 'A file with that name already exists: ' . htmlspecialchars($newName)]);
+    }
+
+    if (@rename($source, $dest)) {
+        send_json(200, [
+            'success'  => true,
+            'old_name' => $oldName,
+            'new_name' => $newName,
+            'url'      => 'assets/uploads/' . $newName
+        ]);
+    } else {
+        send_json(500, ['success' => false, 'error' => 'Failed to rename file on disk. Check filesystem permissions.']);
+    }
 }
 
 // ── POST: submit_form ─────────────────────────────────────────────────────────

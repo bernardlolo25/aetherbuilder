@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.6';
+export const APP_VERSION = '2.9.7';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -1452,6 +1452,7 @@ class AetherApp {
       const sizekb = (asset.size / 1024).toFixed(1);
       card.innerHTML = `
         <button class="media-asset-copy" data-url="${asset.url}" title="Copy file URL">📋</button>
+        <button class="media-asset-rename" data-name="${asset.name}" title="Rename file">✏️</button>
         <button class="media-asset-delete" data-name="${asset.name}" title="Delete asset">🗑</button>
         <div class="media-asset-thumb">${thumb}</div>
         <div class="media-asset-info">
@@ -1461,14 +1462,14 @@ class AetherApp {
       `;
 
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.media-asset-delete') || e.target.closest('.media-asset-copy')) return;
+        if (e.target.closest('.media-asset-delete') || e.target.closest('.media-asset-copy') || e.target.closest('.media-asset-rename')) return;
         document.querySelectorAll('.media-asset-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         onSelect(asset);
       });
 
       card.addEventListener('dblclick', (e) => {
-        if (e.target.closest('.media-asset-delete') || e.target.closest('.media-asset-copy')) return;
+        if (e.target.closest('.media-asset-delete') || e.target.closest('.media-asset-copy') || e.target.closest('.media-asset-rename')) return;
         onSelect(asset);
         document.getElementById('media-btn-use')?.click();
       });
@@ -1483,6 +1484,45 @@ class AetherApp {
           setTimeout(() => { btn.innerHTML = '📋'; btn.style.color = ''; }, 1600);
         } catch {
           prompt('Copy asset URL:', asset.url);
+        }
+      });
+
+      card.querySelector('.media-asset-rename')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const lastDot = asset.name.lastIndexOf('.');
+        const curBase = lastDot > 0 ? asset.name.substring(0, lastDot) : asset.name;
+        const ext = lastDot > 0 ? asset.name.substring(lastDot + 1).toLowerCase() : asset.ext || '';
+
+        const input = prompt(`Rename "${asset.name}" to:`, curBase);
+        if (input === null) return;
+        const cleanBase = input.trim().replace(/[^a-zA-Z0-9_\-\.]/g, '_').replace(/^_+|_+$/g, '');
+        if (!cleanBase) {
+          alert('Filename cannot be empty.');
+          return;
+        }
+        const newFullName = cleanBase.toLowerCase().endsWith('.' + ext) ? cleanBase : `${cleanBase}.${ext}`;
+        if (newFullName === asset.name) return;
+
+        try {
+          const res = await fetch('api.php?action=rename_asset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              old_name: asset.name,
+              new_name: newFullName,
+              admin_token: getAdminToken()
+            })
+          });
+          const result = await res.json();
+          if (result.success) {
+            this.canvas?.showToast(`File renamed to "${newFullName}"`, 'success');
+            const assets2 = await this.fetchAssets();
+            this.renderAssetGrid(assets2, document.getElementById('media-search')?.value || '', onSelect);
+          } else {
+            this.canvas?.showToast(`Failed to rename: ${result.error || 'Server error'}`, 'error');
+          }
+        } catch (err) {
+          this.canvas?.showToast('Network error while renaming asset', 'error');
         }
       });
 

@@ -1,9 +1,11 @@
 {
   "name": "AetherBuilder",
-  "version": "2.9.6",
+  "version": "2.9.7",
   "release_date": "2026-11-04",
   "min_php": "7.4",
   "changelog": [
+    "New: Media Library Asset Renaming — 1-click '✏️ Rename' button on media cards to rename any image, JSON template, or upload directly on disk without re-uploading",
+    "Security: Safe filename sanitization and extension validation in api.php rename_asset handler preventing path traversal and disallowed types",
     "New: Template Autosave & Backup Settings in Site Settings (⚙️ Site Tab) — full control over template naming, backup limits, and auto-rotation",
     "New: Customizable Template Name / Prefix — rename current template to easily recognize and organize different designs in the Media Library",
     "New: Auto-Rotation & Pruning Limit in Media Library — set max template backups (1, 3, 5, 10, 20, 50). When limit is reached, older template JSON files are automatically cleaned up",

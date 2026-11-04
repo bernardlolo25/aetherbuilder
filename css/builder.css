@@ -2044,6 +2044,36 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   transform: scale(1.1);
 }
 
+.media-asset-rename {
+  position: absolute;
+  top: 6px;
+  right: 36px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.media-asset-card:hover .media-asset-rename {
+  opacity: 1;
+}
+
+.media-asset-rename:hover {
+  background: #4f46e5;
+  border-color: #818cf8;
+  transform: scale(1.1);
+}
+
 .media-asset-copy {
   position: absolute;
   top: 6px;
