@@ -5622,10 +5622,12 @@ ${addonManager.getAllActiveJs()}
       const ts = Date.now();
       let manifest = null;
 
-      // 1. Check official GitHub repository channel first
+      // 1. Check official public distribution channel (aetherbuilder-releases) first
+      // Allows main engine repository to stay permanently PRIVATE while updates remain public 24/7
+      const RELEASES_REPO = 'bernardlolo25/aetherbuilder-releases';
       const GITHUB_REPO = 'bernardlolo25/aetherbuilder';
-      const GITHUB_RAW_MANIFEST = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/version.json?_t=${ts}`;
-      const GITHUB_RAW_ZIP = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/aetherbuilder-update.zip?_t=${ts}`;
+      const GITHUB_RAW_MANIFEST = `https://raw.githubusercontent.com/${RELEASES_REPO}/main/version.json?_t=${ts}`;
+      const GITHUB_RAW_ZIP = `https://raw.githubusercontent.com/${RELEASES_REPO}/main/aetherbuilder-update.zip?_t=${ts}`;
 
       try {
         const ghRes = await fetch(GITHUB_RAW_MANIFEST, { cache: 'no-store' });
@@ -5635,7 +5637,22 @@ ${addonManager.getAllActiveJs()}
           manifest.github_zip_url = GITHUB_RAW_ZIP;
         }
       } catch (ghErr) {
-        console.warn('GitHub update channel deferred:', ghErr);
+        console.warn('Releases channel deferred:', ghErr);
+      }
+
+      // Fallback: check primary repository
+      if (!manifest) {
+        try {
+          const fbManifest = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/version.json?_t=${ts}`;
+          const ghRes = await fetch(fbManifest, { cache: 'no-store' });
+          if (ghRes.ok) {
+            manifest = await ghRes.json();
+            manifest.is_github = true;
+            manifest.github_zip_url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/aetherbuilder-update.zip?_t=${ts}`;
+          }
+        } catch (fbErr) {
+          console.warn('Primary repository fallback deferred:', fbErr);
+        }
       }
 
       // 2. Fallback to local version.json if GitHub is unreachable
@@ -5889,6 +5906,24 @@ ${addonManager.getAllActiveJs()}
         const changelogCard = changelogList.closest('.update-changelog-card');
         if (changelogCard) changelogCard.scrollTop = 0;
       }
+
+      // 3. Check if update is already pre-cached / staged on hosting server
+      try {
+        const stageRes = await fetch('api.php?action=check_staged_update');
+        if (stageRes.ok) {
+          const stageData = await stageRes.json();
+          if (stageData.staged) {
+            const chkCard = changelogList?.closest('.update-changelog-card');
+            if (chkCard && !modal.querySelector('#staged-update-banner')) {
+              const badge = document.createElement('div');
+              badge.id = 'staged-update-banner';
+              badge.style.cssText = 'background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:8px 12px;font-size:0.78rem;color:#c7d2fe;margin-bottom:12px;display:flex;align-items:center;gap:8px;';
+              badge.innerHTML = `<span>💾</span> <div><strong>Pre-staged on server:</strong> <code>${stageData.filename}</code> (${stageData.size_kb} KB) is cached on your hosting. Ready for 1-click install without external downloads!</div>`;
+              chkCard.parentNode.insertBefore(badge, chkCard);
+            }
+          }
+        }
+      } catch (e) {}
 
       if (updateBtn) {
         if (!isNewer) {

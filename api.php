@@ -1200,6 +1200,91 @@ if ($action === 'upload_update_zip' && $method === 'POST') {
     $createBackup = isset($_POST['backup']) ? ($_POST['backup'] === '1' || $_POST['backup'] === 'true') : true;
     $result = perform_core_update($tempZip, $createBackup);
     send_json($result['success'] ? 200 : 500, $result);
+// ── GET: check_staged_update ──────────────────────────────────────────────────
+if ($action === 'check_staged_update' && $method === 'GET') {
+    require_admin_token();
+    $stagedCandidates = [
+        ROOT . '/aetherbuilder-update.zip',
+        DATA_DIR . '/aetherbuilder-update.zip',
+        ROOT . '/aetherbuilder-update-v' . AETHER_VERSION . '.zip'
+    ];
+    $found = null;
+    foreach ($stagedCandidates as $cand) {
+        if (file_exists($cand) && filesize($cand) > 1024) {
+            $found = $cand;
+            break;
+        }
+    }
+    if ($found) {
+        send_json(200, [
+            'success'  => true,
+            'staged'   => true,
+            'filename' => basename($found),
+            'size_kb'  => round(filesize($found) / 1024, 1),
+            'mtime'    => filemtime($found)
+        ]);
+    } else {
+        send_json(200, ['success' => true, 'staged' => false]);
+    }
+}
+
+// ── POST: stage_remote_update ─────────────────────────────────────────────────
+if ($action === 'stage_remote_update' && $method === 'POST') {
+    require_admin_token();
+    $body = @json_decode(get_request_body(), true);
+    $url  = trim($body['url'] ?? '');
+    if (empty($url)) {
+        send_json(400, ['success' => false, 'error' => 'Remote package URL is required.']);
+    }
+
+    $targetFile = ROOT . '/aetherbuilder-update.zip';
+    if (!is_writable(ROOT)) {
+        $targetFile = DATA_DIR . '/aetherbuilder-update.zip';
+    }
+
+    $ch = @curl_init($url);
+    if ($ch) {
+        $fp = @fopen($targetFile, 'wb');
+        if (!$fp) {
+            send_json(500, ['success' => false, 'error' => 'Cannot open target staging file for writing.']);
+        }
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'AetherBuilder/' . AETHER_VERSION);
+        $exec = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        fclose($fp);
+
+        if ($exec && $httpCode >= 200 && $httpCode < 300 && filesize($targetFile) > 1024) {
+            send_json(200, [
+                'success'  => true,
+                'message'  => 'Update package successfully pre-cached on server.',
+                'size_kb'  => round(filesize($targetFile) / 1024, 1),
+                'filename' => basename($targetFile)
+            ]);
+        }
+    }
+
+    // Fallback: file_get_contents
+    $opts = [
+        'http' => ['method' => 'GET', 'timeout' => 60, 'header' => "User-Agent: AetherBuilder/" . AETHER_VERSION . "\r\n"]
+    ];
+    $ctx = stream_context_create($opts);
+    $content = @file_get_contents($url, false, $ctx);
+    if ($content && substr($content, 0, 2) === 'PK') {
+        @file_put_contents($targetFile, $content);
+        send_json(200, [
+            'success'  => true,
+            'message'  => 'Update package successfully pre-cached on server.',
+            'size_kb'  => round(filesize($targetFile) / 1024, 1),
+            'filename' => basename($targetFile)
+        ]);
+    }
+
+    send_json(500, ['success' => false, 'error' => 'Failed to pre-download remote update package to server. Check server outgoing connection.']);
 }
 
 // ── GET: get_dev_auth ─────────────────────────────────────────────────────────
