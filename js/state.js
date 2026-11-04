@@ -129,6 +129,9 @@ class BuilderState {
         subcaption: 'Initializing modules & layout engine',
         showSubcaption: true
       },
+      backToTop: {
+        enabled: true
+      },
       templateAutosave: {
         enabled: true,
         templateName: 'live_canvas',

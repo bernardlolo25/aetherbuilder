@@ -1,18 +1,18 @@
 {
   "name": "AetherBuilder",
-  "version": "2.9.8",
-  "release_date": "2026-11-04",
+  "version": "2.9.9",
+  "release_date": "2026-11-05",
   "min_php": "7.4",
   "changelog": [
-    "New: Instant Page Loading (Splash Screen & Pre-loader 100% Optional) - when disabled, the entire black screen, spinner overlay, and initialization delay are completely bypassed for blazing fast immediate page rendering",
-    "New: Disable Initializing Sub-caption - unchecking 'Show' on Sub-caption immediately eliminates 'Initializing modules & layout engine' text and its timing across both live pages and the editor",
-    "UX: Clear 'Enable Splash Screen' toggle and Instant Loading status banner in Site Settings (\u2699\ufe0f Site Tab) with live preview updates",
-    "Performance: Synchronous pre-paint CSS injection in <head> ensuring zero black flash or spinner rendering when splash screen is disabled",
-    "Performance: Reduced loader dismissal and failsafe auto-dismiss timing so pages never wait unnecessarily",
-    "Media Library: 1-click '\u270f\ufe0f Rename' button on media cards to rename any image, JSON template, or upload directly on disk without re-uploading",
-    "Site Settings: Template Autosave & Backup Settings with auto-rotation limit (1, 3, 5, 10, 20, 50) and live prune cleanup",
-    "Forms: Registration Form Image Options with Fit / Natural (Max Image Priority), Banner (3:1), and expanded Landscape (16:9)"
+    "New: Sticky Bottom Publish Dock in Sidebar - '\ud83d\ude80 Publish Live' button permanently accessible at the bottom of the sidebar drawer on mobile portrait web browsers and desktop",
+    "New: Mobile Live Preview QR Code - 1-click '\ud83d\udcf1' button in Topbar and Sidebar Dock generates a crisp scannable QR Code to immediately test live sites on phones",
+    "New: 1-Click '\ud83d\udccb Copy Live URL' - quickly copy public site link from the Topbar, Sidebar Dock, or QR Modal with instant toast feedback",
+    "Performance: Client-Side Photo Auto-Optimizer - oversized raster images (>1.2MB / >1920px) are automatically scaled and compressed on canvas before upload, speeding up uploads 10x and saving server disk space",
+    "UX: Floating 'Back to Top' Button in Site Settings (\u2699\ufe0f Site Tab) - smooth circular button that appears when scrolling down, bringing visitors back to the top with one tap",
+    "Mobile UX: Responsive Topbar improvements - brand title collapses to icon on phone screens and actions container supports horizontal scrolling, preventing button clipping in portrait mode",
+    "Performance: Instant Page Loading (Splash Screen & Pre-loader 100% Optional) - when disabled, the entire black screen, spinner overlay, and initialization delay are completely bypassed",
+    "UX: Fully disableable Sub-caption - unchecking 'Show' on Sub-caption immediately eliminates 'Initializing modules & layout engine' text and its timing"
   ],
   "download_url": "aetherbuilder-update.zip",
-  "releaseDate": "2026-11-04"
+  "releaseDate": "2026-11-05"
 }

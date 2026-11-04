@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.8';
+export const APP_VERSION = '2.9.9';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -28,6 +28,124 @@ export function removeInitialLoader() {
     try { loader.remove(); } catch (e) {}
   }
 }
+
+// ── Back to Top Floating Button Helper ─────────────────────────────────────────
+export function initBackToTopButton() {
+  if (document.getElementById('aether-back-to-top')) return;
+  const btn = document.createElement('button');
+  btn.id = 'aether-back-to-top';
+  btn.type = 'button';
+  btn.title = 'Back to Top';
+  btn.setAttribute('aria-label', 'Scroll back to top');
+  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>`;
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 10px rgba(99, 102, 241, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+    z-index: 990;
+  `;
+  btn.addEventListener('mouseenter', () => {
+    btn.style.background = 'rgba(99, 102, 241, 0.9)';
+    btn.style.transform = 'translateY(0) scale(1.08)';
+  });
+  btn.addEventListener('mouseleave', () => {
+    btn.style.background = 'rgba(15, 23, 42, 0.88)';
+    btn.style.transform = 'translateY(0) scale(1)';
+  });
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.body.appendChild(btn);
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        if (window.scrollY > 280) {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+          btn.style.transform = 'translateY(0)';
+        } else {
+          btn.style.opacity = '0';
+          btn.style.pointerEvents = 'none';
+          btn.style.transform = 'translateY(12px)';
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+// ── Client-Side Photo Auto-Optimizer Helper ────────────────────────────────────
+export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file; // Do not touch SVGs or animated GIFs
+  if (file.size <= 1.2 * 1024 * 1024) return file; // Skip photos already under 1.2MB
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= maxDim && height <= maxDim && file.size < 1.6 * 1024 * 1024) {
+        return resolve(file);
+      }
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob((blob) => {
+        if (!blob || blob.size >= file.size) {
+          return resolve(file);
+        }
+        const optFile = new File([blob], file.name, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        console.log(`⚡ Auto-optimized ${file.name}: ${(file.size / 1024).toFixed(0)}KB -> ${(optFile.size / 1024).toFixed(0)}KB`);
+        resolve(optFile);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
 import { addonManager, AddonMaker } from './addons.js';
 import { addonStore } from './addon-store.js';
 import { devAuth } from './dev-auth.js';
@@ -455,6 +573,12 @@ class AetherApp {
       initPublicChatbot(cbConfig);
     }
 
+    // Mount Floating Back to Top Button
+    const bttConfig = siteSettings.backToTop || { enabled: true };
+    if (bttConfig.enabled !== false) {
+      initBackToTopButton();
+    }
+
     // Dismiss initial loading overlay
     removeInitialLoader();
   }
@@ -575,6 +699,16 @@ class AetherApp {
             <!-- Add-On Store Button -->
             <button class="topbar-btn" id="btn-topbar-store" style="background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe; display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" title="Browse & Install Add-ons from the Store">
               <span>🛒</span> Store
+            </button>
+
+            <!-- 1-Click Copy Public Link -->
+            <button class="tool-icon-btn" id="btn-topbar-copy-link" title="Copy Live Website URL">
+              <span>📋</span>
+            </button>
+
+            <!-- Mobile Preview QR Code -->
+            <button class="tool-icon-btn" id="btn-topbar-qr" title="Show Mobile Test QR Code">
+              <span>📱</span>
             </button>
 
             <!-- Publish Button -->
@@ -1140,6 +1274,20 @@ class AetherApp {
                     <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">Receive instant email notifications when someone submits a contact form or chatbot lead.</div>
                   </div>
                 </div>
+
+                <!-- Floating Back to Top Button Setting -->
+                <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span>⬆️</span> Floating Back-to-Top Button</span>
+                    <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
+                      <input type="checkbox" id="site-backtotop-enable" checked style="cursor:pointer;" />
+                      <span>Enable</span>
+                    </label>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim);">
+                    Displays a smooth floating circular button at the bottom-right corner when visitors scroll down, allowing 1-tap return to the top.
+                  </div>
+                </div>
               </div>
 
               <!-- Add-ons & Widget Plugins Panel -->
@@ -1184,6 +1332,22 @@ class AetherApp {
               <div id="tab-developer-panel" style="display: none; padding-bottom: 24px;">
                 <!-- Dynamically rendered via renderDeveloperPanel() -->
               </div>
+            </div>
+
+            <!-- Sticky Bottom Publish Dock (Always accessible in Mobile Portrait & Desktop) -->
+            <div class="sidebar-bottom-dock" id="sidebar-bottom-dock">
+              <button type="button" class="sidebar-btn-publish" id="btn-sidebar-publish" title="Publish Canvas Changes to Live Website">
+                <span>🚀</span> <strong>Publish Live</strong>
+              </button>
+              <button type="button" class="sidebar-dock-action-btn" id="btn-sidebar-copy-link" title="Copy Public Live URL">
+                <span>📋</span>
+              </button>
+              <button type="button" class="sidebar-dock-action-btn" id="btn-sidebar-qr" title="Show Mobile Test QR Code">
+                <span>📱</span>
+              </button>
+              <a href="index.html?view=public" target="_blank" class="sidebar-dock-action-btn" id="btn-sidebar-view-live" title="Open Live Site in New Tab">
+                <span>🌐</span>
+              </a>
             </div>
           </aside>
 
@@ -1684,7 +1848,19 @@ class AetherApp {
     let skipped = 0;
     const total = files.length;
 
-    for (const file of files) {
+    // Automatically optimize oversized images before upload to save bandwidth & disk space
+    statusText.textContent = `Optimizing ${files.length} asset${files.length > 1 ? 's' : ''}...`;
+    const readyFiles = [];
+    for (const f of files) {
+      try {
+        const opt = await optimizeImageForUpload(f);
+        readyFiles.push(opt);
+      } catch (err) {
+        readyFiles.push(f);
+      }
+    }
+
+    for (const file of readyFiles) {
       // Sanitize filename the same way the backend does
       const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
       const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_');
@@ -3656,6 +3832,16 @@ git push -u origin main</textarea>
       });
     }
 
+    // Back to Top Button Wiring
+    const bttEnableCb = document.getElementById('site-backtotop-enable');
+    if (bttEnableCb) {
+      bttEnableCb.addEventListener('change', (e) => {
+        const cur = state.siteSettings.backToTop || { enabled: true };
+        state.setSiteSetting('backToTop', { ...cur, enabled: e.target.checked });
+        this.canvas?.showToast(e.target.checked ? '⬆️ Back-to-top button enabled' : 'Back-to-top button disabled', 'info');
+      });
+    }
+
     // Chatbot Settings Wiring
     const cbEnableCb = document.getElementById('site-chatbot-enable');
     if (cbEnableCb) {
@@ -4010,6 +4196,10 @@ git push -u origin main</textarea>
     const cbEnableEl = document.getElementById('site-chatbot-enable');
     if (cbEnableEl) cbEnableEl.checked = cb.enabled !== false;
 
+    const btt = s.backToTop || { enabled: true };
+    const bttEnableEl = document.getElementById('site-backtotop-enable');
+    if (bttEnableEl) bttEnableEl.checked = btt.enabled !== false;
+
     // Sync Global Background Image inputs
     const gBg = s.globalBg || {};
     const gBgEnable = document.getElementById('site-global-bg-enable');
@@ -4145,23 +4335,51 @@ git push -u origin main</textarea>
       }
     });
 
-    // Publish to Live Public View (Handles both topbar & floating buttons)
+    // Copy Public Link Helper
+    const copyPublicLiveUrl = () => {
+      const base = window.location.origin + window.location.pathname.replace(/index\.html$/, '');
+      const pubUrl = `${base}index.html?view=public`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pubUrl).then(() => {
+          this.canvas?.showToast('📋 Public live link copied to clipboard!', 'success');
+        }).catch(() => {
+          prompt('Copy public website URL:', pubUrl);
+        });
+      } else {
+        prompt('Copy public website URL:', pubUrl);
+      }
+    };
+
+    // Publish to Live Public View (Handles both topbar & sticky sidebar bottom dock)
     const handlePublish = async () => {
       const topbarBtn = document.getElementById('btn-publish');
-      
+      const sidebarBtn = document.getElementById('btn-sidebar-publish');
 
       const setPublishState = (disabled, text) => {
-        if (topbarBtn) { topbarBtn.disabled = disabled; topbarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> ${text}`; }
-        
+        if (topbarBtn) {
+          topbarBtn.disabled = disabled;
+          topbarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> ${text}`;
+        }
+        if (sidebarBtn) {
+          sidebarBtn.disabled = disabled;
+          sidebarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> <span class="publish-label">${text}</span>`;
+        }
       };
 
       setPublishState(true, 'Publishing...');
       await state.publishToLive();
       setPublishState(false, 'Publish Live');
-      this.canvas.showToast('🚀 Changes published live! Synced to Hostinger server.', 'success');
+      this.canvas.showToast('🚀 Changes published live! Synced to server.', 'success');
     };
 
     document.getElementById('btn-publish')?.addEventListener('click', handlePublish);
+    document.getElementById('btn-sidebar-publish')?.addEventListener('click', handlePublish);
+
+    document.getElementById('btn-topbar-copy-link')?.addEventListener('click', copyPublicLiveUrl);
+    document.getElementById('btn-sidebar-copy-link')?.addEventListener('click', copyPublicLiveUrl);
+
+    document.getElementById('btn-topbar-qr')?.addEventListener('click', () => this.showQrModal());
+    document.getElementById('btn-sidebar-qr')?.addEventListener('click', () => this.showQrModal());
     
 
     // Sync / Pull Latest from Server
