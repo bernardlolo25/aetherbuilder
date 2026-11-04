@@ -1,0 +1,48 @@
+﻿name: Deploy Update to Hosting (FTP)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'aetherbuilder-update.zip'
+      - 'version.json'
+
+jobs:
+  deploy-update:
+    name: Upload aetherbuilder-update.zip via FTP
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repo so we have the updated files
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Upload aetherbuilder-update.zip to hosting root via FTP
+      - name: Upload update ZIP via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          # Only upload these two files â€” nothing else
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          include: |
+            aetherbuilder-update.zip
+            version.json
+          # Exclude everything else
+          exclude: |
+            **/*
+            !aetherbuilder-update.zip
+            !version.json
+          log-level: standard
+          timeout: 60000
+
+      # 3. Print confirmation
+      - name: Deployment complete
+        run: |
+          echo "âœ… aetherbuilder-update.zip and version.json uploaded to hosting successfully!"
+          echo "All AetherBuilder admin panels will now see the update notification."
