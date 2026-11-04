@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.7';
+export const APP_VERSION = '2.9.8';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -24,9 +24,8 @@ export function removeInitialLoader() {
   if (loader) {
     loader.style.opacity = '0';
     loader.style.pointerEvents = 'none';
-    setTimeout(() => {
-      try { loader.remove(); } catch (e) {}
-    }, 200);
+    loader.style.display = 'none';
+    try { loader.remove(); } catch (e) {}
   }
 }
 import { addonManager, AddonMaker } from './addons.js';
@@ -817,16 +816,28 @@ class AetherApp {
                   </div>
                 </div>
 
-                <!-- Pre-loader & Splash Screen Settings -->
+                                <!-- Pre-loader & Splash Screen Settings -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>⏳</span> Splash Screen &amp; Pre-loader</span>
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span>⚡</span> Splash Screen &amp; Pre-loader</span>
                     <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
                       <input type="checkbox" id="site-loader-enable" checked style="cursor:pointer;" />
-                      <span>Enable Captions</span>
+                      <span id="site-loader-enable-label" style="font-weight:600;color:#a5b4fc;">Enable Splash Screen</span>
                     </label>
                   </div>
-                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px;">Customize or toggle the loading title and sub-caption displayed when visitors or admins refresh the page.</div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px;">
+                    Control the initial dark loading screen. When disabled, your website renders immediately with zero black screen overlay.
+                  </div>
+
+                  <!-- Instant Loading Notice when disabled -->
+                  <div id="site-loader-disabled-notice" style="display:none;padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;text-align:center;margin-bottom:8px;">
+                    <div style="font-size:0.8rem;font-weight:700;color:#34d399;display:flex;align-items:center;justify-content:center;gap:6px;">
+                      <span>⚡</span> Instant Page Loading Active
+                    </div>
+                    <div style="font-size:0.72rem;color:#94a3b8;margin-top:4px;">
+                      The black splash screen and initializing animation are completely disabled. Visitors see your header, layout, and background immediately.
+                    </div>
+                  </div>
 
                   <div id="site-loader-controls" style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -844,10 +855,11 @@ class AetherApp {
                         </label>
                       </div>
                       <input type="text" id="site-loader-subcaption" placeholder="e.g. Initializing modules &amp; layout engine" style="font-size:0.78rem;" />
+                      <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;">When unchecked, the initializing text &amp; animation are completely disabled.</div>
                     </div>
 
                     <!-- Live Mini Splash Preview -->
-                    <div style="margin-top: 4px; padding: 12px; background: #090d16; border: 1px solid rgba(99,102,241,0.25); border-radius: 8px; text-align: center;">
+                    <div id="site-loader-preview-box" style="margin-top: 4px; padding: 12px; background: #090d16; border: 1px solid rgba(99,102,241,0.25); border-radius: 8px; text-align: center;">
                       <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 8px;">Live Splash Preview</div>
                       <div style="display: inline-block; width: 24px; height: 24px; border: 2px solid rgba(99,102,241,0.2); border-top-color: #6366f1; border-radius: 50%; animation: aether-spin 0.8s linear infinite; margin-bottom: 8px;"></div>
                       <div id="site-loader-preview-caption" style="font-size: 0.82rem; font-weight: 600; color: #f8fafc; letter-spacing: 0.01em;">Loading...</div>
@@ -3595,6 +3607,10 @@ git push -u origin main</textarea>
     if (loaderEnableCb) {
       loaderEnableCb.addEventListener('change', (e) => {
         state.setSiteSetting('loaderEnabled', e.target.checked);
+        if (state.siteSettings.loader) {
+          state.siteSettings.loader.enabled = e.target.checked;
+        }
+        state.syncLoaderCache();
         this.updateLoaderPreview();
       });
     }
@@ -3602,6 +3618,10 @@ git push -u origin main</textarea>
     if (loaderCapInput) {
       loaderCapInput.addEventListener('input', (e) => {
         state.setSiteSetting('loaderCaption', e.target.value);
+        if (state.siteSettings.loader) {
+          state.siteSettings.loader.caption = e.target.value;
+        }
+        state.syncLoaderCache();
         this.updateLoaderPreview();
       });
     }
@@ -3609,6 +3629,10 @@ git push -u origin main</textarea>
     if (loaderSubInput) {
       loaderSubInput.addEventListener('input', (e) => {
         state.setSiteSetting('loaderSubcaption', e.target.value);
+        if (state.siteSettings.loader) {
+          state.siteSettings.loader.subcaption = e.target.value;
+        }
+        state.syncLoaderCache();
         this.updateLoaderPreview();
       });
     }
@@ -3616,6 +3640,10 @@ git push -u origin main</textarea>
     if (loaderSubEnableCb) {
       loaderSubEnableCb.addEventListener('change', (e) => {
         state.setSiteSetting('loaderShowSubcaption', e.target.checked);
+        if (state.siteSettings.loader) {
+          state.siteSettings.loader.showSubcaption = e.target.checked;
+        }
+        state.syncLoaderCache();
         this.updateLoaderPreview();
       });
     }
@@ -4040,15 +4068,30 @@ git push -u origin main</textarea>
   updateLoaderPreview() {
     const s = state.siteSettings || {};
     const l = s.loader || {};
-    const enabled = s.loaderEnabled !== undefined ? s.loaderEnabled : (l.enabled !== false);
+    const enabled = s.loaderEnabled !== undefined ? (s.loaderEnabled !== false) : (l.enabled !== false);
     const caption = s.loaderCaption !== undefined && s.loaderCaption !== '' ? s.loaderCaption : (l.caption || (s.siteName ? `Loading ${s.siteName}...` : 'Loading...'));
     const subcaption = s.loaderSubcaption !== undefined && s.loaderSubcaption !== '' ? s.loaderSubcaption : (l.subcaption || 'Initializing modules & layout engine');
-    const showSub = s.loaderShowSubcaption !== undefined ? s.loaderShowSubcaption : (l.showSubcaption !== false);
+    const showSub = s.loaderShowSubcaption !== undefined ? (s.loaderShowSubcaption !== false) : (l.showSubcaption !== false);
 
+    const enableLabel = document.getElementById('site-loader-enable-label');
+    const disabledNotice = document.getElementById('site-loader-disabled-notice');
+    const previewBox = document.getElementById('site-loader-preview-box');
     const previewCap = document.getElementById('site-loader-preview-caption');
     const previewSub = document.getElementById('site-loader-preview-subcaption');
     const subInput = document.getElementById('site-loader-subcaption');
     const capInput = document.getElementById('site-loader-caption');
+
+    if (enableLabel) {
+      enableLabel.textContent = enabled ? 'Enable Splash Screen' : 'Disabled (Instant Load)';
+      enableLabel.style.color = enabled ? '#a5b4fc' : '#34d399';
+    }
+
+    if (disabledNotice) {
+      disabledNotice.style.display = enabled ? 'none' : 'block';
+    }
+    if (previewBox) {
+      previewBox.style.display = enabled ? 'block' : 'none';
+    }
 
     if (previewCap) {
       previewCap.style.display = enabled ? 'block' : 'none';
@@ -4060,7 +4103,8 @@ git push -u origin main</textarea>
     }
     if (subInput) {
       subInput.disabled = !showSub;
-      subInput.style.opacity = showSub ? '1' : '0.5';
+      subInput.style.opacity = showSub ? '1' : '0.4';
+      subInput.style.cursor = showSub ? 'text' : 'not-allowed';
     }
     if (capInput && !capInput.value && s.siteName) {
       capInput.placeholder = `Loading ${s.siteName}...`;

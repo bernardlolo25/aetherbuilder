@@ -452,12 +452,19 @@ class BuilderState {
     try {
       const s = this.siteSettings || {};
       const l = s.loader || {};
+      const enabled = s.loaderEnabled !== undefined ? (s.loaderEnabled !== false) : (l.enabled !== false);
+      const showSub = s.loaderShowSubcaption !== undefined ? (s.loaderShowSubcaption !== false) : (l.showSubcaption !== false);
       const cfg = {
-        enabled: s.loaderEnabled !== undefined ? s.loaderEnabled : (l.enabled !== false),
+        enabled: enabled,
         caption: s.loaderCaption !== undefined ? s.loaderCaption : (l.caption !== undefined ? l.caption : (s.siteName ? `Loading ${s.siteName}...` : 'Loading...')),
         subcaption: s.loaderSubcaption !== undefined ? s.loaderSubcaption : (l.subcaption !== undefined ? l.subcaption : 'Initializing modules & layout engine'),
-        showSubcaption: s.loaderShowSubcaption !== undefined ? s.loaderShowSubcaption : (l.showSubcaption !== false)
+        showSubcaption: showSub
       };
+      if (!this.siteSettings.loader) this.siteSettings.loader = {};
+      this.siteSettings.loader.enabled = enabled;
+      this.siteSettings.loader.showSubcaption = showSub;
+      this.siteSettings.loaderEnabled = enabled;
+      this.siteSettings.loaderShowSubcaption = showSub;
       localStorage.setItem('aether_site_loader_config', JSON.stringify(cfg));
     } catch (e) {}
   }
