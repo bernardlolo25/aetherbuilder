@@ -1136,6 +1136,40 @@ export class InspectorPanel {
       });
     };
 
+    // ── Image Shape selector ───────────────────────────────────────
+    const shapeRow = document.createElement('div');
+    shapeRow.className = 'fb-row';
+    shapeRow.style.cssText = 'margin-top:8px;';
+    shapeRow.innerHTML = `<span class="fb-row-label" style="min-width:110px;">Image Shape</span>`;
+    const shapeSelect = document.createElement('select');
+    shapeSelect.className = 'fb-select';
+    [['square','Square (1:1)'],['landscape','Landscape (16:9)'],['wide','Wide (4:3)'],['portrait','Portrait (3:4)']].forEach(([v,l]) => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = l;
+      if ((f.imageShape || 'square') === v) o.selected = true;
+      shapeSelect.appendChild(o);
+    });
+    shapeSelect.addEventListener('change', e => { f.imageShape = e.target.value; save(); });
+    shapeRow.appendChild(shapeSelect);
+    section.appendChild(shapeRow);
+
+    // ── List Layout selector ────────────────────────────────────────
+    const layoutRow = document.createElement('div');
+    layoutRow.className = 'fb-row';
+    layoutRow.style.cssText = 'margin-top:6px;';
+    layoutRow.innerHTML = `<span class="fb-row-label" style="min-width:110px;">List Layout</span>`;
+    const layoutSelect = document.createElement('select');
+    layoutSelect.className = 'fb-select';
+    [['horizontal','Horizontal (cards side by side)'],['vertical','Vertical (stacked rows)']].forEach(([v,l]) => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = l;
+      if ((f.listLayout || 'horizontal') === v) o.selected = true;
+      layoutSelect.appendChild(o);
+    });
+    layoutSelect.addEventListener('change', e => { f.listLayout = e.target.value; save(); });
+    layoutRow.appendChild(layoutSelect);
+    section.appendChild(layoutRow);
+
     renderOptList();
     section.appendChild(optList);
 
