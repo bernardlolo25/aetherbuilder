@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.1';
+export const APP_VERSION = '2.9.2';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -5316,19 +5316,30 @@ ${addonManager.getAllActiveJs()}
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 
     try {
-      const res = await fetch('api.php?action=get_revisions');
-      const data = await res.json();
+      const token = typeof getAdminToken === 'function' ? getAdminToken() : '';
+      const res = await fetch(`api.php?action=get_revisions&admin_token=${encodeURIComponent(token)}&_t=${Date.now()}`, {
+        headers: { 'X-Admin-Token': token }
+      });
+      let data = {};
+      const text = await res.text();
+      try {
+        data = text && text.trim() ? JSON.parse(text) : {};
+      } catch (jsonErr) {
+        console.warn('Revisions response was not valid JSON:', text);
+        data = { success: false, revisions: [] };
+      }
       const loading = modal.querySelector('#revisions-loading');
       const list = modal.querySelector('#revisions-list');
       if (loading) loading.style.display = 'none';
       if (list) list.style.display = 'flex';
 
-      let revs = data.revisions || [];
+      let revs = Array.isArray(data.revisions) ? data.revisions : [];
       if (revs.length === 0) {
         // Fallback: check localStorage for cached publish revisions
         try {
           const cached = localStorage.getItem('aether_site_revisions');
           if (cached) revs = JSON.parse(cached);
+          if (!Array.isArray(revs)) revs = [];
         } catch {}
       }
 

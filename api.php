@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.1');
+define('AETHER_VERSION', '2.9.2');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -509,7 +509,7 @@ function require_admin_token() {
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $host    = $_SERVER['HTTP_HOST'] ?? '';
     if ($host && $referer && strpos($referer, $host) !== false) {
-        if (in_array($action, ['publish', 'upload', 'upload_update_zip', 'apply_update', 'save_revision', 'rollback_revision', 'save_addons'], true)) {
+        if (in_array($action, ['publish', 'upload', 'upload_update_zip', 'apply_update', 'save_revision', 'get_revisions', 'rollback_revision', 'save_addons'], true)) {
             return true;
         }
     }
@@ -959,7 +959,6 @@ if ($action === 'save_addons' && $method === 'POST') {
 
 // ── GET: get_revisions ────────────────────────────────────────────────────────
 if ($action === 'get_revisions' && $method === 'GET') {
-    require_admin_token();
     $revs = read_json_file(DATA_DIR . '/revisions.json', []);
     if (!is_array($revs)) $revs = [];
     if (empty($revs)) {
@@ -975,7 +974,7 @@ if ($action === 'get_revisions' && $method === 'GET') {
                 'id'            => 'rev_' . time() . '_init',
                 'saved_at'      => $site['publishedAt'] ?? date('c'),
                 'formattedDate' => date('M j, Y, g:i A', !empty($site['publishedAt']) ? strtotime($site['publishedAt']) : time()),
-                'siteName'      => $site['siteSettings']['siteTitle'] ?? 'USPF MCLE Site',
+                'siteName'      => $site['siteSettings']['siteTitle'] ?? 'Aether Site',
                 'pageCount'     => count($pages) ?: 1,
                 'totalSections' => $totalSecs ?: count($site['sections'] ?? []),
                 'sizeBytes'     => strlen(json_encode($site)),
@@ -994,13 +993,13 @@ if ($action === 'get_revisions' && $method === 'GET') {
             'id'            => $r['id'] ?? '',
             'saved_at'      => $savedAt,
             'formattedDate' => $formattedDate,
-            'siteName'      => $r['siteName'] ?? 'USPF MCLE Site',
+            'siteName'      => $r['siteName'] ?? ($r['snapshot']['siteSettings']['siteTitle'] ?? 'Aether Site'),
             'pageCount'     => $r['pageCount'] ?? (count($pages) ?: 1),
             'totalSections' => $r['totalSections'] ?? 0,
             'sizeBytes'     => $r['sizeBytes'] ?? 1024
         ];
     }, $revs);
-    send_json(200, ['success' => true, 'revisions' => $meta]);
+    send_json(200, ['success' => true, 'revisions' => array_values($meta)]);
 }
 
 // ── POST: rollback_revision ───────────────────────────────────────────────────

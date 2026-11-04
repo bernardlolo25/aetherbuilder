@@ -1,9 +1,10 @@
 {
   "name": "AetherBuilder",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "release_date": "2026-11-03",
   "min_php": "7.4",
   "changelog": [
+    "Fix: Resolved 'Unexpected end of JSON input' in Publish Version History & Revisions list with safe response parsing, token parameters, and same-origin whitelist",
     "New: Customizable Splash Screen & Pre-loader Settings in Site Settings (⚙️) — full control over loading title, sub-caption, toggle visibility, and live mini-preview",
     "Fix: Resolved black screen bug in Admin Studio & Public View caused by loader z-index conflicts; initial loader auto-dismisses immediately",
     "Fix: Added Argon2 login modal loader dismissal ensuring security prompts are always visible above any overlay",

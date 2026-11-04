@@ -512,6 +512,80 @@ http.createServer(async (req, res) => {
       }
     }
 
+    // GET: get_revisions
+    if (req.method === 'GET' && action === 'get_revisions') {
+      try {
+        const revFile = path.join(ROOT, 'data', 'revisions.json');
+        let revs = [];
+        if (fs.existsSync(revFile)) {
+          try {
+            revs = JSON.parse(fs.readFileSync(revFile, 'utf8') || '[]');
+          } catch {}
+        }
+        if (!Array.isArray(revs)) revs = [];
+        const meta = revs.map(r => ({
+          id: r.id || '',
+          saved_at: r.saved_at || new Date().toISOString(),
+          formattedDate: r.formattedDate || new Date().toLocaleString(),
+          siteName: r.siteName || (r.snapshot?.siteSettings?.siteTitle || 'Aether Site'),
+          pageCount: r.pageCount || (r.snapshot?.pages?.length || 1),
+          totalSections: r.totalSections || 0,
+          sizeBytes: r.sizeBytes || 1024
+        }));
+        return json(res, 200, { success: true, revisions: meta });
+      } catch (err) {
+        return json(res, 200, { success: true, revisions: [] });
+      }
+    }
+
+    // POST: save_revision
+    if (req.method === 'POST' && action === 'save_revision') {
+      try {
+        const bodyStr = (await readBody(req)).toString('utf8');
+        const body = JSON.parse(bodyStr || '{}');
+        const revFile = path.join(ROOT, 'data', 'revisions.json');
+        let revs = [];
+        if (fs.existsSync(revFile)) {
+          try {
+            revs = JSON.parse(fs.readFileSync(revFile, 'utf8') || '[]');
+          } catch {}
+        }
+        if (!Array.isArray(revs)) revs = [];
+        const newRev = Object.assign({}, body, {
+          id: 'rev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          saved_at: new Date().toISOString(),
+          label: body.label || 'Auto-save'
+        });
+        revs.unshift(newRev);
+        if (revs.length > 20) revs = revs.slice(0, 20);
+        fs.writeFileSync(revFile, JSON.stringify(revs, null, 2), 'utf8');
+        return json(res, 200, { success: true, id: newRev.id });
+      } catch (err) {
+        return json(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // POST: rollback_revision
+    if (req.method === 'POST' && action === 'rollback_revision') {
+      try {
+        const bodyStr = (await readBody(req)).toString('utf8');
+        const { revisionId, id } = JSON.parse(bodyStr || '{}');
+        const targetId = revisionId || id;
+        const revFile = path.join(ROOT, 'data', 'revisions.json');
+        let revs = [];
+        if (fs.existsSync(revFile)) {
+          revs = JSON.parse(fs.readFileSync(revFile, 'utf8') || '[]');
+        }
+        const rev = revs.find(r => r.id === targetId);
+        if (!rev) return json(res, 404, { success: false, error: 'Revision not found' });
+        const snapshot = rev.snapshot || rev;
+        fs.writeFileSync(path.join(ROOT, 'data', 'site.json'), JSON.stringify(snapshot, null, 2), 'utf8');
+        return json(res, 200, { success: true, message: 'Restored successfully' });
+      } catch (err) {
+        return json(res, 500, { success: false, error: err.message });
+      }
+    }
+
     json(res, 400, { error: 'unknown action: ' + action });
     return;
   }
