@@ -1,18 +1,18 @@
 {
   "name": "AetherBuilder",
-  "version": "2.9.9",
+  "version": "2.9.10",
   "release_date": "2026-11-05",
   "min_php": "7.4",
   "changelog": [
-    "New: Sticky Bottom Publish Dock in Sidebar - '\ud83d\ude80 Publish Live' button permanently accessible at the bottom of the sidebar drawer on mobile portrait web browsers and desktop",
-    "New: Mobile Live Preview QR Code - 1-click '\ud83d\udcf1' button in Topbar and Sidebar Dock generates a crisp scannable QR Code to immediately test live sites on phones",
-    "New: 1-Click '\ud83d\udccb Copy Live URL' - quickly copy public site link from the Topbar, Sidebar Dock, or QR Modal with instant toast feedback",
+    "New: Facebook Messenger Bridge Integration - Site Tab includes Messenger Bridge with customizable Page Username/ID, direct launcher mode, and 1-click 'Open Studio' shortcut",
+    "New: Topbar Messenger Bot Studio Shortcut - direct 1-click button in builder topbar to launch the 24/7 Messenger Bot Studio",
+    "New: Sticky Bottom Publish Dock in Sidebar - Publish Live button permanently accessible at the bottom of the sidebar drawer on mobile portrait web browsers and desktop",
+    "New: Mobile Live Preview QR Code - 1-click button in Topbar and Sidebar Dock generates a crisp scannable QR Code to immediately test live sites on phones",
+    "New: 1-Click Copy Live URL - quickly copy public site link from the Topbar, Sidebar Dock, or QR Modal with instant toast feedback",
     "Performance: Client-Side Photo Auto-Optimizer - oversized raster images (>1.2MB / >1920px) are automatically scaled and compressed on canvas before upload, speeding up uploads 10x and saving server disk space",
-    "UX: Floating 'Back to Top' Button in Site Settings (\u2699\ufe0f Site Tab) - smooth circular button that appears when scrolling down, bringing visitors back to the top with one tap",
-    "Mobile UX: Responsive Topbar improvements - brand title collapses to icon on phone screens and actions container supports horizontal scrolling, preventing button clipping in portrait mode",
+    "UX: Floating Back to Top Button in Site Settings - smooth circular button that appears when scrolling down, bringing visitors back to the top with one tap",
     "Performance: Instant Page Loading (Splash Screen & Pre-loader 100% Optional) - when disabled, the entire black screen, spinner overlay, and initialization delay are completely bypassed",
     "UX: Fully disableable Sub-caption - unchecking 'Show' on Sub-caption immediately eliminates 'Initializing modules & layout engine' text and its timing"
   ],
-  "download_url": "aetherbuilder-update.zip",
-  "releaseDate": "2026-11-05"
+  "download_url": "https://github.com/bernardlolo25/aetherbuilder-releases/releases/download/v2.9.10/aetherbuilder-update.zip"
 }

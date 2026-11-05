@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.9';
+export const APP_VERSION = '2.9.10';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -4195,6 +4195,15 @@ git push -u origin main</textarea>
 
     const cbEnableEl = document.getElementById('site-chatbot-enable');
     if (cbEnableEl) cbEnableEl.checked = cb.enabled !== false;
+
+    const msgrEnableEl = document.getElementById('site-messenger-enable');
+    if (msgrEnableEl) msgrEnableEl.checked = !!cb.messengerEnabled;
+
+    const msgrDirectEl = document.getElementById('site-messenger-direct');
+    if (msgrDirectEl) msgrDirectEl.checked = !!cb.messengerDirectLaunch;
+
+    const msgrPageIdEl = document.getElementById('site-messenger-page-id');
+    if (msgrPageIdEl) msgrPageIdEl.value = cb.messengerPageId || '';
 
     const btt = s.backToTop || { enabled: true };
     const bttEnableEl = document.getElementById('site-backtotop-enable');

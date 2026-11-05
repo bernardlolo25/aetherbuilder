@@ -13,6 +13,9 @@ export const DEFAULT_CHATBOT_CONFIG = {
   avatar: '⚖️',
   bubbleText: 'Need help? Ask us!',
   primaryColor: '#6366f1',
+  messengerEnabled: false,
+  messengerPageId: '',
+  messengerDirectLaunch: false,
   nodes: [
     {
       id: 'start',
@@ -182,7 +185,15 @@ export function initPublicChatbot(customConfig = {}) {
     }
   };
 
-  launcherEl.addEventListener('click', () => toggleWindow());
+  launcherEl.addEventListener('click', () => {
+    if (config.messengerDirectLaunch && (config.messengerPageId || config.messengerUrl)) {
+      const pId = (config.messengerPageId || '').replace(/^@/, '').trim();
+      const msgrUrl = config.messengerUrl || ('https://m.me/' + encodeURIComponent(pId));
+      window.open(msgrUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    toggleWindow();
+  });
   closeBtn.addEventListener('click', () => toggleWindow(false));
   restartBtn.addEventListener('click', () => {
     chatHistory = [];
@@ -343,6 +354,22 @@ export function initPublicChatbot(customConfig = {}) {
       return;
     }
 
+    // Facebook Messenger Bridge Button
+    if (config.messengerEnabled && (config.messengerPageId || config.messengerUrl)) {
+      const pId = (config.messengerPageId || '').replace(/^@/, '').trim();
+      const msgrUrl = config.messengerUrl || ('https://m.me/' + encodeURIComponent(pId));
+      const msgrPill = document.createElement('a');
+      msgrPill.className = 'aether-chat-messenger-pill';
+      msgrPill.href = msgrUrl;
+      msgrPill.target = '_blank';
+      msgrPill.rel = 'noopener noreferrer';
+      msgrPill.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#0084FF" style="flex-shrink:0;"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.914 1.455 5.518 3.735 7.18v3.562l3.42-1.877c.905.251 1.865.387 2.845.387 5.523 0 10-4.145 10-9.252C22 6.145 17.523 2 12 2zm1.066 12.443l-2.613-2.787-5.097 2.787 5.607-5.952 2.68 2.787 5.03-2.787-5.607 5.952z"/></svg>
+        <span>Chat on Facebook Messenger</span>
+      `;
+      optionsEl.appendChild(msgrPill);
+    }
+
     opts.forEach(opt => {
       const chip = document.createElement('button');
       chip.className = 'aether-chat-chip animate-fade-in';
@@ -366,6 +393,37 @@ function injectChatbotStyles() {
   const style = document.createElement('style');
   style.id = 'aether-chatbot-styles';
   style.textContent = `
+    /* Messenger Bridge Link in Chat Window */
+    .aether-chat-messenger-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 7px 12px;
+      background: rgba(0, 132, 255, 0.1);
+      border: 1px solid rgba(0, 132, 255, 0.3);
+      border-radius: 8px;
+      color: #60a5fa;
+      font-size: 0.74rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    .aether-chat-messenger-pill:hover {
+      background: #0084FF;
+      color: #ffffff;
+      border-color: #0084FF;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 132, 255, 0.3);
+    }
+    .aether-chat-messenger-pill:hover svg {
+      fill: #ffffff;
+    }
+
     /* Chatbot Root */
     #aether-chatbot-root {
       position: fixed;
