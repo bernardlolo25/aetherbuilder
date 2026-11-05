@@ -372,6 +372,71 @@ export class InspectorPanel {
           group.appendChild(syncCard);
         }
 
+        // ── Catalog Bridge: Import Live Products for addon_culinary_grid
+        if (field.key === 'items' && activeEl.addonId === 'addon_culinary_grid') {
+          const catCard = document.createElement('div');
+          catCard.className = 'sheet-sync-control-card';
+          catCard.innerHTML = `
+            <div class="sheet-sync-tip">
+              <span>🍰</span>
+              <div>
+                <strong>Messenger Bot Catalog Bridge:</strong>
+                <p>Click the button below to import your live product listing from the Messenger Bot catalog directly into this grid. Products are mapped automatically — name, price, image, and category tag.</p>
+                <p style="margin-top:4px;color:var(--text-dim);font-size:0.78rem;">💡 Tip: Enable <strong>Live Sync from Bot Catalog</strong> above to skip manual import and auto-update on page load.</p>
+              </div>
+            </div>
+            <div class="sheet-sync-actions">
+              <button type="button" class="sheet-sync-btn" id="btn-import-catalog-products">
+                <span>🔄</span> Import Live Products from Catalog
+              </button>
+              <div class="sheet-sync-msg" style="display:none;"></div>
+            </div>
+          `;
+
+          const catBtn = catCard.querySelector('#btn-import-catalog-products');
+          const catMsg = catCard.querySelector('.sheet-sync-msg');
+
+          catBtn.addEventListener('click', async () => {
+            catBtn.disabled = true;
+            catBtn.innerHTML = `<span>⏳</span> Fetching from catalog...`;
+            catMsg.style.display = 'block';
+            catMsg.className = 'sheet-sync-msg info';
+            catMsg.textContent = 'Connecting to Messenger Bot product catalog...';
+            try {
+              const res = await fetch('api.php?action=get_catalog_products', { cache: 'no-store' });
+              if (!res.ok) throw new Error(`Server returned ${res.status}`);
+              const data = await res.json();
+              if (!data.success || !Array.isArray(data.products) || data.products.length === 0) {
+                throw new Error('No active products found in catalog. Add products in the Bot Dashboard first.');
+              }
+              const currMap = { 'PHP': '₱', 'USD': '$' };
+              const mapped = data.products.map(p => ({
+                name:     p.name || '',
+                price:    (currMap[p.currency] || (p.currency + ' ')) + parseFloat(p.price || 0).toFixed(2),
+                imageUrl: p.image_url || '',
+                tag:      p.category || '',
+                link:     ''
+              }));
+              activeEl.props.items = mapped;
+              state.saveDraft();
+              state.notify('propUpdate');
+              catMsg.className = 'sheet-sync-msg success';
+              catMsg.innerHTML = `✅ <strong>Imported ${mapped.length} product(s) from catalog!</strong> Edit individual items above to customise.`;
+              catBtn.disabled = false;
+              catBtn.innerHTML = `<span>🔄</span> Re-import from Catalog`;
+              setTimeout(() => { this.render(); }, 700);
+            } catch (err) {
+              console.error('Catalog import failed:', err);
+              catMsg.className = 'sheet-sync-msg error';
+              catMsg.innerHTML = `❌ <strong>Import Failed:</strong> ${err.message || 'Could not reach catalog API.'}`;
+              catBtn.disabled = false;
+              catBtn.innerHTML = `<span>🔄</span> Retry Import`;
+            }
+          });
+
+          group.appendChild(catCard);
+        }
+
         // Google Apps Script Webhook Guide & Cheat-Sheet for registration_form
         if (field.key === 'googleSheetUrl' && activeEl.widgetType === 'registration_form') {
           const webhookCard = document.createElement('div');

@@ -3001,5 +3001,122 @@
     "template": "<div class=\"wb-addon-livechat-anchor\" data-provider=\"{{provider}}\" data-pos=\"{{position}}\" style=\"--lc-accent: {{accentColor}};\"></div>",
     "customCss": ".wb-addon-livechat-anchor {\n  display: block;\n}\n.wb-livechat-fab {\n  position: fixed;\n  bottom: 24px;\n  z-index: 9999;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 18px;\n  border-radius: 50px;\n  background: var(--lc-accent, #25d366);\n  color: #ffffff;\n  text-decoration: none;\n  font-family: inherit;\n  font-weight: 700;\n  font-size: 0.9rem;\n  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);\n  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n  cursor: pointer;\n  border: 1px solid rgba(255, 255, 255, 0.2);\n}\n.wb-livechat-fab:hover {\n  transform: translateY(-3px) scale(1.02);\n  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);\n  color: #ffffff;\n}\n.wb-livechat-fab--bottom-right {\n  right: 24px;\n}\n.wb-livechat-fab--bottom-left {\n  left: 24px;\n}\n.wb-livechat-icon {\n  font-size: 1.3rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n}\n.wb-livechat-pulse {\n  position: absolute;\n  top: -2px;\n  right: -2px;\n  width: 12px;\n  height: 12px;\n  background: #22c55e;\n  border: 2px solid #ffffff;\n  border-radius: 50%;\n  animation: wbChatPulse 2s infinite;\n}\n@keyframes wbChatPulse {\n  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }\n  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }\n  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }\n}\n@media (max-width: 640px) {\n  .wb-livechat-fab {\n    padding: 12px;\n    border-radius: 50%;\n    bottom: 20px;\n  }\n  .wb-livechat-fab .wb-livechat-label {\n    display: none;\n  }\n}",
     "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-livechat-anchor') || el;\n  if (!root) return;\n\n  var provider = props.provider || 'whatsapp';\n  var pos = props.position || 'bottom-right';\n  var label = props.buttonLabel || 'Chat with us';\n  var accent = props.accentColor || '#25d366';\n  var esc = function(s) { return String(s || '').replace(/[&<>\"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]; }); };\n\n  // 1. WhatsApp Floating Button\n  if (provider === 'whatsapp') {\n    var rawPhone = (props.whatsappNumber || '').replace(/[^0-9]/g, '');\n    var msg = encodeURIComponent(props.whatsappMessage || 'Hello!');\n    var href = rawPhone ? ('https://wa.me/' + rawPhone + '?text=' + msg) : '#';\n\n    var btn = document.createElement('a');\n    btn.className = 'wb-livechat-fab wb-livechat-fab--' + pos;\n    btn.href = href;\n    btn.target = '_blank';\n    btn.rel = 'noopener noreferrer';\n    btn.style.setProperty('--lc-accent', accent);\n    btn.innerHTML = '<span class=\"wb-livechat-icon\" aria-hidden=\"true\">💚</span><span class=\"wb-livechat-label\">' + esc(label) + '</span><span class=\"wb-livechat-pulse\"></span>';\n\n    // Remove any previous widget\n    var prev = document.querySelector('.wb-livechat-fab');\n    if (prev) prev.remove();\n\n    document.body.appendChild(btn);\n\n    el.__wbDestroy = function() {\n      if (btn && btn.parentNode) btn.parentNode.removeChild(btn);\n    };\n    return;\n  }\n\n  // 2. Tawk.to Free Live Chat\n  if (provider === 'tawk') {\n    var propId = (props.propertyId || '').trim();\n    if (!propId) return;\n    if (document.querySelector('script[src*=\"tawk.to\"]')) return;\n\n    window.Tawk_API = window.Tawk_API || {};\n    window.Tawk_LoadStart = new Date();\n    var s = document.createElement('script');\n    s.async = true;\n    s.src = 'https://embed.tawk.to/' + propId + '/default';\n    s.charset = 'UTF-8';\n    s.setAttribute('crossorigin', '*');\n    document.head.appendChild(s);\n    return;\n  }\n\n  // 3. Crisp Customer Messaging\n  if (provider === 'crisp') {\n    var crispId = (props.propertyId || '').trim();\n    if (!crispId) return;\n    if (document.querySelector('script[src*=\"client.crisp.chat\"]')) return;\n\n    window.$crisp = [];\n    window.CRISP_WEBSITE_ID = crispId;\n    var s2 = document.createElement('script');\n    s2.src = 'https://client.crisp.chat/l.js';\n    s2.async = true;\n    document.head.appendChild(s2);\n    return;\n  }\n\n  // 4. Custom Script Embed\n  if (provider === 'custom') {\n    var scriptUrl = (props.embedScriptUrl || '').trim();\n    if (!scriptUrl) return;\n    if (document.querySelector('script[src=\"' + scriptUrl + '\"]')) return;\n\n    var s3 = document.createElement('script');\n    s3.src = scriptUrl;\n    s3.async = true;\n    document.head.appendChild(s3);\n  }\n\n  el.__wbDestroy = function() {};\n}"
+  },
+  {
+    "id": "addon_culinary_grid",
+    "name": "Culinary Product Grid",
+    "category": "addons",
+    "icon": "🍰",
+    "version": "1.1.0",
+    "author": "Aether Studio",
+    "badge": "Official",
+    "price": 0,
+    "priceLabel": "FREE",
+    "rating": 5,
+    "downloads": "0",
+    "description": "A responsive grid for displaying cakes or kitchen utensils with prices and links. Supports live auto-sync from the Messenger Bot product catalog.",
+    "features": [
+      "Live auto-sync from Messenger Bot product catalog",
+      "One-click import of products into the builder",
+      "Responsive masonry-style grid with badge tags",
+      "Accent color customization and hover animations"
+    ],
+    "enabled": true,
+    "defaultProps": {
+      "sectionTitle": "Featured Cakes",
+      "sectionSubtitle": "Delicious treats baked fresh daily",
+      "syncLiveCatalog": true,
+      "btnText": "Add to Cart",
+      "accentColor": "#ec4899",
+      "items": [
+        {
+          "name": "Classic Strawberry Cake",
+          "price": "$45.00",
+          "imageUrl": "assets/uploads/Screenshot__74_.png",
+          "tag": "Bestseller",
+          "link": "order.html"
+        },
+        {
+          "name": "Chocolate Ganache",
+          "price": "$50.00",
+          "imageUrl": "assets/uploads/Screenshot__82_.png",
+          "tag": "Rich",
+          "link": "order.html"
+        },
+        {
+          "name": "Vanilla Rose",
+          "price": "$40.00",
+          "imageUrl": "",
+          "tag": "New",
+          "link": "order.html"
+        }
+      ]
+    },
+    "schema": {
+      "content": [
+        {
+          "key": "sectionTitle",
+          "label": "Section Title",
+          "type": "text"
+        },
+        {
+          "key": "sectionSubtitle",
+          "label": "Section Subtitle",
+          "type": "text"
+        },
+        {
+          "key": "syncLiveCatalog",
+          "label": "Live Sync from Bot Catalog",
+          "type": "toggle"
+        },
+        {
+          "key": "btnText",
+          "label": "Button Text",
+          "type": "text"
+        },
+        {
+          "key": "items",
+          "label": "Products",
+          "type": "repeater",
+          "fields": [
+            {
+              "key": "name",
+              "label": "Product Name",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "label": "Price",
+              "type": "text"
+            },
+            {
+              "key": "imageUrl",
+              "label": "Image",
+              "type": "image-picker"
+            },
+            {
+              "key": "tag",
+              "label": "Badge/Tag (e.g. New)",
+              "type": "text"
+            },
+            {
+              "key": "link",
+              "label": "Button Link (URL)",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "style": [
+        {
+          "key": "accentColor",
+          "label": "Accent Color",
+          "type": "color"
+        }
+      ]
+    },
+    "template": "<div class=\"wb-addon-culinary-grid\" style=\"--grid-accent: {{accentColor}};\"><div class=\"cg-header\"><h2 class=\"cg-title\">{{sectionTitle}}</h2><p class=\"cg-subtitle\">{{sectionSubtitle}}</p></div><div class=\"cg-grid\" data-cg-mount></div></div>",
+    "customCss": ".wb-addon-culinary-grid{padding:60px 20px;max-width:1200px;margin:0 auto;font-family:inherit}\n.cg-header{text-align:center;margin-bottom:40px}\n.cg-title{font-size:2.2rem;font-weight:800;color:#fff;margin:0 0 10px}\n.cg-subtitle{color:#94a3b8;font-size:1.1rem;margin:0}\n.cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}\n.cg-card{background:#1e293b;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.05);transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}\n.cg-card:hover{transform:translateY(-5px);box-shadow:0 15px 30px rgba(0,0,0,.4)}\n.cg-img-wrap{aspect-ratio:4/3;background:#0f172a;position:relative;overflow:hidden}\n.cg-img{width:100%;height:100%;object-fit:cover;display:block}\n.cg-tag{position:absolute;top:12px;left:12px;background:var(--grid-accent);color:#fff;padding:4px 12px;border-radius:99px;font-size:.75rem;font-weight:700}\n.cg-info{padding:20px;flex:1;display:flex;flex-direction:column}\n.cg-name{font-size:1.2rem;font-weight:700;color:#fff;margin:0 0 8px}\n.cg-price{font-size:1.1rem;font-weight:800;color:var(--grid-accent);margin:0 0 16px}\n.cg-btn{margin-top:auto;padding:12px;border-radius:10px;background:rgba(255,255,255,.05);color:#fff;text-align:center;font-weight:700;text-decoration:none;transition:background .2s,border-color .2s;cursor:pointer;border:1px solid rgba(255,255,255,.1);display:block}\n.cg-btn:hover{background:var(--grid-accent);border-color:var(--grid-accent)}\n.cg-sync-badge{display:inline-block;margin-top:8px;font-size:.7rem;color:#94a3b8;text-align:center;width:100%}\n@media(max-width:600px){.cg-title{font-size:1.8rem}}",
+    "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-culinary-grid');\n  var mount = el.querySelector('[data-cg-mount]');\n  if (!root || !mount) return;\n\n  var esc = function(s) {\n    return String(s || '').replace(/[&<>\"']/g, function(c) {\n      return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c];\n    });\n  };\n\n  function renderGrid(items) {\n    mount.innerHTML = items.map(function(item) {\n      var img = item.imageUrl\n        ? '<img class=\"cg-img\" src=\"' + esc(item.imageUrl) + '\" alt=\"' + esc(item.name) + '\" loading=\"lazy\">'\n        : '<div class=\"cg-img\" style=\"display:flex;align-items:center;justify-content:center;color:#64748b;font-size:2rem;\">🍰</div>';\n      var tag = item.tag ? '<div class=\"cg-tag\">' + esc(item.tag) + '</div>' : '';\n      var btnHtml = item.link\n        ? '<a href=\"' + esc(item.link) + '\" class=\"cg-btn\">' + esc(props.btnText || 'Order') + '</a>'\n        : '<div class=\"cg-btn\">' + esc(props.btnText || 'Order') + '</div>';\n      return '<div class=\"cg-card\"><div class=\"cg-img-wrap\">' + img + tag + '</div><div class=\"cg-info\"><h3 class=\"cg-name\">' + esc(item.name) + '</h3><div class=\"cg-price\">' + esc(item.price) + '</div>' + btnHtml + '</div></div>';\n    }).join('');\n  }\n\n  // Render static props.items immediately (no layout shift)\n  var staticItems = props.items || [];\n  renderGrid(staticItems);\n\n  // Live auto-sync from Messenger Bot catalog (non-blocking)\n  if (props.syncLiveCatalog !== false) {\n    var apiBase = (function() {\n      var s = window.location.pathname.replace(/\\/[^\\/]*$/, '/');\n      return window.location.origin + s + 'api.php';\n    })();\n    fetch(apiBase + '?action=get_catalog_products', { cache: 'no-store' })\n      .then(function(r) { return r.ok ? r.json() : null; })\n      .then(function(data) {\n        if (!data || !data.success || !Array.isArray(data.products) || data.products.length === 0) return;\n        var mapped = data.products.map(function(p) {\n          return {\n            name: p.name || '',\n            price: (p.currency === 'PHP' ? '\\u20b1' : (p.currency === 'USD' ? '$' : (p.currency + ' '))) + parseFloat(p.price || 0).toFixed(2),\n            imageUrl: p.image_url || '',\n            tag: p.category || '',\n            link: p.action_label ? '#order-' + p.id : ''\n          };\n        });\n        renderGrid(mapped);\n        // Show live sync badge\n        var badge = root.querySelector('.cg-sync-badge');\n        if (!badge) {\n          badge = document.createElement('div');\n          badge.className = 'cg-sync-badge';\n          root.appendChild(badge);\n        }\n        badge.textContent = '\\u{1f7e2} Live — ' + mapped.length + ' products synced from catalog';\n      })\n      .catch(function() { /* silently keep static items */ });\n  }\n\n  el.__wbDestroy = function() {};\n}"
   }
 ]

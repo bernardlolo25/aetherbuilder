@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.10');
+define('AETHER_VERSION', '2.9.11');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -670,6 +670,41 @@ if ($action === 'get_site' && $method === 'GET') {
 }
 
 // ── POST: publish ─────────────────────────────────────────────────────────────
+
+// ── GET: get_catalog_products (Messenger Bot Products Bridge) ────────────────
+if ($action === 'get_catalog_products' && $method === 'GET') {
+    $products = [];
+    $dbFile = ROOT . '/messenger/config/database.php';
+    if (file_exists($dbFile)) {
+        try {
+            require_once $dbFile;
+            $pdo = db();
+            $stmt = $pdo->query(
+                "SELECT id, name, category, price, currency, description, sku,
+                        stock_status, features, image_url, action_label
+                 FROM products WHERE is_active = 1
+                 ORDER BY sort_order ASC, id ASC LIMIT 100"
+            );
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as $r) {
+                $img = trim($r['image_url'] ?? '');
+                // If stored as base64 blob, serve via media proxy
+                if (strpos($img, 'data:image/') === 0) {
+                    $img = rtrim((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'), '/') . '/messenger/media.php?id=' . (int)$r['id'];
+                }
+                $r['image_url'] = $img;
+                $products[] = $r;
+            }
+        } catch (Throwable $e) {
+            // Silently fail — catalog bridge is non-critical
+        }
+    }
+    send_json(200, [
+        'success'  => true,
+        'count'    => count($products),
+        'products' => $products,
+    ]);
+}
 if ($action === 'publish' && $method === 'POST') {
     require_admin_token();
     $body = get_request_body();
