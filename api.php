@@ -151,7 +151,26 @@ function write_json_file($path, $data) {
 }
 
 function get_request_body() {
-    return file_get_contents('php://input');
+    static $body = null;
+    if ($body === null) {
+        $body = @file_get_contents('php://input');
+        if ($body === false) $body = '';
+    }
+    return $body;
+}
+
+function get_json_input() {
+    static $cache = null;
+    if ($cache === null) {
+        $ct = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
+        if (strpos($ct, 'application/json') !== false) {
+            $raw = get_request_body();
+            $cache = $raw ? (@json_decode($raw, true) ?: []) : [];
+        } else {
+            $cache = [];
+        }
+    }
+    return $cache;
 }
 
 function safe_basename($name) {
@@ -490,17 +509,10 @@ function get_client_token() {
         return trim($_POST['admin_token']);
     }
     // 4b. JSON body — PHP does NOT populate $_POST for application/json requests.
-    //     apply_update / apply_update use this to avoid CORS preflight on custom headers.
-    $ct = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
-    if (strpos($ct, 'application/json') !== false) {
-        static $json_body_cache = null;
-        if ($json_body_cache === null) {
-            $raw = file_get_contents('php://input');
-            $json_body_cache = $raw ? (@json_decode($raw, true) ?: []) : [];
-        }
-        if (!empty($json_body_cache['admin_token'])) {
-            return trim($json_body_cache['admin_token']);
-        }
+    //     apply_update / publish use this to avoid CORS preflight on custom headers.
+    $json = get_json_input();
+    if (!empty($json['admin_token'])) {
+        return trim($json['admin_token']);
     }
     // 5. Cookie
     if (!empty($_COOKIE['aether_token'])) {
@@ -527,8 +539,9 @@ function require_admin_token() {
         return true;
     }
 
-    // Fallback: check password header or post field
-    $pass = $_SERVER['HTTP_X_ADMIN_PASSWORD'] ?? ($_POST['admin_password'] ?? '');
+    // Fallback: check password header, post field, json body, or query param
+    $json = get_json_input();
+    $pass = $_SERVER['HTTP_X_ADMIN_PASSWORD'] ?? ($_POST['admin_password'] ?? ($json['admin_password'] ?? ($_GET['admin_password'] ?? '')));
     if ($pass !== '') {
         $storedHash = get_admin_hash_from_config();
         if (!$storedHash && $pass === 'admin123') {
@@ -692,6 +705,9 @@ if ($action === 'save_store_feed_config' && $method === 'POST') {
 
 // ── GET: get_site ─────────────────────────────────────────────────────────────
 if ($action === 'get_site' && $method === 'GET') {
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+    header('Pragma: no-cache');
+    header('Expires: 0');
     $file = DATA_DIR . '/site.json';
     if (!file_exists($file)) {
         $templateFile = UPLOADS_DIR . '/template_live_canvas.json';
@@ -864,6 +880,9 @@ if ($action === 'publish' && $method === 'POST') {
     if (!$body) send_json(400, ['error' => 'Empty body']);
     $decoded = @json_decode($body, true);
     if ($decoded === null) send_json(400, ['error' => 'Invalid JSON']);
+
+    // Strip client session / admin tokens from site.json payload
+    unset($decoded['admin_token'], $decoded['admin_password']);
 
     $targetFile = DATA_DIR . '/site.json';
     $writeRes = write_json_file($targetFile, $decoded);

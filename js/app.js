@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.12';
+export const APP_VERSION = '2.9.13';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
@@ -4376,9 +4376,15 @@ git push -u origin main</textarea>
       };
 
       setPublishState(true, 'Publishing...');
-      await state.publishToLive();
-      setPublishState(false, 'Publish Live');
-      this.canvas.showToast('🚀 Changes published live! Synced to server.', 'success');
+      try {
+        await state.publishToLive();
+        setPublishState(false, 'Publish Live');
+        this.canvas.showToast('🚀 Changes published live! Synced to server.', 'success');
+      } catch (err) {
+        setPublishState(false, 'Publish Live');
+        this.canvas.showToast('❌ Publish failed: ' + (err.message || 'Server error'), 'error');
+        alert('⚠️ Publish to server failed: ' + (err.message || 'Network/Server Error') + '\n\nPlease check your admin session or hard-refresh.');
+      }
     };
 
     document.getElementById('btn-publish')?.addEventListener('click', handlePublish);

@@ -528,15 +528,25 @@ class BuilderState {
       } catch {}
     } catch {}
 
-    try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'X-Admin-Token': _getAdminToken(),
-      };
-      if (typeof window !== 'undefined' && window.auth && typeof window.auth.getAdminPassword === 'function') {
-        headers['X-Admin-Password'] = window.auth.getAdminPassword();
+    const token = _getAdminToken();
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Admin-Token': token,
+    };
+    if (token) {
+      payload.admin_token = token;
+    }
+    if (typeof window !== 'undefined' && window.auth && typeof window.auth.getAdminPassword === 'function') {
+      const pass = window.auth.getAdminPassword();
+      if (pass) {
+        headers['X-Admin-Password'] = pass;
+        payload.admin_password = pass;
       }
-      const res = await fetch('api.php?action=publish', {
+    }
+
+    try {
+      const publishUrl = `api.php?action=publish${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+      const res = await fetch(publishUrl, {
         method:  'POST',
         headers: headers,
         body:    JSON.stringify(payload)
@@ -546,10 +556,17 @@ class BuilderState {
         console.log('✅ Multi-page publish live on server!', result);
       } else {
         const errText = await res.text();
-        console.error('Publish API error HTTP ' + res.status + ':', errText);
+        let errMsg = `Server error HTTP ${res.status}`;
+        try {
+          const errObj = JSON.parse(errText);
+          if (errObj.error) errMsg = errObj.error;
+        } catch {}
+        console.error('Publish API error:', errMsg, errText);
+        throw new Error(errMsg);
       }
     } catch (err) {
       console.warn('Network error while publishing to api.php:', err);
+      throw err;
     }
 
     // Automatically save current canvas as a JSON template to Media Library Assets

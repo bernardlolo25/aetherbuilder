@@ -14,6 +14,13 @@
 # ── Directory Index ────────────────────────────────────────────
 DirectoryIndex index.php index.html
 
+# ── Pass Custom Headers to FastCGI/PHP ──────────────────────────
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+    SetEnvIf X-Admin-Token "(.*)" HTTP_X_ADMIN_TOKEN=$1
+    SetEnvIf X-Admin-Password "(.*)" HTTP_X_ADMIN_PASSWORD=$1
+</IfModule>
+
 # ── Correct MIME Types ─────────────────────────────────────────
 # Ensures ES Modules, CSS, fonts and icons load properly
 <IfModule mod_mime.c>
