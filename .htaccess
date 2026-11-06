@@ -12,7 +12,7 @@
 </IfModule>
 
 # ── Directory Index ────────────────────────────────────────────
-DirectoryIndex index.html index.php
+DirectoryIndex index.php index.html
 
 # ── Correct MIME Types ─────────────────────────────────────────
 # Ensures ES Modules, CSS, fonts and icons load properly

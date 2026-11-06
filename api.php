@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.11');
+define('AETHER_VERSION', '2.9.12');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -368,6 +368,12 @@ function perform_core_update($zipFilePath, $createBackup = true) {
         if (is_array($vd) && !empty($vd['version'])) {
             // version.json was extracted from zip — it's already correct. Touch it to bust any proxy cache.
             @touch($versionJsonPath);
+            // Also touch all JS/CSS files so filemtime() cache-busters in index.php return new timestamps
+            foreach (['js/app.js', 'js/inspector.js', 'js/builder.js', 'js/assistant.js',
+                      'css/design-system.css', 'css/builder.css', 'css/widgets.css'] as $assetFile) {
+                $assetPath = ROOT . '/' . $assetFile;
+                if (file_exists($assetPath)) @touch($assetPath);
+            }
         }
     }
 

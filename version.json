@@ -1,8 +1,8 @@
 {
-  "version": "2.9.11",
-  "release_date": "2026-11-05",
-  "changelog": "v2.9.11: Catalog Bridge addon (addon_culinary_grid) with live sync + 1-click import; Messenger web_url button template for direct website launch from chat.",
-  "download_url": "https://github.com/bernardlolo25/aetherbuilder/releases/download/v2.9.11/aetherbuilder-update-v2.9.11.zip",
+  "version": "2.9.12",
+  "release_date": "2026-11-06",
+  "changelog": "v2.9.12: Fix update version not persisting after refresh on InfinityFree/LiteSpeed — index.php now serves the builder entry point (PHP = never server-cached), filemtime() cache-busters auto-invalidate JS/CSS after every update.",
+  "download_url": "https://github.com/bernardlolo25/aetherbuilder/releases/download/v2.9.12/aetherbuilder-update-v2.9.12.zip",
   "min_php": "7.4",
-  "requires": "2.9.11"
+  "requires": "2.9.12"
 }
