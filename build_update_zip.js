@@ -29,6 +29,7 @@ function copyRecursive(src, dest) {
 // 1. Core root files only
 const coreRootFiles = [
   'index.html',
+  'index.php',
   'admin.html',
   'public.html',
   'api.php',
@@ -75,7 +76,7 @@ const outZipGeneric = path.join(rootDir, 'aetherbuilder-update.zip');
   if (fs.existsSync(z)) fs.unlinkSync(z);
 });
 
-execSync(`python3 -c "
+execSync(`python -c "
 import zipfile, os
 stage = '''${stageDir}'''
 out_zip = '''${outZipVersioned}'''
