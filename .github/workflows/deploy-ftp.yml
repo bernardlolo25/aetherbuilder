@@ -1,4 +1,4 @@
-﻿name: Deploy Update to Hosting (FTP)
+name: Deploy Update to Hosting (FTP)
 
 on:
   push:
@@ -18,7 +18,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Upload aetherbuilder-update.zip to hosting root via FTP
+      # 2. Upload ONLY aetherbuilder-update.zip and version.json to hosting
+      #    SamKirkland/FTP-Deploy-Action v4.3.5 does NOT support 'include'.
+      #    Use 'exclude' with glob negation OR upload files manually via curl/ftp.
+      #    We use the exclude approach: deploy only root-level files, skip everything else.
       - name: Upload update ZIP via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -27,15 +30,11 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
-          # Only upload these two files â€” nothing else
           local-dir: ./
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          include: |
-            aetherbuilder-update.zip
-            version.json
-          # Exclude everything else
+          # Exclude everything EXCEPT the two target files
           exclude: |
-            **/*
+            **
             !aetherbuilder-update.zip
             !version.json
           log-level: standard
@@ -44,5 +43,5 @@ jobs:
       # 3. Print confirmation
       - name: Deployment complete
         run: |
-          echo "âœ… aetherbuilder-update.zip and version.json uploaded to hosting successfully!"
+          echo "✅ aetherbuilder-update.zip and version.json uploaded to hosting!"
           echo "All AetherBuilder admin panels will now see the update notification."
