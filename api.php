@@ -43,6 +43,13 @@ if (!empty($origin)) {
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, Authorization');
 
+// Security & Perimeter Defense Headers (HSTS, Clickjacking, MIME sniffing, Referrer privacy)
+header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
+
 // Fatal Error & Exception Interceptor: guarantees clean JSON responses on shared hosts (no empty 500s!)
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
