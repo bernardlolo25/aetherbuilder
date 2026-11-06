@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.12');
+define('AETHER_VERSION', '2.9.13');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -702,7 +702,12 @@ if ($action === 'get_site' && $method === 'GET') {
 // ── POST: publish ─────────────────────────────────────────────────────────────
 
 // ── GET: get_catalog_products (Messenger Bot Products Bridge) ────────────────
-if ($action === 'get_catalog_products' && $method === 'GET') {
+if ($action === 'get_catalog_products' && ($method === 'GET' || $method === 'OPTIONS')) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    if ($method === 'OPTIONS') { exit; }
+
     $products = [];
     $dbFile = ROOT . '/messenger/config/database.php';
     if (file_exists($dbFile)) {
@@ -711,9 +716,10 @@ if ($action === 'get_catalog_products' && $method === 'GET') {
             $pdo = db();
             $stmt = $pdo->query(
                 "SELECT id, name, category, price, currency, description, sku,
-                        stock_status, features, image_url, action_label
+                        stock_status, fulfillment_mode, stock_quantity, variations,
+                        features, image_url, action_label
                  FROM products WHERE is_active = 1
-                 ORDER BY sort_order ASC, id ASC LIMIT 100"
+                 ORDER BY sort_order ASC, id ASC LIMIT 150"
             );
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
@@ -723,6 +729,14 @@ if ($action === 'get_catalog_products' && $method === 'GET') {
                     $img = rtrim((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'), '/') . '/messenger/media.php?id=' . (int)$r['id'];
                 }
                 $r['image_url'] = $img;
+                
+                // Parse variations if stored as JSON
+                if (!empty($r['variations'])) {
+                    $r['variations_list'] = @json_decode($r['variations'], true) ?: [];
+                } else {
+                    $r['variations_list'] = [];
+                }
+
                 $products[] = $r;
             }
         } catch (Throwable $e) {
@@ -735,6 +749,108 @@ if ($action === 'get_catalog_products' && $method === 'GET') {
         'products' => $products,
     ]);
 }
+
+// ── POST: create_booking (Culinary Cart & Event Booking Bridge) ───────────────
+if ($action === 'create_booking' && ($method === 'POST' || $method === 'OPTIONS')) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    if ($method === 'OPTIONS') { exit; }
+
+    $body = @json_decode(get_request_body(), true) ?: [];
+
+    $customerName   = trim($body['customer_name'] ?? ($body['name'] ?? ''));
+    $customerPhone  = trim($body['customer_phone'] ?? ($body['phone'] ?? ''));
+    $customerEmail  = trim($body['customer_email'] ?? ($body['email'] ?? ''));
+    $deliveryType   = trim($body['delivery_type'] ?? 'pickup');
+    $deliveryAddress= trim($body['delivery_address'] ?? ($body['address'] ?? ''));
+    $eventDate      = !empty($body['event_date']) ? trim($body['event_date']) : null;
+    $eventTime      = trim($body['event_time'] ?? '');
+    $dedicationText = trim($body['dedication_text'] ?? ($body['cake_dedication'] ?? ''));
+    $items          = $body['items'] ?? [];
+    $totalAmount    = (float)($body['total_amount'] ?? 0);
+    $currency       = trim($body['currency'] ?? 'PHP');
+    $notes          = trim($body['notes'] ?? '');
+
+    if ($customerName === '' || $customerPhone === '') {
+        send_json(400, ['success' => false, 'error' => 'Customer name and phone number are required.']);
+    }
+
+    $ref = 'BK-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 4));
+    $itemsJson = json_encode($items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    $dbFile = ROOT . '/messenger/config/database.php';
+    if (file_exists($dbFile)) {
+        try {
+            require_once $dbFile;
+            $pdo = db();
+            // Ensure bookings table exists
+            $pdo->exec("CREATE TABLE IF NOT EXISTS bookings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                booking_ref VARCHAR(50) UNIQUE NOT NULL,
+                customer_name VARCHAR(150) NOT NULL,
+                customer_phone VARCHAR(50) NOT NULL,
+                customer_email VARCHAR(150) NULL,
+                delivery_type VARCHAR(50) DEFAULT 'pickup',
+                delivery_address TEXT NULL,
+                event_date DATE NULL,
+                event_time VARCHAR(30) NULL,
+                dedication_text TEXT NULL,
+                items_json LONGTEXT NOT NULL,
+                total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                currency VARCHAR(10) DEFAULT 'PHP',
+                status VARCHAR(30) DEFAULT 'pending',
+                notes TEXT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_status (status),
+                INDEX idx_event_date (event_date)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $stmt = $pdo->prepare("INSERT INTO bookings (
+                booking_ref, customer_name, customer_phone, customer_email,
+                delivery_type, delivery_address, event_date, event_time,
+                dedication_text, items_json, total_amount, currency, status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+
+            $stmt->execute([
+                $ref, $customerName, $customerPhone, $customerEmail,
+                $deliveryType, $deliveryAddress, $eventDate, $eventTime,
+                $dedicationText, $itemsJson, $totalAmount, $currency, $notes
+            ]);
+
+            // Auto-decrement physical stock items
+            if (is_array($items)) {
+                foreach ($items as $it) {
+                    $prodId = (int)($it['id'] ?? 0);
+                    $qty    = max(1, (int)($it['quantity'] ?? 1));
+                    if ($prodId > 0) {
+                        try {
+                            $pdo->prepare("UPDATE products SET stock_quantity = GREATEST(0, stock_quantity - ?) WHERE id = ? AND fulfillment_mode = 'stock'")->execute([$qty, $prodId]);
+                        } catch (Throwable $e) {}
+                    }
+                }
+            }
+
+            // Also record into messenger leads table for bot tracking!
+            try {
+                $insLead = $pdo->prepare("INSERT INTO leads (full_name, phone, notes, lead_status, created_at) VALUES (?, ?, ?, 'new', NOW())");
+                $leadNote = "New Booking {$ref} — Total: {$currency} " . number_format($totalAmount, 2) . ($eventDate ? " | Event: {$eventDate}" : "");
+                $insLead->execute([$customerName, $customerPhone, $leadNote]);
+            } catch (Throwable $e) {}
+
+            send_json(200, [
+                'success'     => true,
+                'booking_ref' => $ref,
+                'message'     => 'Booking submitted successfully!'
+            ]);
+        } catch (Throwable $e) {
+            send_json(500, ['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        }
+    } else {
+        send_json(500, ['success' => false, 'error' => 'Messenger database configuration not found.']);
+    }
+}
+
 if ($action === 'publish' && $method === 'POST') {
     require_admin_token();
     $body = get_request_body();
