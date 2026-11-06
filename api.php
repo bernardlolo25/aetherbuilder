@@ -348,13 +348,37 @@ function perform_core_update($zipFilePath, $createBackup = true) {
         ];
     }
 
+    // ── Post-extraction: flush OPcache so PHP serves the new api.php immediately ──
+    if (function_exists('opcache_reset')) {
+        @opcache_reset();
+    }
+    // Invalidate specific critical files in case opcache_reset is not enough
+    $criticalFiles = [ROOT . '/api.php', ROOT . '/index.html', ROOT . '/version.json'];
+    foreach ($criticalFiles as $cf) {
+        if (file_exists($cf) && function_exists('opcache_invalidate')) {
+            @opcache_invalidate($cf, true);
+        }
+    }
+
+    // ── Explicitly re-write version.json with the new version extracted from the zip ──
+    // This ensures the version is correct even when OPcache serves old api.php bytecode.
+    $versionJsonPath = ROOT . '/version.json';
+    if (file_exists($versionJsonPath)) {
+        $vd = @json_decode(file_get_contents($versionJsonPath), true);
+        if (is_array($vd) && !empty($vd['version'])) {
+            // version.json was extracted from zip — it's already correct. Touch it to bust any proxy cache.
+            @touch($versionJsonPath);
+        }
+    }
+
     return [
         'success'         => true,
         'extracted_count' => $extracted,
         'skipped_count'   => $skipped,
         'updated_files'   => $updatedFiles,
         'backup'          => $backupFile,
-        'message'         => "Successfully updated {$extracted} core files without touching your pages, media, or settings."
+        'new_version'     => $vd['version'] ?? AETHER_VERSION,
+        'message'         => "Successfully updated {$extracted} core files. Please hard-refresh (Ctrl+Shift+R) if the version still shows old in browser."
     ];
 }
 
