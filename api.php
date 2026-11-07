@@ -111,40 +111,52 @@ function read_json_file($path, $default = []) {
 function write_json_file($path, $data) {
     $dir = dirname($path);
     if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
-        @chmod($dir, 0755);
+        @mkdir($dir, 0777, true);
+        @chmod($dir, 0777);
     }
     $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($encoded === false) return false;
 
-    // Reset file permissions if existing
+    // Reset file permissions if existing (0666 ensures writeable by both FTP & WebServer PHP)
     if (file_exists($path)) {
-        @chmod($path, 0644);
+        @chmod($path, 0666);
     }
 
-    // 1. Standard file_put_contents
-    $res = @file_put_contents($path, $encoded);
+    // 1. Standard file_put_contents with atomic write
+    $res = @file_put_contents($path, $encoded, LOCK_EX);
     if ($res !== false) {
-        @chmod($path, 0644);
+        @chmod($path, 0666);
         return $res;
     }
 
-    // 2. Direct stream write
+    // 2. Direct stream write fallback
     $fp = @fopen($path, 'wb');
     if ($fp) {
         $written = @fwrite($fp, $encoded);
         @fclose($fp);
-        @chmod($path, 0644);
-        if ($written !== false) return $written;
+        if ($written !== false) {
+            @chmod($path, 0666);
+            return $written;
+        }
     }
 
-    // 3. Temp file atomic rename
+    // 3. Temp file atomic rename fallback
     $tmp = $dir . '/tmp_' . uniqid('', true) . '.json';
     $tmpRes = @file_put_contents($tmp, $encoded);
     if ($tmpRes !== false) {
         @rename($tmp, $path);
-        @chmod($path, 0644);
+        @chmod($path, 0666);
         return $tmpRes;
+    }
+
+    // 4. Force unlink and rewrite fallback (for stuck FTP-owned file on shared host)
+    if (file_exists($path)) {
+        @unlink($path);
+        $res4 = @file_put_contents($path, $encoded);
+        if ($res4 !== false) {
+            @chmod($path, 0666);
+            return $res4;
+        }
     }
 
     return false;
@@ -724,6 +736,28 @@ if ($action === 'get_site' && $method === 'GET') {
 
 // ── POST: publish ─────────────────────────────────────────────────────────────
 
+// Helper: Safe PDO connection to Messenger database (never terminates with die() or HTML)
+function get_safe_messenger_pdo() {
+    $configFile = ROOT . '/messenger/config/config.php';
+    if (!file_exists($configFile)) return null;
+    try {
+        require_once $configFile;
+        if (!defined('DB_HOST') || !defined('DB_NAME') || !defined('DB_USER') || !defined('DB_PASS')) return null;
+        return new PDO(
+            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+            DB_USER,
+            DB_PASS,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 4,
+            ]
+        );
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
 // ── GET: get_catalog_products (Messenger Bot Products Bridge) ────────────────
 if ($action === 'get_catalog_products' && ($method === 'GET' || $method === 'OPTIONS')) {
     header('Access-Control-Allow-Origin: *');
@@ -732,17 +766,20 @@ if ($action === 'get_catalog_products' && ($method === 'GET' || $method === 'OPT
     if ($method === 'OPTIONS') { exit; }
 
     $products = [];
-    $dbFile = ROOT . '/messenger/config/database.php';
-    if (file_exists($dbFile)) {
+    $pdo = get_safe_messenger_pdo();
+    if ($pdo) {
         try {
-            require_once $dbFile;
-            $pdo = db();
+            // Self-healing migrations: ensure optional columns exist if not yet migrated
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1"); } catch (Throwable $e) {}
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN sort_order INT NOT NULL DEFAULT 0"); } catch (Throwable $e) {}
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN variations LONGTEXT NULL"); } catch (Throwable $e) {}
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN fulfillment_mode VARCHAR(30) NOT NULL DEFAULT 'booking'"); } catch (Throwable $e) {}
+            try { $pdo->exec("ALTER TABLE products ADD COLUMN stock_quantity INT NOT NULL DEFAULT 0"); } catch (Throwable $e) {}
+
             $stmt = $pdo->query(
-                "SELECT id, name, category, price, currency, description, sku,
-                        stock_status, fulfillment_mode, stock_quantity, variations,
-                        features, image_url, action_label
-                 FROM products WHERE is_active = 1
-                 ORDER BY sort_order ASC, id ASC LIMIT 150"
+                "SELECT * FROM products 
+                 WHERE (is_active = 1 OR is_active IS NULL)
+                 ORDER BY sort_order ASC, id DESC LIMIT 150"
             );
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $r) {
@@ -802,11 +839,9 @@ if ($action === 'create_booking' && ($method === 'POST' || $method === 'OPTIONS'
     $ref = 'BK-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 4));
     $itemsJson = json_encode($items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-    $dbFile = ROOT . '/messenger/config/database.php';
-    if (file_exists($dbFile)) {
+    $pdo = get_safe_messenger_pdo();
+    if ($pdo) {
         try {
-            require_once $dbFile;
-            $pdo = db();
             // Ensure bookings table exists
             $pdo->exec("CREATE TABLE IF NOT EXISTS bookings (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -1356,60 +1391,28 @@ if ($action === 'apply_update' && $method === 'POST') {
         return ($magic && substr($magic, 0, 2) === 'PK');
     };
 
-    // 1. Check local file candidates on server first (instant, 100% reliable on restricted hosts)
-    $localCandidates = [
-        ROOT . '/' . ltrim($url, '/'),
-        ROOT . '/aetherbuilder-update.zip',
-        ROOT . '/aetherbuilder.zip',
-        ROOT . '/aetherbuilder-update-v' . AETHER_VERSION . '.zip',
-        DATA_DIR . '/' . ltrim($url, '/'),
-        DATA_DIR . '/aetherbuilder-update.zip',
-        DATA_DIR . '/aetherbuilder.zip'
-    ];
-    // Automatically discover ANY .zip file present in site root or data dir
-    foreach ([ROOT, DATA_DIR] as $scanDir) {
-        if (is_dir($scanDir)) {
-            $found = glob($scanDir . '/*.zip');
-            if (is_array($found)) {
-                foreach ($found as $fz) {
-                    if (!in_array($fz, $localCandidates, true)) {
-                        $localCandidates[] = $fz;
-                    }
+    // 1. If $url is an external HTTP/HTTPS URL, download from release channel first
+    if (preg_match('#^https?://#i', $url)) {
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            $fp = @fopen($tempZip, 'wb');
+            if ($fp) {
+                curl_setopt($ch, CURLOPT_FILE, $fp);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'AetherBuilder-Updater/' . AETHER_VERSION);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                $res = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                @fclose($fp);
+                if ($res && $httpCode >= 200 && $httpCode < 400 && $isZipFile($tempZip)) {
+                    $downloaded = true;
                 }
             }
         }
-    }
-    foreach ($localCandidates as $cand) {
-        if ($isZipFile($cand)) {
-            if (@copy($cand, $tempZip)) {
-                $downloaded = true;
-                break;
-            }
-        }
-    }
 
-    // 2. If not found locally and $url is an HTTP/HTTPS URL, attempt download
-    if (!$downloaded && preg_match('#^https?://#i', $url)) {
-        // Try cURL first
-        if (function_exists('curl_init')) {
-            $ch = curl_init($url);
-            $fp = fopen($tempZip, 'wb');
-            curl_setopt($ch, CURLOPT_FILE, $fp);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'AetherBuilder-Updater/' . AETHER_VERSION);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            $res = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-            fclose($fp);
-            if ($res && $httpCode >= 200 && $httpCode < 400 && $isZipFile($tempZip)) {
-                $downloaded = true;
-            }
-        }
-
-        // Try file_get_contents fallback
         if (!$downloaded) {
             $ctx = stream_context_create([
                 'http' => ['timeout' => 120, 'user_agent' => 'AetherBuilder-Updater/' . AETHER_VERSION],
@@ -1423,15 +1426,42 @@ if ($action === 'apply_update' && $method === 'POST') {
         }
     }
 
+    // 2. If not downloaded via HTTP, look for a newly uploaded local zip file
+    if (!$downloaded) {
+        $localCandidates = [
+            ROOT . '/' . ltrim($url, '/'),
+            ROOT . '/aetherbuilder-update.zip',
+            DATA_DIR . '/aetherbuilder-update.zip'
+        ];
+        foreach ($localCandidates as $cand) {
+            if ($isZipFile($cand)) {
+                if (@copy($cand, $tempZip)) {
+                    $downloaded = true;
+                    // Delete local staging zip so it is never reused on future updates
+                    @unlink($cand);
+                    break;
+                }
+            }
+        }
+    }
+
     if (!$downloaded || !$isZipFile($tempZip)) {
         @unlink($tempZip);
         send_json(500, [
             'success' => false,
-            'error'   => 'Could not find a valid update ZIP package in site root (' . ROOT . '). Files currently in root: [' . implode(', ', array_map('basename', glob(ROOT . '/*') ?: [])) . ']. Please upload "aetherbuilder-update.zip" or "aetherbuilder.zip" directly into your site root (e.g. htdocs).'
+            'error'   => 'Could not download or find a valid update ZIP package. If your hosting provider blocks outbound network connections, please use the "Upload Manual ZIP" button to apply the update directly from your computer.'
         ]);
     }
 
     $result = perform_core_update($tempZip, $createBackup);
+
+    // Clean up temporary and staged files
+    @unlink($tempZip);
+    foreach (glob(DATA_DIR . '/temp_update_*.zip') ?: [] as $oldZip) {
+        @unlink($oldZip);
+    }
+    @unlink(ROOT . '/aetherbuilder-update.zip');
+
     send_json($result['success'] ? 200 : 500, $result);
 }
 
@@ -1454,6 +1484,12 @@ if ($action === 'upload_update_zip' && $method === 'POST') {
 
     $createBackup = isset($_POST['backup']) ? ($_POST['backup'] === '1' || $_POST['backup'] === 'true') : true;
     $result = perform_core_update($tempZip, $createBackup);
+
+    @unlink($tempZip);
+    foreach (glob(DATA_DIR . '/temp_update_*.zip') ?: [] as $oldZip) {
+        @unlink($oldZip);
+    }
+
     send_json($result['success'] ? 200 : 500, $result);
 }
 

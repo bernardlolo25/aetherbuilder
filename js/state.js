@@ -337,7 +337,16 @@ class BuilderState {
       }));
 
       if (serverData) {
-        localStorage.setItem(STORAGE_KEY_PUBLIC, JSON.stringify(serverData));
+        const curPubRaw = localStorage.getItem(STORAGE_KEY_PUBLIC);
+        let curPubTime = 0;
+        if (curPubRaw) {
+          try { curPubTime = new Date(JSON.parse(curPubRaw).publishedAt || 0).getTime(); } catch(e){}
+        }
+        const serverPubTime = serverData.publishedAt ? new Date(serverData.publishedAt).getTime() : 0;
+        // Only overwrite public storage if server is truly newer or local is missing
+        if (!curPubTime || serverPubTime >= curPubTime) {
+          localStorage.setItem(STORAGE_KEY_PUBLIC, JSON.stringify(serverData));
+        }
       }
 
       this.syncLoaderCache();

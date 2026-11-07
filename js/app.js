@@ -261,6 +261,25 @@ class AetherApp {
       if (raw) { try { liveData = JSON.parse(raw); } catch {} }
     }
 
+    // Check if local public storage has a NEWER published snapshot than the server
+    const localRaw = localStorage.getItem('aether_public_site_v2') || localStorage.getItem('aether_public_site');
+    if (localRaw) {
+      try {
+        const localPub = JSON.parse(localRaw);
+        if (localPub && (localPub.pages || localPub.sections)) {
+          const localTime = localPub.publishedAt ? new Date(localPub.publishedAt).getTime() : 0;
+          const serverTime = (fromServer && liveData && liveData.publishedAt) ? new Date(liveData.publishedAt).getTime() : 0;
+          if (localTime > serverTime) {
+            console.log('📌 Local published site is newer than server response. Retaining local latest published changes.');
+            liveData = localPub;
+            fromServer = false;
+            // Background re-sync to update server with the latest snapshot
+            state.publishToLive().catch(() => {});
+          }
+        }
+      } catch (e) {}
+    }
+
     // Last resort: use current in-memory state
     if (!liveData) liveData = state.getPublicSiteData();
 
@@ -6476,31 +6495,36 @@ ${addonManager.getAllActiveJs()}
       const downloadUrl = manifest?.github_zip_url || 
         (manifest?.download_url?.startsWith('http') ? manifest.download_url : null);
 
+      let downloadedViaClient = false;
       if (downloadUrl) {
-        // Client-side download from GitHub (bypasses hosting firewall / cURL restrictions!)
-        setProgress(25, `Downloading update package from GitHub (v${manifest.version || ''})...`);
-        const zipRes = await fetch(downloadUrl, { cache: 'no-store' });
-        if (!zipRes.ok) {
-          throw new Error(`Failed to download update from GitHub (HTTP ${zipRes.status})`);
+        try {
+          // Client-side download from GitHub CDN (bypasses hosting firewalls & server cURL restrictions!)
+          setProgress(25, `Downloading update package from GitHub (v${manifest.version || ''})...`);
+          const zipRes = await fetch(downloadUrl, { cache: 'no-store' });
+          if (zipRes.ok) {
+            const zipBlob = await zipRes.blob();
+            setProgress(65, 'Unpacking core files & verifying integrity on server...');
+            const formData = new FormData();
+            formData.append('update_zip', zipBlob, 'aetherbuilder-update.zip');
+            formData.append('backup', chkBackup ? (chkBackup.checked ? '1' : '0') : '1');
+            formData.append('admin_token', getAdminToken());
+
+            const postRes = await fetch(`api.php?action=upload_update_zip&token=${encodeURIComponent(getAdminToken())}`, {
+              method: 'POST',
+              body: formData
+            });
+            data = await postRes.json();
+            downloadedViaClient = true;
+          }
+        } catch (clientErr) {
+          console.warn('Client-side download fallback to server apply_update:', clientErr);
         }
-        const zipBlob = await zipRes.blob();
+      }
 
-        setProgress(65, 'Unpacking core files & verifying integrity on server...');
-        const formData = new FormData();
-        formData.append('update_zip', zipBlob, 'aetherbuilder-update.zip');
-        formData.append('backup', chkBackup ? (chkBackup.checked ? '1' : '0') : '1');
-        formData.append('admin_token', getAdminToken());
-
-        const postRes = await fetch('api.php?action=upload_update_zip', {
-          method: 'POST',
-          body: formData
-        });
-        data = await postRes.json();
-      } else {
-        // Server-side local or direct install
+      if (!downloadedViaClient) {
+        // Server-side local or direct install fallback
         setProgress(25, 'Connecting to update channel & creating safety backup...');
-        // No X-Admin-Token header — InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
-        const res = await fetch('api.php?action=apply_update', {
+        const res = await fetch(`api.php?action=apply_update&token=${encodeURIComponent(getAdminToken())}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

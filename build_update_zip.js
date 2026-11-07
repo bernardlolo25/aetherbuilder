@@ -76,17 +76,23 @@ const outZipGeneric = path.join(rootDir, 'aetherbuilder-update.zip');
   if (fs.existsSync(z)) fs.unlinkSync(z);
 });
 
-execSync(`python -c "
-import zipfile, os
-stage = '''${stageDir}'''
-out_zip = '''${outZipVersioned}'''
+const pyScript = `import zipfile, os
+stage = r'''${stageDir}'''
+out_zip = r'''${outZipVersioned}'''
 with zipfile.ZipFile(out_zip, 'w', zipfile.ZIP_DEFLATED) as z:
     for root, dirs, files in os.walk(stage):
         for file in files:
             full = os.path.join(root, file)
             rel = os.path.relpath(full, stage).replace('\\\\\\\\', '/')
             z.write(full, rel)
-"`);
+`;
+const tmpPy = path.join(rootDir, '_tmp_pack.py');
+fs.writeFileSync(tmpPy, pyScript, 'utf8');
+try {
+  execSync(`python "${tmpPy}"`);
+} finally {
+  if (fs.existsSync(tmpPy)) fs.unlinkSync(tmpPy);
+}
 
 fs.copyFileSync(outZipVersioned, outZipGeneric);
 
