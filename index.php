@@ -151,7 +151,7 @@ header("Content-Security-Policy: default-src 'self' 'unsafe-inline' https: data:
   <noscript>
     <div style="padding: 40px; text-align: center; color: #fff; background: #0b0f19;">
       <h2>JavaScript Required</h2>
-      <p>AetherBuilder requires JavaScript to render the visual canvas and compute Argon2 cryptographic hashes.</p>
+      <p>AetherBuilder requires JavaScript to render the visual canvas.</p>
     </div>
   </noscript>
 

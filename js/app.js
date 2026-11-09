@@ -1,7 +1,7 @@
-export const APP_VERSION = '2.9.13';
+export const APP_VERSION = '2.9.14';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
- * Coordinates Public vs. Admin Studio views, Argon2 authentication gates, and Topbar tools.
+ * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
  */
 
 import { auth } from './auth.js';
@@ -699,10 +699,10 @@ class AetherApp {
               <span>🖼️</span>
             </button>
 
-            <!-- Argon2 Security Badge -->
-            <div class="security-badge" id="btn-security" title="Argon2id WebAssembly Active. Click to manage password.">
-              <span>🔐</span>
-              <span>Argon2id</span>
+            <!-- Admin Security Badge -->
+            <div class="security-badge" id="btn-security" title="Security Settings. Click to change admin password.">
+              <span>🔒</span>
+              <span>Security</span>
             </div>
 
             <!-- Public Site Link -->
@@ -2521,16 +2521,16 @@ class AetherApp {
       this.activeDevSubTab = 'feed';
     }
 
-    // ── 1. If Locked: Render Argon2 Security Gate ──
+    // ── 1. If Locked: Render Developer Security Gate ──
     if (!devAuth.isAuthenticated()) {
       panel.innerHTML = `
         <div style="padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;">
           <div style="text-align: center; padding: 20px 14px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px;">
             <div style="font-size: 2.4rem; margin-bottom: 8px;">🔒</div>
             <div style="font-weight: 800; font-size: 1.05rem; color: #ffffff; letter-spacing: -0.02em;">Developer Hub Gate</div>
-            <div style="font-size: 0.74rem; color: #818cf8; font-weight: 600; margin-top: 2px;">WebAssembly Argon2id Security</div>
+            <div style="font-size: 0.74rem; color: #818cf8; font-weight: 600; margin-top: 2px;">Developer Authentication</div>
             <p style="font-size: 0.76rem; color: var(--text-dim); margin-top: 10px; line-height: 1.45;">
-              This tab is exclusively for the developer to manage remote marketplace feeds, sell widgets, and curate free templates. Standard users cannot access this area.
+              This tab is exclusively for the developer to manage marketplace feeds, sell widgets, and curate templates.
             </p>
           </div>
 
@@ -2550,19 +2550,6 @@ class AetherApp {
 
             <div id="dev-unlock-feedback" style="display: none; font-size: 0.74rem; padding: 8px 10px; border-radius: 6px; line-height: 1.4;"></div>
           </form>
-
-          <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; font-size: 0.72rem; color: var(--text-dim); line-height: 1.6;">
-            <div style="font-weight: 700; color: #cbd5e1; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>🛡️</span> Cryptographic Security Spec
-            </div>
-            <div>• Algorithm: <strong>Argon2id (PHC encoded)</strong></div>
-            <div>• WebAssembly Acceleration: <strong>hash-wasm v4</strong></div>
-            <div>• Memory Cost: <strong>4096 KB (4MB RAM)</strong></div>
-            <div>• Salt: <strong>CSPRNG 16-byte random</strong></div>
-            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08); color: #94a3b8;">
-              🔑 Initial default developer password: <code style="color: #a5b4fc; background: rgba(99,102,241,0.15); padding: 1px 4px; border-radius: 4px;">dev2026!</code>
-            </div>
-          </div>
         </div>
       `;
 
@@ -2580,12 +2567,12 @@ class AetherApp {
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span>⏳</span> Verifying Argon2id hash...`;
+        submitBtn.innerHTML = `<span>⏳</span> Verifying credentials...`;
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(99,102,241,0.15)';
         feedback.style.border = '1px solid rgba(99,102,241,0.3)';
         feedback.style.color = '#c7d2fe';
-        feedback.textContent = 'Computing WebAssembly Argon2id verification across 4MB memory cost...';
+        feedback.textContent = 'Checking developer credentials...';
 
         try {
           const res = await devAuth.unlock(pwd);
@@ -3054,7 +3041,7 @@ class AetherApp {
             <span>🔑</span> Update Master Developer Password
           </div>
           <p style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4;">
-            Computes a fresh WebAssembly Argon2id hash (4MB RAM cost) and saves to <code style="color:#a5b4fc;">data/dev_auth.json</code>.
+            Saves encrypted credentials to <code style="color:#a5b4fc;">data/dev_auth.json</code>.
           </p>
 
           <form id="form-dev-change-password" style="display: flex; flex-direction: column; gap: 8px;">
@@ -3097,13 +3084,13 @@ class AetherApp {
               
               <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.7rem; color: #cbd5e1; cursor: pointer;">
                 <input type="checkbox" id="dev-auto-push-github-cb" checked style="accent-color: #6366f1; cursor: pointer;" />
-                <span>🚀 Automatically pitch new Argon2 hash to GitHub repo</span>
+                <span>🚀 Automatically sync new credentials to GitHub repo</span>
               </label>
             </div>
 
             <button type="submit" id="btn-dev-pwd-submit" class="wb-btn wb-btn-primary"
               style="width: 100%; justify-content: center; padding: 8px 12px; font-size: 0.78rem; font-weight: 700; margin-top: 6px;">
-              🛡️ Hash &amp; Pitch New Developer Password
+              🛡️ Save &amp; Pitch New Developer Password
             </button>
 
             <div id="dev-pwd-feedback" style="display: none; font-size: 0.72rem; padding: 6px 8px; border-radius: 6px;"></div>
@@ -3149,7 +3136,7 @@ git push -u origin main</textarea>
         <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <label style="font-size: 0.74rem; font-weight: 700; color: #ffffff;">
-              Current PHC Argon2id Hash
+              Current Security Hash
             </label>
             <button type="button" id="btn-copy-dev-hash" class="btn btn-sm"
               style="padding: 2px 6px; font-size: 0.68rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; border-radius: 4px; cursor: pointer;">
@@ -3192,10 +3179,10 @@ git push -u origin main</textarea>
       this.canvas.showToast('Copied Git CLI commands to clipboard', 'info');
     });
 
-    // Copy Argon2 Hash
+    // Copy Hash
     copyBtn?.addEventListener('click', () => {
       navigator.clipboard.writeText(hashArea.value);
-      this.canvas.showToast('Copied Argon2 PHC hash to clipboard', 'info');
+      this.canvas.showToast('Copied security hash to clipboard', 'info');
     });
 
     // Pull Latest Master Hash from GitHub
@@ -3213,7 +3200,7 @@ git push -u origin main</textarea>
           pullFeedback.style.background = 'rgba(16,185,129,0.15)';
           pullFeedback.style.color = '#6ee7b7';
           pullFeedback.textContent = res.updated
-            ? '✅ Successfully pulled and synchronized updated master Argon2 hash from GitHub!'
+            ? '✅ Successfully pulled and synchronized updated credentials from GitHub!'
             : '✅ Local master hash is already in sync with GitHub supreme authority.';
           hashArea.value = res.hash;
           this.canvas.showToast('✅ Synced with GitHub security authority!', 'success');
@@ -3268,11 +3255,11 @@ git push -u origin main</textarea>
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳</span> Generating Argon2id hash &amp; pitching...`;
+      submitBtn.innerHTML = `<span>⏳</span> Updating &amp; pitching...`;
       feedback.style.display = 'block';
       feedback.style.background = 'rgba(99,102,241,0.15)';
       feedback.style.color = '#c7d2fe';
-      feedback.textContent = 'Re-computing WebAssembly Argon2id cryptographic salt and PHC string...';
+      feedback.textContent = 'Verifying security credentials...';
 
       try {
         const res = await devAuth.updatePassword(current, next, {
@@ -5233,51 +5220,43 @@ ${addonManager.getAllActiveJs()}
     });
   }
 
-  // Argon2 Security Modal & Password Manager
+  // Admin Security Modal & Password Settings
   showSecurityModal() {
     let modal = document.getElementById('security-modal');
     if (modal) modal.remove();
-
-    const storedHash = auth.getStoredHash();
 
     modal = document.createElement('div');
     modal.id = 'security-modal';
     modal.className = 'modal-overlay animate-fade-in';
     modal.innerHTML = `
-      <div class="modal-box animate-scale-in">
+      <div class="modal-box animate-scale-in" style="max-width: 440px;">
         <div class="modal-header">
           <div class="modal-title">
-            <span>🔐</span> Argon2id Security Center
+            <span>🔒</span> Admin Password Settings
           </div>
           <button class="tool-icon-btn" id="close-sec-modal">✕</button>
         </div>
         <div class="modal-body">
-          <div class="argon2-verify-box">
-            <div style="font-weight: 700; color: #fff;">Cryptographic Spec:</div>
-            <div style="font-size: 0.82rem; line-height: 1.5;">
-              • Algorithm: <strong>Argon2id (PHC format)</strong><br>
-              • WebAssembly Acceleration: <strong>hash-wasm v4</strong><br>
-              • Memory Cost: <strong>4096 KB (4 MB)</strong><br>
-              • Iterations: <strong>3 passes</strong><br>
-              • Salt: <strong>16-byte cryptographically secure random</strong>
-            </div>
-            <div style="font-weight: 700; margin-top: 6px; color: #fff;">Stored Argon2 Hash:</div>
-            <div class="argon2-hash-preview">${storedHash}</div>
-          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+            Update the master password for the admin studio. Changes take effect across all browsers and devices immediately.
+          </p>
 
-          <form id="change-pass-form" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-            <div style="font-weight: 700; font-size: 0.95rem;">Update Master Password</div>
+          <form id="change-pass-form" style="display: flex; flex-direction: column; gap: 12px;">
             <div class="prop-group">
               <label class="prop-label">Current Password</label>
-              <input type="password" id="cur-pass-input" placeholder="Current password..." required />
+              <input type="password" id="cur-pass-input" placeholder="Current password..." autocomplete="current-password" required />
             </div>
             <div class="prop-group">
-              <label class="prop-label">New Master Password</label>
-              <input type="password" id="new-pass-input" placeholder="New password (min 4 chars)..." required />
+              <label class="prop-label">New Password</label>
+              <input type="password" id="new-pass-input" placeholder="New password (min 4 characters)..." autocomplete="new-password" required />
+            </div>
+            <div class="prop-group">
+              <label class="prop-label">Confirm New Password</label>
+              <input type="password" id="confirm-pass-input" placeholder="Re-enter new password..." autocomplete="new-password" required />
             </div>
             <div id="change-pass-msg" style="font-size: 0.85rem; font-weight: 600; min-height: 18px;"></div>
-            <button type="submit" class="wb-btn wb-btn-primary" style="width: 100%;">
-              <span>Re-hash & Save with Argon2</span>
+            <button type="submit" id="save-pass-btn" class="wb-btn wb-btn-primary" style="width: 100%; justify-content: center;">
+              <span>Update Password</span>
             </button>
           </form>
         </div>
@@ -5293,23 +5272,39 @@ ${addonManager.getAllActiveJs()}
 
     const form = modal.querySelector('#change-pass-form');
     const msg = modal.querySelector('#change-pass-msg');
+    const saveBtn = modal.querySelector('#save-pass-btn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      msg.textContent = 'Computing new Argon2id hash...';
-      msg.style.color = 'var(--warning)';
-
       const curPass = modal.querySelector('#cur-pass-input').value;
       const newPass = modal.querySelector('#new-pass-input').value;
+      const confirmPass = modal.querySelector('#confirm-pass-input').value;
 
-      const res = await auth.updatePassword(curPass, newPass);
-      if (res.success) {
-        msg.textContent = '✓ Password successfully updated and hashed!';
-        msg.style.color = 'var(--success)';
-        setTimeout(() => modal.remove(), 1500);
-      } else {
-        msg.textContent = res.error || 'Failed to update password.';
+      if (newPass !== confirmPass) {
+        msg.textContent = 'New passwords do not match.';
         msg.style.color = 'var(--danger)';
+        return;
+      }
+
+      msg.textContent = 'Updating password...';
+      msg.style.color = 'var(--warning)';
+      saveBtn.disabled = true;
+
+      try {
+        const res = await auth.updatePassword(curPass, newPass);
+        if (res.success) {
+          msg.textContent = '✓ Password successfully updated!';
+          msg.style.color = 'var(--success)';
+          setTimeout(() => modal.remove(), 1400);
+        } else {
+          msg.textContent = res.error || 'Failed to update password.';
+          msg.style.color = 'var(--danger)';
+          saveBtn.disabled = false;
+        }
+      } catch (err) {
+        msg.textContent = 'Error: ' + err.message;
+        msg.style.color = 'var(--danger)';
+        saveBtn.disabled = false;
       }
     });
   }

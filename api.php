@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.13');
+define('AETHER_VERSION', '2.9.14');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -435,38 +435,31 @@ define('CONFIG_FILE', DATA_DIR . '/config.json');
 define('TOKEN_TTL',   86400); // 24 hours
 
 function get_server_secret() {
-    $cfg = [];
-    if (file_exists(CONFIG_FILE)) {
-        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    }
+    $cfg = read_json_file(CONFIG_FILE, []);
     if (empty($cfg['server_secret'])) {
         $cfg['server_secret'] = bin2hex(random_bytes(32));
-        if (empty($cfg['admin_hash'])) {
+        if (!isset($cfg['admin_hash'])) {
             $cfg['admin_hash'] = '';
         }
-        file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
-        @chmod(CONFIG_FILE, 0600);
+        write_json_file(CONFIG_FILE, $cfg);
     }
     return $cfg['server_secret'];
 }
 
 function get_admin_hash_from_config() {
     if (!file_exists(CONFIG_FILE)) return null;
-    $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    return $cfg['admin_hash'] ?? null;
+    $cfg = read_json_file(CONFIG_FILE, []);
+    return !empty($cfg['admin_hash']) ? $cfg['admin_hash'] : null;
 }
 
 function save_admin_hash_to_config($hash) {
-    $cfg = [];
-    if (file_exists(CONFIG_FILE)) {
-        $cfg = json_decode(file_get_contents(CONFIG_FILE), true) ?: [];
-    }
+    $cfg = read_json_file(CONFIG_FILE, []);
     if (empty($cfg['server_secret'])) {
         $cfg['server_secret'] = bin2hex(random_bytes(32));
     }
     $cfg['admin_hash'] = $hash;
-    file_put_contents(CONFIG_FILE, json_encode($cfg, JSON_PRETTY_PRINT));
-    @chmod(CONFIG_FILE, 0600);
+    $cfg['admin_hash_updated_at'] = time();
+    return write_json_file(CONFIG_FILE, $cfg);
 }
 
 function generate_session_token() {
@@ -619,19 +612,40 @@ if ($action === 'login' && $method === 'POST') {
     send_json(200, ['success' => true, 'token' => $token]);
 }
 
-// POST: verify_session — client sends Argon2 hash; server returns signed token
+// POST: verify_session — client sends credentials; server returns signed token
 if ($action === 'verify_session' && $method === 'POST') {
     check_rate_limit('verify_session', 30, 60);
+    $storedHash = get_admin_hash_from_config();
+    $body = @json_decode(get_request_body(), true) ?: [];
+    $clientHash = trim($body['argon2_hash'] ?? ($body['admin_hash'] ?? ''));
+
+    // If server has a custom password hash set, ensure client verified against it
+    if (!empty($storedHash) && $clientHash !== '') {
+        if (!hash_equals($storedHash, $clientHash)) {
+            send_json(401, ['error' => 'Authentication mismatch. Please reload and try again.', 'code' => 'HASH_MISMATCH']);
+        }
+    }
+
     $token = generate_session_token();
     @setcookie('aether_token', $token, time() + TOKEN_TTL, '/');
     send_json(200, ['success' => true, 'token' => $token]);
 }
 
-// POST: save_admin_hash — update stored hash (requires valid session)
+// GET: get_admin_auth — returns current global admin credentials state
+if ($action === 'get_admin_auth' && $method === 'GET') {
+    $storedHash = get_admin_hash_from_config();
+    send_json(200, [
+        'success'    => true,
+        'has_hash'   => !empty($storedHash),
+        'admin_hash' => $storedHash ?: ''
+    ]);
+}
+
+// POST: save_admin_hash — update stored master hash (requires valid session)
 if ($action === 'save_admin_hash' && $method === 'POST') {
     require_admin_token();
     $body = @json_decode(get_request_body(), true) ?: [];
-    $newHash = trim($body['argon2_hash'] ?? '');
+    $newHash = trim($body['argon2_hash'] ?? ($body['admin_hash'] ?? ''));
     if (!$newHash) send_json(400, ['error' => 'No hash provided']);
     save_admin_hash_to_config($newHash);
     send_json(200, ['success' => true, 'message' => 'Admin password updated successfully.']);

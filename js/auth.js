@@ -1,11 +1,12 @@
 /**
- * AETHERBUILDER - ARGON2 CRYPTOGRAPHIC AUTHENTICATION ENGINE
- * Uses WebAssembly Argon2id for secure password hashing and verification.
+ * AETHERBUILDER - ADMIN AUTHENTICATION ENGINE
+ * Secure client-side password verification with atomic server synchronization.
  */
 
-const AUTH_STORAGE_KEY = 'aether_argon2_master_hash';
+const AUTH_STORAGE_KEY    = 'aether_admin_master_hash';
+const LEGACY_STORAGE_KEY  = 'aether_argon2_master_hash';
 const SESSION_STORAGE_KEY = 'aether_admin_session';
-const TOKEN_STORAGE_KEY    = 'aether_admin_token';
+const TOKEN_STORAGE_KEY   = 'aether_admin_token';
 
 export const DEFAULT_ADMIN_HASH = '$argon2id$v=19$m=4096,t=3,p=1$AQIDBAUGBwgJCgsMDQ4PEA$AcLtZ2LeyjAEESISSgm0dbsP0qO7+uGaVzDF6ei+1Xw';
 
@@ -44,7 +45,7 @@ export class Argon2Auth {
       await this.ensureEngineReady();
       await this.ensureDefaultAdmin();
     } catch (err) {
-      console.warn('Argon2 init non-blocking warn:', err);
+      console.warn('Auth init non-blocking warn:', err);
     }
     return this.isReady;
   }
@@ -56,11 +57,11 @@ export class Argon2Auth {
     return salt;
   }
 
-  // Hashes password using Argon2id with recommended memory and iteration parameters
+  // Hashes password using memory-hard parameters
   async hashPassword(password) {
     await this.ensureEngineReady();
     if (!this.hashwasm || !this.hashwasm.argon2id) {
-      throw new Error('Argon2 WebAssembly engine is not available.');
+      throw new Error('Verification engine is not available.');
     }
 
     const salt = this.generateSalt(16);
@@ -71,17 +72,17 @@ export class Argon2Auth {
       iterations: 3,
       memorySize: 4096, // 4MB RAM cost in browser
       hashLength: 32,
-      outputType: 'encoded' // Standard PHC Argon2 format
+      outputType: 'encoded' // Standard PHC format
     });
 
     return hash;
   }
 
-  // Verifies password against standard Argon2 PHC string
+  // Verifies password against standard PHC string
   async verifyPassword(password, encodedHash) {
     await this.ensureEngineReady();
     if (!this.hashwasm || !this.hashwasm.argon2Verify) {
-      throw new Error('Argon2 WebAssembly verify engine is not available.');
+      throw new Error('Verification engine is not available.');
     }
 
     const isValid = await this.hashwasm.argon2Verify({
@@ -92,22 +93,55 @@ export class Argon2Auth {
     return isValid;
   }
 
+  // Syncs current global master hash from server data/config.json
+  async syncServerHash() {
+    try {
+      const res = await fetch('api.php?action=get_admin_auth&_t=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.admin_hash) {
+          this.setStoredHash(data.admin_hash);
+          return data.admin_hash;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not sync admin credentials from server:', err);
+    }
+    return this.getStoredHash();
+  }
+
   // Ensures there is an initial admin hash in localStorage (default: 'admin123')
   async ensureDefaultAdmin() {
-    let currentHash = localStorage.getItem(AUTH_STORAGE_KEY);
+    // 1. First attempt to pull the globally configured hash from the server
+    const remoteHash = await this.syncServerHash();
+    if (remoteHash) return remoteHash;
+
+    // 2. Check local browser storage
+    let currentHash = this.getStoredHash();
     if (!currentHash) {
       currentHash = DEFAULT_ADMIN_HASH;
       try {
-        localStorage.setItem(AUTH_STORAGE_KEY, currentHash);
-        console.log('✅ Master Argon2id password initialized. Default: admin123');
+        this.setStoredHash(currentHash);
       } catch (err) {
-        console.warn('Could not persist default admin hash:', err);
+        console.warn('Could not persist default admin credentials:', err);
       }
     }
+    return currentHash;
   }
 
   getStoredHash() {
-    return localStorage.getItem(AUTH_STORAGE_KEY) || '';
+    return localStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || '';
+  }
+
+  setStoredHash(hash) {
+    if (hash) {
+      try {
+        localStorage.setItem(AUTH_STORAGE_KEY, hash);
+        localStorage.setItem(LEGACY_STORAGE_KEY, hash);
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+    }
   }
 
   isAuthenticated() {
@@ -130,19 +164,22 @@ export class Argon2Auth {
 
   async login(password) {
     await this.initPromise;
-    const storedHash = this.getStoredHash();
-    if (!storedHash) {
-      await this.ensureDefaultAdmin();
+
+    // Always sync latest global hash from server before evaluating
+    await this.syncServerHash();
+
+    let targetHash = this.getStoredHash();
+    if (!targetHash) {
+      targetHash = await this.ensureDefaultAdmin();
     }
 
-    const targetHash = this.getStoredHash();
     const startTime = performance.now();
     const valid = await this.verifyPassword(password, targetHash);
     const computeTime = Math.round(performance.now() - startTime);
 
     if (valid) {
       this._adminPass = password;
-      // Obtain server-side session token (validates this browser session server-side)
+      // Obtain server-side session token
       try {
         const res = await fetch('api.php?action=verify_session', {
           method: 'POST',
@@ -159,7 +196,7 @@ export class Argon2Auth {
       this.setSession(true);
       return { success: true, computeTime };
     } else {
-      return { success: false, error: 'Invalid admin password.', computeTime };
+      return { success: false, error: 'Incorrect password. Please try again.', computeTime };
     }
   }
 
@@ -192,13 +229,17 @@ export class Argon2Auth {
     return sessionStorage.getItem(TOKEN_STORAGE_KEY) || '';
   }
 
-  /** Checks whether a server session token is present (doesn't re-verify server-side) */
+  /** Checks whether a server session token is present */
   hasValidToken() {
     return !!sessionStorage.getItem(TOKEN_STORAGE_KEY);
   }
 
   async updatePassword(oldPassword, newPassword) {
     await this.initPromise;
+
+    // Sync latest credentials from server first
+    await this.syncServerHash();
+
     const verifyRes = await this.login(oldPassword);
     if (!verifyRes.success) {
       return { success: false, error: 'Current password is incorrect.' };
@@ -209,24 +250,34 @@ export class Argon2Auth {
     }
 
     const newHash = await this.hashPassword(newPassword);
-    localStorage.setItem(AUTH_STORAGE_KEY, newHash);
-    // Persist new hash server-side
+    this.setStoredHash(newHash);
+    this._adminPass = newPassword;
+
+    // Persist new hash globally to server config.json
     try {
-      await fetch('api.php?action=save_admin_hash', {
+      const res = await fetch('api.php?action=save_admin_hash', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Token': this.getAdminToken()
         },
-        body: JSON.stringify({ argon2_hash: newHash })
+        body: JSON.stringify({
+          argon2_hash: newHash,
+          admin_hash: newHash
+        })
       });
+      const data = await res.json();
+      if (!res.ok || (data && data.error)) {
+        throw new Error(data?.error || 'Server rejected password update');
+      }
     } catch (e) {
       console.warn('Could not sync password to server:', e);
+      return { success: false, error: 'Password updated locally, but server sync failed: ' + e.message };
     }
     return { success: true, newHash };
   }
 
-  // Renders the interactive Argon2 login modal
+  // Renders the clean, simplified admin login modal
   showLoginModal(onSuccess) {
     let existing = document.getElementById('argon2-login-modal');
     if (existing) existing.remove();
@@ -235,115 +286,98 @@ export class Argon2Auth {
     const loader = document.getElementById('aether-initial-loader');
     if (loader) loader.remove();
 
-    const storedHash = this.getStoredHash();
-    const hashPreview = storedHash ? `${storedHash.substring(0, 32)}...` : 'Generating initial Argon2id state...';
-
     const modal = document.createElement('div');
     modal.id = 'argon2-login-modal';
     modal.className = 'modal-overlay animate-fade-in';
     modal.innerHTML = `
-      <div class="modal-box animate-scale-in" style="max-width: 440px;">
-        <div style="text-align: center; padding: 24px 20px 10px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06); border-top-left-radius: 12px; border-top-right-radius: 12px;">
-          <img src="assets/logo.png" alt="AetherBuilder" style="max-height: 84px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 16px rgba(99,102,241,0.25)); border-radius: 10px;" />
+      <div class="modal-box animate-scale-in" style="max-width: 400px; padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: #0f172a; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);">
+        <div style="text-align: center; padding: 26px 20px 14px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <img src="assets/logo.png" alt="AetherBuilder" style="max-height: 72px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(99,102,241,0.25));" />
+          <h2 style="margin: 14px 0 4px; font-size: 1.25rem; font-weight: 700; color: #ffffff; letter-spacing: -0.01em;">Admin Login</h2>
+          <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">Enter your password to access the studio.</p>
         </div>
-        <div class="modal-header" style="padding-top: 14px;">
-          <div class="modal-title">
-            <span style="font-size: 1.3rem;">🔐</span>
-            <div>
-              <div>Admin Authentication</div>
-              <div style="font-size: 0.75rem; color: var(--accent); font-weight: 500;">Argon2id Cryptographic Protection</div>
-            </div>
-          </div>
-          <button class="tool-icon-btn" id="close-login-btn" title="Back to public view">✕</button>
-        </div>
-        <form id="argon2-login-form" class="modal-body">
-          <p style="font-size: 0.92rem; color: var(--text-muted);">
-            The AetherBuilder Admin Studio is locked. Enter your master password to decrypt session controls.
-          </p>
 
-          <div class="prop-group">
-            <label class="prop-label" for="admin-pass-input">Admin Password</label>
-            <input type="password" id="admin-pass-input" placeholder="Enter master password..." autocomplete="current-password" autofocus required />
-            <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 4px;">
-              Default password on first install is: <code style="color: var(--primary-light); background: rgba(99,102,241,0.15); padding: 2px 6px; border-radius: 4px;">admin123</code>
+        <form id="admin-login-form" style="padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="admin-pass-input" style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1;">Password</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="password" id="admin-pass-input" placeholder="Enter password..." autocomplete="current-password" autofocus required
+                style="width: 100%; padding: 11px 40px 11px 14px; font-size: 0.92rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #1e293b; color: #ffffff; outline: none; transition: border-color 0.2s;" />
+              <button type="button" id="toggle-pass-visibility-btn" style="position: absolute; right: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 1rem; line-height: 1;" title="Toggle password visibility">
+                👁️
+              </button>
             </div>
           </div>
 
-          <div class="argon2-verify-box">
-            <div style="display: flex; justify-content: space-between; font-weight: 600;">
-              <span>Active Argon2 PHC Hash:</span>
-              <span id="argon2-calc-time" style="color: var(--success); font-family: var(--font-mono);">WebAssembly Ready</span>
-            </div>
-            <div class="argon2-hash-preview" id="argon2-hash-display">${hashPreview}</div>
-          </div>
+          <div id="login-error-msg" style="color: #f87171; font-size: 0.84rem; font-weight: 500; min-height: 18px; text-align: left; display: none;"></div>
 
-          <div id="login-error-msg" style="color: var(--danger); font-size: 0.85rem; font-weight: 600; min-height: 20px;"></div>
-
-          <button type="submit" id="login-submit-btn" class="wb-btn wb-btn-primary" style="width: 100%;">
-            <span>Unlock Admin Studio</span>
-            <span id="login-spinner" style="display: none;" class="animate-spin">⚙️</span>
+          <button type="submit" id="login-submit-btn" class="wb-btn wb-btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.92rem; font-weight: 600; border-radius: 8px; cursor: pointer;">
+            <span id="login-btn-text">Sign In</span>
+            <span id="login-spinner" style="display: none; margin-left: 8px;" class="animate-spin">⚙️</span>
           </button>
         </form>
-        <div class="modal-footer" style="justify-content: space-between;">
-          <a href="?view=public" style="font-size: 0.82rem; color: var(--text-dim);">← Return to Public Site</a>
-          <button type="button" id="quick-fill-btn" style="font-size: 0.8rem; color: var(--primary-light); text-decoration: underline;">
-            Fill default (admin123)
-          </button>
+
+        <div style="padding: 14px 24px 18px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);">
+          <a href="?view=public" style="font-size: 0.84rem; color: #94a3b8; text-decoration: none; transition: color 0.2s;">← Return to Website</a>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
 
-    const form = modal.querySelector('#argon2-login-form');
+    const form = modal.querySelector('#admin-login-form');
     const passInput = modal.querySelector('#admin-pass-input');
     const errorMsg = modal.querySelector('#login-error-msg');
     const submitBtn = modal.querySelector('#login-submit-btn');
+    const submitBtnText = modal.querySelector('#login-btn-text');
     const spinner = modal.querySelector('#login-spinner');
-    const calcTime = modal.querySelector('#argon2-calc-time');
-    const quickFillBtn = modal.querySelector('#quick-fill-btn');
-    const closeBtn = modal.querySelector('#close-login-btn');
+    const togglePassBtn = modal.querySelector('#toggle-pass-visibility-btn');
 
-    closeBtn.addEventListener('click', () => {
-      window.location.href = '?view=public';
+    togglePassBtn.addEventListener('click', () => {
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        togglePassBtn.textContent = '🙈';
+      } else {
+        passInput.type = 'password';
+        togglePassBtn.textContent = '👁️';
+      }
     });
 
-    quickFillBtn.addEventListener('click', () => {
-      passInput.value = 'admin123';
-      passInput.focus();
-    });
+    passInput.focus();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      errorMsg.style.display = 'none';
       errorMsg.textContent = '';
       submitBtn.disabled = true;
+      submitBtnText.textContent = 'Signing in...';
       spinner.style.display = 'inline-block';
-      calcTime.textContent = 'Computing Argon2id...';
-      calcTime.style.color = 'var(--warning)';
 
       try {
         const res = await this.login(passInput.value);
         if (res.success) {
-          calcTime.textContent = `Verified in ${res.computeTime}ms`;
-          calcTime.style.color = 'var(--success)';
           modal.classList.add('animate-fade-out');
           setTimeout(() => {
             modal.remove();
             if (typeof onSuccess === 'function') onSuccess();
           }, 200);
         } else {
-          calcTime.textContent = `Failed (${res.computeTime}ms)`;
-          calcTime.style.color = 'var(--danger)';
           errorMsg.textContent = res.error || 'Incorrect password.';
-          modal.querySelector('.modal-box').classList.add('animate-shake');
-          setTimeout(() => {
-            modal.querySelector('.modal-box').classList.remove('animate-shake');
-          }, 500);
+          errorMsg.style.display = 'block';
+          const box = modal.querySelector('.modal-box');
+          if (box) {
+            box.classList.add('animate-shake');
+            setTimeout(() => box.classList.remove('animate-shake'), 500);
+          }
+          passInput.focus();
+          passInput.select();
         }
       } catch (err) {
         errorMsg.textContent = `Verification error: ${err.message}`;
+        errorMsg.style.display = 'block';
       } finally {
         submitBtn.disabled = false;
+        submitBtnText.textContent = 'Sign In';
         spinner.style.display = 'none';
       }
     });
