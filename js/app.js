@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.14';
+export const APP_VERSION = '2.9.15';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -98,7 +98,7 @@ export function initBackToTopButton() {
 export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
   if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file; // Do not touch SVGs or animated GIFs
-  if (file.size <= 1.2 * 1024 * 1024) return file; // Skip photos already under 1.2MB
+  if (file.size <= 150 * 1024 && file.type === 'image/webp') return file; // Skip photos already under 150KB WebP
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -106,9 +106,6 @@ export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85
     img.onload = () => {
       URL.revokeObjectURL(url);
       let { width, height } = img;
-      if (width <= maxDim && height <= maxDim && file.size < 1.6 * 1024 * 1024) {
-        return resolve(file);
-      }
       if (width > maxDim || height > maxDim) {
         if (width > height) {
           height = Math.round((height * maxDim) / width);
@@ -122,21 +119,24 @@ export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
 
+      // Convert to modern WebP (~150KB) for lightning-fast page loading and 90% storage savings
       canvas.toBlob((blob) => {
         if (!blob || blob.size >= file.size) {
           return resolve(file);
         }
-        const optFile = new File([blob], file.name, {
-          type: 'image/jpeg',
+        const baseName = file.name.replace(/\.[^.]+$/, '');
+        const optFile = new File([blob], `${baseName}.webp`, {
+          type: 'image/webp',
           lastModified: Date.now()
         });
-        console.log(`⚡ Auto-optimized ${file.name}: ${(file.size / 1024).toFixed(0)}KB -> ${(optFile.size / 1024).toFixed(0)}KB`);
+        console.log(`⚡ Auto-optimized ${file.name} to WebP: ${(file.size / 1024).toFixed(0)}KB -> ${(optFile.size / 1024).toFixed(0)}KB`);
         resolve(optFile);
-      }, 'image/jpeg', quality);
+      }, 'image/webp', quality);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -653,91 +653,112 @@ class AetherApp {
 
             <!-- Viewport Switcher -->
             <div class="device-toggle-group">
-              <button class="device-btn active" data-mode="desktop" title="Desktop View (100%)">🖥️ Desktop</button>
-              <button class="device-btn" data-mode="tablet" title="Tablet View (768px)">📱 Tablet</button>
-              <button class="device-btn" data-mode="mobile" title="Mobile View (390px)">📱 Mobile</button>
+              <button class="device-btn active" data-mode="desktop" title="Desktop View (100%)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span>Desktop</span>
+              </button>
+              <button class="device-btn" data-mode="tablet" title="Tablet View (768px)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <span>Tablet</span>
+              </button>
+              <button class="device-btn" data-mode="mobile" title="Mobile View (390px)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <span>Mobile</span>
+              </button>
             </div>
           </div>
 
           <!-- History & Tools Center -->
           <div class="topbar-controls-center">
             <div class="history-btn-group">
-              <button class="tool-icon-btn" id="btn-undo" title="Undo (Ctrl+Z)">↶</button>
-              <button class="tool-icon-btn" id="btn-redo" title="Redo (Ctrl+Y)">↷</button>
+              <button class="tool-icon-btn" id="btn-undo" title="Undo (Ctrl+Z)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+              </button>
+              <button class="tool-icon-btn" id="btn-redo" title="Redo (Ctrl+Y)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>
+              </button>
             </div>
             <button class="topbar-btn topbar-btn-sm" id="btn-templates">
-              <span>📋</span> Templates
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span>Templates</span>
             </button>
             <button class="topbar-btn topbar-btn-sm" id="btn-revisions" title="Publish Version History & 1-Click Rollback">
-              <span>🕒</span> Revisions
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Revisions</span>
             </button>
-            <button class="topbar-btn topbar-btn-sm" id="btn-seo-audit" title="Pre-Publish SEO & Accessibility Health Audit" style="border-color: rgba(16,185,129,0.35); color: #34d399;">
-              <span>🛡️</span> SEO Audit
+            <button class="topbar-btn topbar-btn-sm" id="btn-seo-audit" title="Pre-Publish SEO & Accessibility Health Audit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              <span>SEO Audit</span>
             </button>
             <button class="topbar-btn topbar-btn-sm" id="btn-export">
-              <span>📤</span> Export
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Export</span>
             </button>
-            <button class="tool-icon-btn" id="btn-clear" title="Clear Canvas" style="color: var(--danger);">🗑</button>
+            <button class="tool-icon-btn" id="btn-clear" title="Clear Canvas">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
           </div>
 
           <!-- Actions & Security Right -->
           <div class="topbar-actions">
             <!-- System Updates Center Button -->
             <button class="tool-icon-btn" id="btn-system-updates" title="System Updates & Maintenance" style="position: relative;">
-              <span>🔄</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
               <span id="update-badge-dot" style="display:none; position:absolute; top:-2px; right:-2px; background:#10b981; border-radius:50%; width:8px; height:8px; box-shadow:0 0 6px #10b981;"></span>
             </button>
 
             <!-- Notifications & Leads Hub -->
             <button class="tool-icon-btn" id="btn-notifications" title="Notifications & Leads Inbox" style="position: relative;">
-              <span>🔔</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span id="notif-badge" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:0.62rem; font-weight:800; border-radius:10px; min-width:16px; height:16px; padding:0 3px; line-height:16px; text-align:center; box-shadow:0 0 8px rgba(239,68,68,0.8);">0</span>
             </button>
 
             <!-- Media Library -->
             <button class="tool-icon-btn" id="btn-media" title="Media Library">
-              <span>🖼️</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </button>
 
             <!-- Admin Security Badge -->
             <div class="security-badge" id="btn-security" title="Security Settings. Click to change admin password.">
-              <span>🔒</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <span>Security</span>
             </div>
 
             <!-- Public Site Link -->
-            <a href="?view=public" target="_blank" class="tool-icon-btn" title="Open live public view in new tab" style="text-decoration:none;display:flex;align-items:center;gap:4px;">
-              <span>🌐</span>
+            <a href="?view=public" target="_blank" class="tool-icon-btn" title="Open live public view in new tab" style="text-decoration:none;display:flex;align-items:center;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </a>
 
             <!-- Sync / Pull Latest from Server -->
             <button class="tool-icon-btn" id="btn-sync-server" title="Sync from Server: Load latest published content from data/site.json into builder">
-              <span>🔄</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="12" x2="12" y2="20"/></svg>
             </button>
 
             <!-- Add-On Store Button -->
-            <button class="topbar-btn" id="btn-topbar-store" style="background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe; display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" title="Browse & Install Add-ons from the Store">
-              <span>🛒</span> Store
+            <button class="topbar-btn" id="btn-topbar-store" title="Browse & Install Add-ons from the Store">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span>Store</span>
             </button>
 
             <!-- 1-Click Copy Public Link -->
             <button class="tool-icon-btn" id="btn-topbar-copy-link" title="Copy Live Website URL">
-              <span>📋</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             </button>
 
             <!-- Mobile Preview QR Code -->
             <button class="tool-icon-btn" id="btn-topbar-qr" title="Show Mobile Test QR Code">
-              <span>📱</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
 
             <!-- Publish Button -->
             <button class="topbar-btn topbar-btn-publish" id="btn-publish">
-              <span>🚀</span> Publish Live
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+              <span>Publish Live</span>
             </button>
 
             <!-- Admin Logout -->
             <button class="tool-icon-btn" id="btn-logout" title="Lock Admin Studio">
-              <span>🚪</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             </button>
           </div>
         </header>
@@ -759,11 +780,11 @@ class AetherApp {
               <div class="sidebar-tabs" id="sidebar-tabs">
                 <button type="button" class="sidebar-tab-btn active" data-side-tab="widgets">Widgets</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="inspector">Inspector</button>
-                <button type="button" class="sidebar-tab-btn" data-side-tab="pages">📱 Pages</button>
+                <button type="button" class="sidebar-tab-btn" data-side-tab="pages">Pages</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="settings">Page</button>
-                <button type="button" class="sidebar-tab-btn" data-side-tab="sitesettings">⚙️ Site</button>
-                <button type="button" class="sidebar-tab-btn" data-side-tab="addons">🧩 Add-ons</button>
-                <button type="button" class="sidebar-tab-btn" data-side-tab="developer">🔒 Developer</button>
+                <button type="button" class="sidebar-tab-btn" data-side-tab="sitesettings">Site</button>
+                <button type="button" class="sidebar-tab-btn" data-side-tab="addons">Add-ons</button>
+                <button type="button" class="sidebar-tab-btn" data-side-tab="developer">Developer</button>
               </div>
               <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">›</button>
               <!-- Mobile Close Button -->
@@ -4530,6 +4551,7 @@ git push -u origin main</textarea>
             <button class="inspector-tab-btn active" id="tab-export-json">Export JSON</button>
             <button class="inspector-tab-btn" id="tab-export-html">Standalone HTML</button>
             <button class="inspector-tab-btn" id="tab-import-json">Import JSON</button>
+            <button class="inspector-tab-btn" id="tab-site-backup">📦 Full Site Backup (.zip)</button>
           </div>
 
           <div id="export-json-view">
@@ -4557,6 +4579,33 @@ git push -u origin main</textarea>
               <button class="wb-btn wb-btn-secondary" id="btn-load-media-template" style="padding: 8px 16px; font-size: 0.85rem;">📁 Load Latest Media Template</button>
             </div>
           </div>
+
+          <div id="site-backup-view" style="display: none;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+              Create an all-in-one portable backup containing your full website layout (<code>data/site.json</code>), addons, and all uploaded media files (<code>assets/uploads/</code>). Use this to migrate your entire website to another domain or save a complete offline snapshot.
+            </p>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+              <div style="font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 4px;">Download Full Website Backup</div>
+              <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">Bundles all pages, settings, revisions, and media images into a single .zip file.</p>
+              <button class="wb-btn wb-btn-primary" id="btn-download-full-backup" style="padding: 9px 18px; font-size: 0.86rem;">
+                <span>📦</span> Download Complete Site (.zip)
+              </button>
+              <span id="backup-status-text" style="font-size: 0.8rem; margin-left: 10px; color: var(--accent);"></span>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px;">
+              <div style="font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 4px;">Restore / Migrate Website from Backup</div>
+              <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">Upload a previously downloaded AetherBuilder site backup (.zip) to restore all content and media.</p>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="input-restore-zip" accept=".zip" style="font-size: 0.8rem; color: #cbd5e1;" />
+                <button class="wb-btn wb-btn-secondary" id="btn-perform-restore" style="padding: 9px 18px; font-size: 0.86rem;">
+                  <span>📥</span> Restore Website Now
+                </button>
+              </div>
+              <div id="restore-status-text" style="font-size: 0.82rem; margin-top: 8px; min-height: 18px;"></div>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -4569,36 +4618,93 @@ git push -u origin main</textarea>
     const tabExportJson = modal.querySelector('#tab-export-json');
     const tabExportHtml = modal.querySelector('#tab-export-html');
     const tabImportJson = modal.querySelector('#tab-import-json');
+    const tabSiteBackup = modal.querySelector('#tab-site-backup');
 
     const viewJson = modal.querySelector('#export-json-view');
     const viewHtml = modal.querySelector('#export-html-view');
     const viewImport = modal.querySelector('#import-json-view');
+    const viewBackup = modal.querySelector('#site-backup-view');
 
-    tabExportJson.addEventListener('click', () => {
-      tabExportJson.classList.add('active');
-      tabExportHtml.classList.remove('active');
-      tabImportJson.classList.remove('active');
-      viewJson.style.display = 'block';
-      viewHtml.style.display = 'none';
-      viewImport.style.display = 'none';
+    const activateTab = (activeTab, activeView) => {
+      [tabExportJson, tabExportHtml, tabImportJson, tabSiteBackup].forEach(t => t?.classList.remove('active'));
+      [viewJson, viewHtml, viewImport, viewBackup].forEach(v => { if (v) v.style.display = 'none'; });
+      activeTab.classList.add('active');
+      activeView.style.display = 'block';
+    };
+
+    tabExportJson.addEventListener('click', () => activateTab(tabExportJson, viewJson));
+    tabExportHtml.addEventListener('click', () => activateTab(tabExportHtml, viewHtml));
+    tabImportJson.addEventListener('click', () => activateTab(tabImportJson, viewImport));
+    tabSiteBackup.addEventListener('click', () => activateTab(tabSiteBackup, viewBackup));
+
+    // Full Site Backup Download
+    const btnDownloadBackup = modal.querySelector('#btn-download-full-backup');
+    const backupStatus = modal.querySelector('#backup-status-text');
+    btnDownloadBackup?.addEventListener('click', async () => {
+      btnDownloadBackup.disabled = true;
+      backupStatus.textContent = 'Generating backup ZIP...';
+      try {
+        const token = auth.getAdminToken();
+        const res = await fetch(`api.php?action=backup_full_site&token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+        if (data && data.success && data.url) {
+          backupStatus.textContent = `✓ Backup ready (${data.size_kb} KB)`;
+          window.location.href = data.url;
+        } else {
+          backupStatus.textContent = 'Failed: ' + (data?.error || 'Unknown error');
+        }
+      } catch (err) {
+        backupStatus.textContent = 'Error: ' + err.message;
+      } finally {
+        btnDownloadBackup.disabled = false;
+      }
     });
 
-    tabExportHtml.addEventListener('click', () => {
-      tabExportHtml.classList.add('active');
-      tabExportJson.classList.remove('active');
-      tabImportJson.classList.remove('active');
-      viewJson.style.display = 'none';
-      viewHtml.style.display = 'block';
-      viewImport.style.display = 'none';
-    });
+    // Full Site Restore
+    const btnRestore = modal.querySelector('#btn-perform-restore');
+    const inputRestore = modal.querySelector('#input-restore-zip');
+    const restoreStatus = modal.querySelector('#restore-status-text');
 
-    tabImportJson.addEventListener('click', () => {
-      tabImportJson.classList.add('active');
-      tabExportJson.classList.remove('active');
-      tabExportHtml.classList.remove('active');
-      viewJson.style.display = 'none';
-      viewHtml.style.display = 'none';
-      viewImport.style.display = 'block';
+    btnRestore?.addEventListener('click', async () => {
+      const file = inputRestore?.files?.[0];
+      if (!file) {
+        alert('Please select a backup .zip file first.');
+        return;
+      }
+      if (!confirm('Warning: Restoring from a backup will overwrite existing pages and media. Do you wish to proceed?')) {
+        return;
+      }
+
+      btnRestore.disabled = true;
+      restoreStatus.textContent = 'Restoring website from archive...';
+      restoreStatus.style.color = 'var(--warning)';
+
+      try {
+        const formData = new FormData();
+        formData.append('backup_zip', file);
+        formData.append('admin_token', auth.getAdminToken());
+
+        const res = await fetch('api.php?action=restore_full_site', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          restoreStatus.textContent = '✓ ' + data.message;
+          restoreStatus.style.color = 'var(--success)';
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        } else {
+          restoreStatus.textContent = 'Error: ' + (data?.error || 'Restore failed');
+          restoreStatus.style.color = 'var(--danger)';
+          btnRestore.disabled = false;
+        }
+      } catch (err) {
+        restoreStatus.textContent = 'Error: ' + err.message;
+        restoreStatus.style.color = 'var(--danger)';
+        btnRestore.disabled = false;
+      }
     });
 
     // Copy JSON

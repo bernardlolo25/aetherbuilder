@@ -52,11 +52,14 @@ coreRootFiles.forEach(f => {
   if (fs.existsSync(p)) copyRecursive(p, path.join(stageDir, d));
 });
 
-// 3. Core data definitions (addons catalog and htaccess only)
+// 3. Core data definitions (addons catalog, template catalog, and htaccess only)
 const stageData = path.join(stageDir, 'data');
 fs.mkdirSync(stageData, { recursive: true });
 if (fs.existsSync(path.join(rootDir, 'data', 'addons.json'))) {
   fs.copyFileSync(path.join(rootDir, 'data', 'addons.json'), path.join(stageData, 'addons.json'));
+}
+if (fs.existsSync(path.join(rootDir, 'data', 'templates.json'))) {
+  fs.copyFileSync(path.join(rootDir, 'data', 'templates.json'), path.join(stageData, 'templates.json'));
 }
 if (fs.existsSync(path.join(rootDir, 'data', '.htaccess'))) {
   fs.copyFileSync(path.join(rootDir, 'data', '.htaccess'), path.join(stageData, '.htaccess'));

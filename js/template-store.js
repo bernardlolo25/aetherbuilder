@@ -298,7 +298,14 @@ export class TemplateStore {
               <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Pre-built full-page templates with automatic required add-on detection &amp; 1-click loading.</p>
             </div>
           </div>
-          <button type="button" id="btn-close-template-modal" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #ffffff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.2s;" title="Close Library">✕</button>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="file" id="input-theme-bundle-file" accept=".zip" style="display: none;" />
+            <button type="button" id="btn-install-theme-bundle" style="background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.38); color: #6ee7b7; padding: 7px 14px; border-radius: 9px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Install custom theme bundle (.zip) with partner add-ons">
+              <span>📦</span>
+              <span>Install Theme (.zip)</span>
+            </button>
+            <button type="button" id="btn-close-template-modal" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #ffffff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.2s;" title="Close Library">✕</button>
+          </div>
         </div>
 
         <!-- 2. Categories & Search Toolbar -->
@@ -338,6 +345,103 @@ export class TemplateStore {
 
     modal.querySelector('#btn-close-template-modal').addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    // 📦 1-Click Theme Bundle (.zip) Installer
+    const bundleInput = modal.querySelector('#input-theme-bundle-file');
+    const bundleBtn = modal.querySelector('#btn-install-theme-bundle');
+
+    if (bundleBtn && bundleInput) {
+      bundleBtn.addEventListener('click', () => {
+        bundleInput.value = '';
+        bundleInput.click();
+      });
+
+      bundleInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.zip')) {
+          alert('Please select a valid .zip theme bundle.');
+          return;
+        }
+
+        const origHtml = bundleBtn.innerHTML;
+        bundleBtn.disabled = true;
+        bundleBtn.innerHTML = `<span>⏳</span><span>Installing...</span>`;
+
+        try {
+          const formData = new FormData();
+          formData.append('theme_zip', file);
+
+          const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
+          const token = sessionStorage.getItem('aether_admin_token') || '';
+
+          const res = await fetch(`${apiBase}?action=install_theme_bundle`, {
+            method: 'POST',
+            headers: { 'X-Admin-Token': token },
+            body: formData
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Failed to install theme bundle.');
+          }
+
+          // 1. Refresh addons in manager
+          try {
+            addonManager.isInitialized = false;
+            await addonManager.init();
+          } catch (ae) {
+            console.warn('[TemplateStore] Addon reload notice:', ae);
+          }
+
+          // 2. Fetch fresh templates from server
+          try {
+            const tRes = await fetch(`${apiBase}?action=get_templates&_t=${Date.now()}`);
+            if (tRes.ok) {
+              const tData = await tRes.json();
+              if (Array.isArray(tData) && tData.length > 0) {
+                this.templates = tData;
+                this.save(false);
+              }
+            }
+          } catch (_) {
+            if (data.theme) {
+              this.templates.unshift(data.theme);
+            }
+          }
+
+          // 3. Update category pill count
+          const allPill = modal.querySelector('.store-filter-pill[data-filter="all"]');
+          if (allPill) allPill.textContent = `All (${this.templates.length})`;
+
+          // 4. Re-render cards
+          this.renderTemplateCards(modal, onLoadCallback);
+
+          const theme = data.theme;
+          const addonCount = (data.addons_installed || []).length;
+          const addonDetail = addonCount > 0 ? ` + ${addonCount} partner add-on(s)` : '';
+
+          if (window.aetherApp && window.aetherApp.canvas) {
+            window.aetherApp.canvas.showToast(`✨ Installed: ${theme ? theme.name : 'Theme Bundle'}${addonDetail}!`, 'success');
+          }
+
+          // 5. Offer 1-click apply to active canvas
+          if (theme && confirm(`🎉 Theme "${theme.name}" installed successfully${addonCount > 0 ? ` along with ${addonCount} partner add-on(s):\n• ` + data.addons_installed.join('\n• ') : ''}!\n\nWould you like to load and apply this theme to your active canvas now?`)) {
+            await this.applyTemplate(theme.id, { autoInstall: true });
+            modal.remove();
+            if (typeof onLoadCallback === 'function') onLoadCallback(theme);
+          }
+
+        } catch (err) {
+          alert('❌ Theme bundle installation error: ' + (err.message || err));
+        } finally {
+          bundleBtn.disabled = false;
+          bundleBtn.innerHTML = origHtml;
+          bundleInput.value = '';
+        }
+      });
+    }
 
     // Category Tabs
     modal.querySelectorAll('.store-filter-pill').forEach(btn => {

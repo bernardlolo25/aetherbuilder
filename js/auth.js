@@ -333,6 +333,44 @@ export class Argon2Auth {
     const spinner = modal.querySelector('#login-spinner');
     const togglePassBtn = modal.querySelector('#toggle-pass-visibility-btn');
 
+    // Progressive Brute-Force Lockout Defense
+    const LOCKOUT_KEY = 'aether_admin_lockout_until';
+    const ATTEMPTS_KEY = 'aether_admin_fail_attempts';
+
+    let lockoutTimer = null;
+    const checkLockout = () => {
+      const until = parseInt(sessionStorage.getItem(LOCKOUT_KEY) || '0', 10);
+      const remaining = until > Date.now() ? Math.ceil((until - Date.now()) / 1000) : 0;
+      if (remaining > 0) {
+        submitBtn.disabled = true;
+        passInput.disabled = true;
+        errorMsg.textContent = `Too many failed attempts. Please wait ${remaining}s...`;
+        errorMsg.style.display = 'block';
+        if (!lockoutTimer) {
+          lockoutTimer = setInterval(() => {
+            const rem = until > Date.now() ? Math.ceil((until - Date.now()) / 1000) : 0;
+            if (rem > 0) {
+              errorMsg.textContent = `Too many failed attempts. Please wait ${rem}s...`;
+            } else {
+              clearInterval(lockoutTimer);
+              lockoutTimer = null;
+              sessionStorage.removeItem(LOCKOUT_KEY);
+              sessionStorage.removeItem(ATTEMPTS_KEY);
+              submitBtn.disabled = false;
+              passInput.disabled = false;
+              errorMsg.style.display = 'none';
+              errorMsg.textContent = '';
+              passInput.focus();
+            }
+          }, 1000);
+        }
+        return true;
+      }
+      return false;
+    };
+
+    checkLockout();
+
     togglePassBtn.addEventListener('click', () => {
       if (passInput.type === 'password') {
         passInput.type = 'text';
@@ -343,10 +381,14 @@ export class Argon2Auth {
       }
     });
 
-    passInput.focus();
+    if (!checkLockout()) {
+      passInput.focus();
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (checkLockout()) return;
+
       errorMsg.style.display = 'none';
       errorMsg.textContent = '';
       submitBtn.disabled = true;
@@ -356,14 +398,25 @@ export class Argon2Auth {
       try {
         const res = await this.login(passInput.value);
         if (res.success) {
+          sessionStorage.removeItem(LOCKOUT_KEY);
+          sessionStorage.removeItem(ATTEMPTS_KEY);
+          if (lockoutTimer) clearInterval(lockoutTimer);
           modal.classList.add('animate-fade-out');
           setTimeout(() => {
             modal.remove();
             if (typeof onSuccess === 'function') onSuccess();
           }, 200);
         } else {
-          errorMsg.textContent = res.error || 'Incorrect password.';
-          errorMsg.style.display = 'block';
+          let attempts = parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || '0', 10) + 1;
+          sessionStorage.setItem(ATTEMPTS_KEY, attempts.toString());
+          if (attempts >= 5) {
+            sessionStorage.setItem(LOCKOUT_KEY, (Date.now() + 60000).toString());
+            checkLockout();
+          } else {
+            const remAttempts = 5 - attempts;
+            errorMsg.textContent = `${res.error || 'Incorrect password.'} (${remAttempts} attempt${remAttempts === 1 ? '' : 's'} remaining)`;
+            errorMsg.style.display = 'block';
+          }
           const box = modal.querySelector('.modal-box');
           if (box) {
             box.classList.add('animate-shake');
@@ -376,8 +429,10 @@ export class Argon2Auth {
         errorMsg.textContent = `Verification error: ${err.message}`;
         errorMsg.style.display = 'block';
       } finally {
-        submitBtn.disabled = false;
-        submitBtnText.textContent = 'Sign In';
+        if (!checkLockout()) {
+          submitBtn.disabled = false;
+          submitBtnText.textContent = 'Sign In';
+        }
         spinner.style.display = 'none';
       }
     });

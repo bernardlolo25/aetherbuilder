@@ -43,12 +43,13 @@ if (!empty($origin)) {
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, Authorization');
 
-// Security & Perimeter Defense Headers (HSTS, Clickjacking, MIME sniffing, Referrer privacy)
+// Security & Perimeter Defense Headers (HSTS, Clickjacking, MIME sniffing, Referrer privacy, CSP)
 header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
+header("Content-Security-Policy: default-src 'self' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' data: blob: https:; media-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src 'self' https:; frame-ancestors 'self';");
 
 // Fatal Error & Exception Interceptor: guarantees clean JSON responses on shared hosts (no empty 500s!)
 ini_set('display_errors', '0');
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.14');
+define('AETHER_VERSION', '2.9.15');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -82,7 +83,7 @@ define('BACKUPS_DIR', DATA_DIR . '/backups');
 define('MAX_SUBS',    1000);
 define('MAX_REVS',    20);
 
-$ALLOWED_EXT = ['jpg','jpeg','png','gif','webp','svg','mp4','webm','pdf','json','zip'];
+$ALLOWED_EXT = ['jpg','jpeg','png','gif','webp','svg','mp4','webm','pdf','json','zip','mp3','ogg','wav','woff','woff2','ttf'];
 
 // Ensure required directories exist with write permissions
 foreach ([DATA_DIR, UPLOADS_DIR, BACKUPS_DIR, DATA_DIR . '/revisions'] as $dir) {
@@ -246,7 +247,7 @@ function perform_core_update($zipFilePath, $createBackup = true) {
         $backupPath = BACKUPS_DIR . '/' . $backupName;
         $zipBackup = new ZipArchive();
         if ($zipBackup->open($backupPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            $filesToBackup = ['index.html', 'admin.html', 'public.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', 'sw.js'];
+            $filesToBackup = ['index.html', 'index.php', 'admin.html', 'public.html', 'api.php', 'version.json', 'favicon.png', 'favicon.ico', 'sw.js'];
             foreach ($filesToBackup as $bf) {
                 if (file_exists(ROOT . '/' . $bf)) {
                     $zipBackup->addFile(ROOT . '/' . $bf, $bf);
@@ -564,7 +565,7 @@ function require_admin_token() {
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
     $host    = $_SERVER['HTTP_HOST'] ?? '';
     if ($host && $referer && strpos($referer, $host) !== false) {
-        if (in_array($action, ['publish', 'upload', 'upload_update_zip', 'apply_update', 'save_revision', 'get_revisions', 'rollback_revision', 'save_addons'], true)) {
+        if (in_array($action, ['publish', 'upload', 'upload_update_zip', 'apply_update', 'save_revision', 'get_revisions', 'rollback_revision', 'save_addons', 'backup_full_site', 'restore_full_site', 'install_theme_bundle'], true)) {
             return true;
         }
     }
@@ -656,6 +657,393 @@ if ($action === 'validate_token' && $method === 'GET') {
     $token = $_SERVER['HTTP_X_ADMIN_TOKEN'] ?? '';
     $valid = validate_session_token($token);
     send_json(200, ['valid' => $valid]);
+}
+
+// ── GET: backup_full_site ─────────────────────────────────────────────────────
+// Generates a complete portable zip backup containing data/site.json, data/addons.json, and assets/uploads/
+if ($action === 'backup_full_site' && $method === 'GET') {
+    require_admin_token();
+    if (!class_exists('ZipArchive')) {
+        send_json(500, ['error' => 'ZipArchive extension is not available on this server.']);
+    }
+
+    if (!is_dir(BACKUPS_DIR)) {
+        @mkdir(BACKUPS_DIR, 0777, true);
+    }
+
+    $backupName = 'aether_site_backup_' . date('Ymd_His') . '.zip';
+    $zipPath = BACKUPS_DIR . '/' . $backupName;
+
+    $zip = new ZipArchive();
+    if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+        send_json(500, ['error' => 'Failed to create backup ZIP archive.']);
+    }
+
+    // 1. Add site data files
+    if (file_exists(DATA_DIR . '/site.json')) {
+        $zip->addFile(DATA_DIR . '/site.json', 'data/site.json');
+    }
+    if (file_exists(DATA_DIR . '/addons.json')) {
+        $zip->addFile(DATA_DIR . '/addons.json', 'data/addons.json');
+    }
+    if (file_exists(DATA_DIR . '/config.json')) {
+        $zip->addFile(DATA_DIR . '/config.json', 'data/config.json');
+    }
+
+    // 2. Add media library assets/uploads recursively
+    if (is_dir(UPLOADS_DIR)) {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        foreach ($files as $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = 'assets/uploads/' . substr($filePath, strlen(realpath(UPLOADS_DIR)) + 1);
+                $relativePath = str_replace('\\', '/', $relativePath);
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+    }
+
+    $zip->close();
+
+    // Stream download if requested
+    if (!empty($_GET['download'])) {
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $backupName . '"');
+        header('Content-Length: ' . filesize($zipPath));
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        readfile($zipPath);
+        exit;
+    }
+
+    send_json(200, [
+        'success'  => true,
+        'filename' => $backupName,
+        'url'      => 'api.php?action=backup_full_site&download=1&token=' . urlencode(get_client_token()),
+        'size_kb'  => round(filesize($zipPath) / 1024, 1)
+    ]);
+}
+
+// ── POST: restore_full_site ───────────────────────────────────────────────────
+// Restores data/site.json, data/addons.json, and assets/uploads/ from an uploaded backup zip
+if ($action === 'restore_full_site' && $method === 'POST') {
+    require_admin_token();
+    if (!class_exists('ZipArchive')) {
+        send_json(500, ['error' => 'ZipArchive extension is not available on this server.']);
+    }
+
+    if (empty($_FILES['backup_zip']['tmp_name'])) {
+        send_json(400, ['error' => 'No backup ZIP file was uploaded.']);
+    }
+
+    $tmpZip = $_FILES['backup_zip']['tmp_name'];
+    $zip = new ZipArchive();
+    if ($zip->open($tmpZip) !== true) {
+        send_json(400, ['error' => 'Uploaded file is not a valid ZIP archive.']);
+    }
+
+    // Verify it contains site.json
+    $hasSiteJson = false;
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $entryName = str_replace('\\', '/', $zip->getNameIndex($i));
+        if (basename($entryName) === 'site.json') {
+            $hasSiteJson = true;
+            break;
+        }
+    }
+
+    if (!$hasSiteJson) {
+        $zip->close();
+        send_json(400, ['error' => 'Invalid backup archive: missing site.json configuration.']);
+    }
+
+    // Extract files safely
+    $restoredCount = 0;
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $entryName = str_replace('\\', '/', $zip->getNameIndex($i));
+        if (strpos($entryName, '..') !== false) continue;
+
+        if (preg_match('#(?:^|/)site\.json$#i', $entryName)) {
+            $content = $zip->getFromIndex($i);
+            if ($content !== false && json_decode($content) !== null) {
+                write_json_file(DATA_DIR . '/site.json', json_decode($content, true));
+                $restoredCount++;
+            }
+        } elseif (preg_match('#(?:^|/)addons\.json$#i', $entryName)) {
+            $content = $zip->getFromIndex($i);
+            if ($content !== false && json_decode($content) !== null) {
+                write_json_file(DATA_DIR . '/addons.json', json_decode($content, true));
+                $restoredCount++;
+            }
+        } elseif (preg_match('#(?:^|/)assets/uploads/(.+)$#i', $entryName, $m)) {
+            $destPath = UPLOADS_DIR . '/' . $m[1];
+            $destDir = dirname($destPath);
+            if (!is_dir($destDir)) @mkdir($destDir, 0777, true);
+            $content = $zip->getFromIndex($i);
+            if ($content !== false && !empty($m[1])) {
+                @file_put_contents($destPath, $content);
+                @chmod($destPath, 0666);
+                $restoredCount++;
+            }
+        }
+    }
+    $zip->close();
+
+    send_json(200, [
+        'success' => true,
+        'message' => 'Website successfully restored from backup!',
+        'restored_files' => $restoredCount
+    ]);
+}
+
+// ── POST: install_theme_bundle ────────────────────────────────────────────────
+// Installs a Theme Bundle ZIP containing theme JSON (theme.json / template.json)
+// and partner addons JSON (addons.json / addons/*.json), plus any demo assets.
+if ($action === 'install_theme_bundle' && $method === 'POST') {
+    require_admin_token();
+
+    if (!class_exists('ZipArchive')) {
+        send_json(500, ['error' => 'ZipArchive extension is not available on this server.']);
+    }
+
+    $uploadedFile = null;
+    foreach (['theme_zip', 'bundle', 'file', 'theme_bundle'] as $k) {
+        if (!empty($_FILES[$k]['tmp_name']) && (is_uploaded_file($_FILES[$k]['tmp_name']) || (php_sapi_name() === 'cli' && file_exists($_FILES[$k]['tmp_name'])))) {
+            $uploadedFile = $_FILES[$k];
+            break;
+        }
+    }
+
+    if (!$uploadedFile) {
+        send_json(400, ['error' => 'No theme bundle ZIP archive was uploaded. Ensure field name is theme_zip or file.']);
+    }
+
+    $tmpPath = $uploadedFile['tmp_name'];
+    $zip = new ZipArchive();
+    if ($zip->open($tmpPath) !== true) {
+        send_json(400, ['error' => 'Uploaded file is not a valid ZIP archive.']);
+    }
+
+    $themeRaw = null;
+    $addonsRawList = [];
+    $extractedAssets = [];
+    global $ALLOWED_EXT;
+    $safeAssetExts = array_merge($ALLOWED_EXT, ['mp3', 'ogg', 'wav', 'woff', 'woff2', 'ttf']);
+
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $entryName = str_replace('\\', '/', $zip->getNameIndex($i));
+        // Prevent directory traversal attacks
+        if (strpos($entryName, '..') !== false) continue;
+
+        $baseName = basename($entryName);
+        $ext = strtolower(pathinfo($baseName, PATHINFO_EXTENSION));
+
+        // Skip folders or hidden/macOS meta files
+        if (substr($entryName, -1) === '/' || substr($baseName, 0, 1) === '.' || strpos($entryName, '__MACOSX') !== false) continue;
+
+        // 1. Theme configuration file
+        if (in_array(strtolower($baseName), ['theme.json', 'template.json', 'manifest.json'], true) || preg_match('/\.theme\.json$/i', $baseName)) {
+            $content = $zip->getFromIndex($i);
+            if ($content !== false) {
+                $decoded = @json_decode($content, true);
+                if (is_array($decoded)) {
+                    $themeRaw = $decoded;
+                }
+            }
+        }
+        // 2. Addons definition file: addons.json, partner-addons.json, or inside addons/ folder
+        elseif (in_array(strtolower($baseName), ['addons.json', 'partner-addons.json', 'plugins.json', 'widgets.json'], true)) {
+            $content = $zip->getFromIndex($i);
+            if ($content !== false) {
+                $decoded = @json_decode($content, true);
+                if (is_array($decoded)) {
+                    $addonsRawList[] = $decoded;
+                }
+            }
+        }
+        elseif (preg_match('#(?:^|/)addons/[^/]+\.json$#i', $entryName) || preg_match('#(?:^|/)addon_[^/]+\.json$#i', $entryName)) {
+            $content = $zip->getFromIndex($i);
+            if ($content !== false) {
+                $decoded = @json_decode($content, true);
+                if (is_array($decoded)) {
+                    $addonsRawList[] = $decoded;
+                }
+            }
+        }
+        // 3. Demo assets/uploads
+        elseif (preg_match('#(?:^|/)(?:assets|uploads|images)/(.*)$#i', $entryName, $m)) {
+            if (in_array($ext, $safeAssetExts, true)) {
+                $cleanBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', pathinfo($baseName, PATHINFO_FILENAME));
+                if (!$cleanBase) $cleanBase = 'asset';
+                $destName = $cleanBase . '.' . $ext;
+                $destPath = UPLOADS_DIR . '/' . $destName;
+
+                $content = $zip->getFromIndex($i);
+                if ($content !== false) {
+                    if (!is_dir(UPLOADS_DIR)) @mkdir(UPLOADS_DIR, 0777, true);
+                    @file_put_contents($destPath, $content);
+                    @chmod($destPath, 0666);
+                    $extractedAssets[] = $destName;
+                }
+            }
+        }
+        // 4. Root level preview/thumbnail image
+        elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'svg'], true) && preg_match('/(?:preview|thumbnail|cover|screenshot|hero)/i', $baseName)) {
+            $cleanBase = preg_replace('/[^a-zA-Z0-9_\-]/', '_', pathinfo($baseName, PATHINFO_FILENAME));
+            $destName = $cleanBase . '.' . $ext;
+            $destPath = UPLOADS_DIR . '/' . $destName;
+
+            $content = $zip->getFromIndex($i);
+            if ($content !== false) {
+                if (!is_dir(UPLOADS_DIR)) @mkdir(UPLOADS_DIR, 0777, true);
+                @file_put_contents($destPath, $content);
+                @chmod($destPath, 0666);
+                $extractedAssets[] = $destName;
+            }
+        }
+    }
+    $zip->close();
+
+    if (!$themeRaw && empty($addonsRawList)) {
+        send_json(400, ['error' => 'No valid theme.json or addons.json was found in the bundle archive.']);
+    }
+
+    // Merge Partner Addons
+    $existingAddons = read_json_file(DATA_DIR . '/addons.json', []);
+    if (!is_array($existingAddons)) $existingAddons = [];
+
+    $addonsMap = [];
+    foreach ($existingAddons as $a) {
+        if (!empty($a['id'])) {
+            $addonsMap[$a['id']] = $a;
+        }
+    }
+
+    $installedAddonIds = [];
+    $installedAddonNames = [];
+
+    foreach ($addonsRawList as $chunk) {
+        $items = isset($chunk['id']) ? [$chunk] : (isset($chunk['addons']) ? $chunk['addons'] : $chunk);
+        if (!is_array($items)) continue;
+
+        foreach ($items as $addon) {
+            if (!is_array($addon) || empty($addon['id'])) continue;
+            $addonId = $addon['id'];
+            $addonName = $addon['name'] ?? $addonId;
+            $addon['enabled'] = true; // Auto-activate partner addon
+
+            $addonsMap[$addonId] = array_merge($addonsMap[$addonId] ?? [], $addon);
+            $installedAddonIds[] = $addonId;
+            $installedAddonNames[] = $addonName;
+        }
+    }
+
+    if (!empty($installedAddonIds)) {
+        write_json_file(DATA_DIR . '/addons.json', array_values($addonsMap));
+    }
+
+    // Merge Theme into templates.json
+    $installedTheme = null;
+    if ($themeRaw) {
+        $themeId = !empty($themeRaw['id']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $themeRaw['id']) : ('tmpl_' . time());
+        $themeName = !empty($themeRaw['name']) ? $themeRaw['name'] : (!empty($themeRaw['title']) ? $themeRaw['title'] : 'Imported Custom Theme');
+        $category = !empty($themeRaw['category']) ? $themeRaw['category'] : 'Imported Themes';
+        $thumbnail = !empty($themeRaw['thumbnail']) ? $themeRaw['thumbnail'] : '';
+        $description = !empty($themeRaw['description']) ? $themeRaw['description'] : 'Imported theme bundle with partner widgets.';
+
+        // Map local thumbnail reference to uploads path if extracted
+        if (!empty($thumbnail) && !preg_match('#^https?://#i', $thumbnail)) {
+            $tBase = basename($thumbnail);
+            foreach ($extractedAssets as $ea) {
+                if (strtolower($ea) === strtolower($tBase)) {
+                    $thumbnail = 'assets/uploads/' . $ea;
+                    break;
+                }
+            }
+        } elseif (empty($thumbnail) && !empty($extractedAssets)) {
+            foreach ($extractedAssets as $ea) {
+                if (preg_match('/(?:preview|thumbnail|cover|screenshot|hero)/i', $ea)) {
+                    $thumbnail = 'assets/uploads/' . $ea;
+                    break;
+                }
+            }
+            if (empty($thumbnail)) {
+                $thumbnail = 'assets/uploads/' . $extractedAssets[0];
+            }
+        }
+
+        $sections = $themeRaw['sections'] ?? ($themeRaw['site']['sections'] ?? []);
+        if (!is_array($sections)) $sections = [];
+
+        $reqAddons = isset($themeRaw['requiredAddons']) && is_array($themeRaw['requiredAddons']) ? $themeRaw['requiredAddons'] : [];
+        foreach ($installedAddonIds as $iId) {
+            if (!in_array($iId, $reqAddons, true)) {
+                $reqAddons[] = $iId;
+            }
+        }
+        if (empty($reqAddons)) {
+            foreach ($sections as $sec) {
+                $wType = $sec['widgetType'] ?? '';
+                if (strpos($wType, 'addon_') === 0 && !in_array($wType, $reqAddons, true)) {
+                    $reqAddons[] = $wType;
+                }
+            }
+        }
+
+        $installedTheme = [
+            'id' => $themeId,
+            'name' => $themeName,
+            'category' => $category,
+            'thumbnail' => $thumbnail,
+            'description' => $description,
+            'price' => 0,
+            'requiredAddons' => array_values(array_unique($reqAddons)),
+            'sections' => $sections,
+            'imported_at' => gmdate('Y-m-d\TH:i:s\Z')
+        ];
+
+        $existingTemplates = read_json_file(DATA_DIR . '/templates.json', []);
+        if (!is_array($existingTemplates)) $existingTemplates = [];
+
+        $tIdx = -1;
+        foreach ($existingTemplates as $idx => $t) {
+            if (!empty($t['id']) && $t['id'] === $themeId) {
+                $tIdx = $idx;
+                break;
+            }
+        }
+
+        if ($tIdx !== -1) {
+            $existingTemplates[$tIdx] = $installedTheme;
+        } else {
+            array_unshift($existingTemplates, $installedTheme);
+        }
+
+        write_json_file(DATA_DIR . '/templates.json', $existingTemplates);
+    }
+
+    $applyNow = (!empty($_POST['apply_now']) && $_POST['apply_now'] === '1') || (!empty($_GET['apply_now']) && $_GET['apply_now'] === '1');
+    if ($applyNow && $installedTheme && !empty($installedTheme['sections'])) {
+        $siteFile = DATA_DIR . '/site.json';
+        $siteData = read_json_file($siteFile, []);
+        $siteData['sections'] = $installedTheme['sections'];
+        if (!empty($installedTheme['name'])) {
+            $siteData['siteTitle'] = $installedTheme['name'];
+        }
+        $siteData['lastSaved'] = gmdate('Y-m-d\TH:i:s\Z');
+        write_json_file($siteFile, $siteData);
+    }
+
+    send_json(200, [
+        'success' => true,
+        'message' => 'Theme bundle installed successfully!',
+        'theme' => $installedTheme,
+        'addons_installed' => array_values(array_unique($installedAddonNames)),
+        'assets_extracted' => $extractedAssets,
+        'applied' => $applyNow
+    ]);
 }
 
 // ── GET: get_dev_auth ──────────────────────────────────────────────────────────

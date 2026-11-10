@@ -76,57 +76,89 @@
 }
 
 .device-btn {
-  padding: 5px 10px;
+  padding: 5px 9px;
   border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 0.82rem;
+  color: var(--text-dim, #94a3b8);
+  font-size: 0.8rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.device-btn svg {
+  stroke: currentColor;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, stroke 0.15s ease;
+}
+
 .device-btn:hover {
-  color: var(--text-main);
-  background: var(--bg-hover);
+  color: var(--text-main, #f8fafc);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.device-btn:hover svg {
+  opacity: 1;
 }
 
 .device-btn.active {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 2px 8px var(--primary-glow);
+  background: rgba(99, 102, 241, 0.18);
+  color: #ffffff;
+  font-weight: 600;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+.device-btn.active svg {
+  opacity: 1;
+  stroke: #a5b4fc;
 }
 
 /* History Controls */
 .history-btn-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .tool-icon-btn {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--text-dim, #94a3b8);
   border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.tool-icon-btn svg {
+  stroke: currentColor;
+  transition: transform 0.15s ease, stroke 0.15s ease;
+}
+
 .tool-icon-btn:hover:not(:disabled) {
-  color: var(--text-main);
-  background: var(--bg-hover);
-  border-color: var(--border-subtle);
+  color: var(--text-main, #f8fafc);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+.tool-icon-btn:hover:not(:disabled) svg {
+  transform: scale(1.06);
 }
 
 .tool-icon-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
@@ -134,64 +166,119 @@
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .security-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
+  gap: 5px;
+  padding: 5px 11px;
   border-radius: var(--radius-full);
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--success);
-  font-size: 0.78rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #34d399;
+  font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.security-badge svg {
+  stroke: currentColor;
+}
+
 .security-badge:hover {
   background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
 }
 
 .topbar-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted, #cbd5e1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.topbar-btn svg {
+  stroke: currentColor;
+  opacity: 0.85;
+  flex-shrink: 0;
 }
 
 .topbar-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.topbar-btn:hover svg {
+  opacity: 1;
+}
+
+/* Specific Topbar Buttons */
+#btn-seo-audit {
+  border-color: rgba(16, 185, 129, 0.32);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+#btn-seo-audit:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+}
+
+#btn-topbar-store {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+}
+
+#btn-topbar-store:hover {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #ffffff;
+}
+
+#btn-clear {
+  color: #64748b;
+}
+
+#btn-clear:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .topbar-btn-publish {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #fff;
+  color: #ffffff;
   border: none;
+  font-weight: 600;
   box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
 }
 
 .topbar-btn-publish:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
+  color: #ffffff;
 }
 
 /* Small compact topbar button (used in center toolbar) */
 .topbar-btn-sm {
-  padding: 6px 10px;
-  font-size: 0.82rem;
+  padding: 6px 11px;
+  font-size: 0.8rem;
   gap: 5px;
 }
 
@@ -401,31 +488,55 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
 
 .sidebar-tab-btn {
   flex: 0 0 auto;
+  position: relative;
   min-width: 58px;
-  padding: 9px 9px;
-  font-size: 0.77rem;
-  font-weight: 600;
-  color: #cbd5e1;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
   text-align: center;
+  border: none;
+  background: transparent;
   border-bottom: 2px solid transparent;
-  transition: all var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.01em;
 }
 
 .sidebar-tab-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-tab-btn.active {
   color: #ffffff;
-  font-weight: 700;
-  border-bottom-color: var(--primary);
-  background: rgba(99, 102, 241, 0.16);
+  font-weight: 600;
+  background: rgba(109, 94, 252, 0.14);
+  border-bottom: 2px solid #6d5efc;
+  box-shadow: inset 0 -2px 10px rgba(109, 94, 252, 0.22);
+}
+
+.sidebar-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 14%;
+  right: 14%;
+  height: 2px;
+  background: #818cf8;
+  box-shadow: 0 0 10px #6d5efc, 0 0 4px #6d5efc;
+  border-radius: 2px;
+  animation: tabUnderlineIn 0.22s ease-out;
+}
+
+@keyframes tabUnderlineIn {
+  from { transform: scaleX(0.3); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
 }
 
 .sidebar-content-area {

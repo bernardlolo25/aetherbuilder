@@ -15,20 +15,81 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
 header("Content-Security-Policy: default-src 'self' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' data: blob: https:; media-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src 'self' https:; frame-ancestors 'self';");
+
+// Dynamic SEO & OpenGraph Social Sharing Metadata
+$siteDataFile = __DIR__ . '/data/site.json';
+$siteTitle = 'AetherBuilder';
+$siteDesc  = 'Modern visual website builder';
+$ogImage   = '';
+$favicon   = 'favicon.png';
+
+if (file_exists($siteDataFile)) {
+    $siteJson = @json_decode(file_get_contents($siteDataFile), true);
+    if (is_array($siteJson)) {
+        $ss = $siteJson['siteSettings'] ?? [];
+        if (!empty($ss['siteTitle'])) {
+            $siteTitle = $ss['siteTitle'];
+        } elseif (!empty($ss['siteName'])) {
+            $siteTitle = $ss['siteName'];
+        }
+        if (!empty($ss['siteDescription'])) {
+            $siteDesc = $ss['siteDescription'];
+        } elseif (!empty($ss['metaDescription'])) {
+            $siteDesc = $ss['metaDescription'];
+        } elseif (!empty($ss['siteName'])) {
+            $siteDesc = $ss['siteName'] . ' - Official Website';
+        }
+        if (!empty($ss['brandLogoUrl'])) {
+            $ogImage = $ss['brandLogoUrl'];
+        } elseif (!empty($ss['faviconUrl'])) {
+            $ogImage = $ss['faviconUrl'];
+        } elseif (!empty($ss['globalBg']['imageUrl'])) {
+            $ogImage = $ss['globalBg']['imageUrl'];
+        }
+        if (!empty($ss['faviconUrl'])) {
+            $favicon = $ss['faviconUrl'];
+        }
+    }
+}
+
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+$scheme  = $isHttps ? 'https' : 'http';
+$host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$reqUri  = $_SERVER['REQUEST_URI'] ?? '/';
+$fullUrl = $scheme . '://' . $host . $reqUri;
+
+if ($ogImage && !preg_match('#^https?://#i', $ogImage)) {
+    $ogImage = $scheme . '://' . $host . '/' . ltrim($ogImage, '/');
+}
+if (!$ogImage) {
+    $ogImage = $scheme . '://' . $host . '/assets/logo.png';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AetherBuilder</title>
-  <meta name="description" content="AetherBuilder - Modern No-Code Website & Page Builder Engine">
-  <meta property="og:title" content="AetherBuilder">
-  <meta property="og:description" content="AetherBuilder - Modern No-Code Website & Page Builder Engine">
+  <title><?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?></title>
+  <meta name="description" content="<?php echo htmlspecialchars($siteDesc, ENT_QUOTES, 'UTF-8'); ?>">
+
+  <!-- OpenGraph / Social Sharing (WhatsApp, Facebook, Messenger, iMessage, LinkedIn) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta property="og:description" content="<?php echo htmlspecialchars($siteDesc, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta property="og:url" content="<?php echo htmlspecialchars($fullUrl, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta property="og:image" content="<?php echo htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta name="twitter:description" content="<?php echo htmlspecialchars($siteDesc, ENT_QUOTES, 'UTF-8'); ?>">
+  <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8'); ?>">
 
   <!-- Favicon & Icons -->
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" href="<?php echo htmlspecialchars($favicon, ENT_QUOTES, 'UTF-8'); ?>">
+  <link rel="shortcut icon" href="<?php echo htmlspecialchars($favicon, ENT_QUOTES, 'UTF-8'); ?>">
 
   <!-- Typography & Google Fonts Pre-fetch -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -3,12 +3,15 @@
 #  Optimized for InfinityFree, AwardSpace & standard cPanel
 # ============================================================
 
-# ── HTTPS Redirect ─────────────────────────────────────────────
-# Force all traffic to HTTPS (InfinityFree provides free SSL)
+# ── HTTPS Redirect & Root Delivery ─────────────────────────────
+# Force all traffic to HTTPS and strictly serve index.php as root entry point
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Explicitly deliver index.php for root URL to guarantee security headers & OpenGraph tags execute
+    RewriteRule ^$ index.php [L]
 </IfModule>
 
 # ── Directory Index ────────────────────────────────────────────
