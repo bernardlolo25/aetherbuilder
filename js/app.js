@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.22';
+export const APP_VERSION = '2.9.23';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -632,7 +632,7 @@ class AetherApp {
       <div class="builder-shell">
         <!-- 1. Top Navigation Bar -->
         <header class="builder-topbar">
-          <div class="flex items-center gap-4">
+          <div class="topbar-left-zone flex items-center gap-4">
             <div class="topbar-brand" id="topbar-brand-link" style="cursor: pointer;" title="AetherBuilder Studio (Click for System Info & Updates)">
               <img src="assets/logo.png" alt="AetherBuilder Logo" class="topbar-logo-img" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.06); padding: 2px;" />
               <div>

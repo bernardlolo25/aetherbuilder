@@ -56,12 +56,22 @@
   box-shadow: 0 2px 10px var(--primary-glow);
 }
 
+.topbar-left-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
 .topbar-controls-center {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 1;
   min-width: 0;
+  overflow: hidden;
+  justify-content: center;
 }
 
 /* Device Viewport Selector */
@@ -166,8 +176,9 @@
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .security-badge {
@@ -3337,9 +3348,19 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   }
 }
 
-@media (max-width: 1320px) {
+@media (max-width: 1480px) {
   /* Gracefully collapse text labels on center secondary buttons into icons so topbar never overflows */
   .topbar-controls-center .topbar-btn-sm span:not(:first-child) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1150px) {
+  /* Collapse device switcher labels to icons only on compact screens */
+  .device-btn span {
+    display: none !important;
+  }
+  .topbar-search-trigger kbd {
     display: none !important;
   }
   .topbar-controls-center .topbar-btn-sm {
