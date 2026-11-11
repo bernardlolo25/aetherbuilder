@@ -1019,6 +1019,14 @@ class BuilderState {
   }
 
   // ── Templates ──────────────────────────────────────────────────────────────
+  loadSections(sections, recordSnapshot = true) {
+    if (!Array.isArray(sections) || sections.length === 0) return;
+    if (recordSnapshot) this.pushSnapshot();
+    this.sections        = JSON.parse(JSON.stringify(sections));
+    this.activeElementId = null;
+    this.notify('loadTemplate');
+  }
+
   loadTemplate(templateId, recordSnapshot = true) {
     const tmpl = TEMPLATES[templateId];
     if (!tmpl) return;

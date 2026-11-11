@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.19';
+export const APP_VERSION = '2.9.20';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -1447,6 +1447,7 @@ class AetherApp {
 
     this.canvas = new BuilderCanvas(canvasContainer, false);
     this.inspector = new InspectorPanel(inspectorContainer);
+    window.aetherApp = this;
     window._aetherApp = this;
     commandPalette.init(this);
 

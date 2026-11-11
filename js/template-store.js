@@ -35,18 +35,36 @@ export class TemplateStore {
       if (raw) serverTemplates = JSON.parse(raw);
     } catch {}
 
-    // 2. Try loading from local PHP server data/templates.json
+    // Verify cache has complete templates with sections. If empty/stale, discard!
+    const hasValidSections = Array.isArray(serverTemplates) && serverTemplates.some(t => Array.isArray(t.sections) && t.sections.length > 0);
+    if (!hasValidSections) {
+      serverTemplates = null;
+    }
+
+    // 2. Try loading from local PHP server data/templates.json or static fallback
     if (!serverTemplates) {
       try {
         const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
         const res = await fetch(`${apiBase}?action=get_templates&_t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data) && data.length > 0 && data.some(t => Array.isArray(t.sections) && t.sections.length > 0)) {
             serverTemplates = data;
           }
         }
       } catch {}
+
+      if (!serverTemplates) {
+        try {
+          const resStatic = await fetch(`data/templates.json?_t=${Date.now()}`);
+          if (resStatic.ok) {
+            const staticData = await resStatic.json();
+            if (Array.isArray(staticData) && staticData.length > 0) {
+              serverTemplates = staticData;
+            }
+          }
+        } catch {}
+      }
     }
 
     if (Array.isArray(serverTemplates) && serverTemplates.length > 0) {
@@ -286,9 +304,51 @@ export class TemplateStore {
    */
   async applyTemplate(templateId, options = {}) {
     let tmpl = this.templates.find(t => t.id === templateId);
-    if (!tmpl && TEMPLATES[templateId]) {
+
+    // Fail-safe 1: If template sections are missing or empty in memory, fetch fresh from server data/templates.json
+    if (!tmpl || !tmpl.sections || tmpl.sections.length === 0) {
+      try {
+        const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
+        const res = await fetch(`${apiBase}?action=get_templates&_t=${Date.now()}`);
+        if (res.ok) {
+          const freshData = await res.json();
+          if (Array.isArray(freshData)) {
+            const found = freshData.find(t => t.id === templateId);
+            if (found && found.sections && found.sections.length > 0) {
+              tmpl = found;
+              const idx = this.templates.findIndex(t => t.id === templateId);
+              if (idx !== -1) this.templates[idx] = found;
+              else this.templates.push(found);
+              this.save(false);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[TemplateStore] Fresh template fetch error:', e);
+      }
+    }
+
+    // Fail-safe 2: Static data/templates.json direct fallback
+    if (!tmpl || !tmpl.sections || tmpl.sections.length === 0) {
+      try {
+        const resStatic = await fetch(`data/templates.json?_t=${Date.now()}`);
+        if (resStatic.ok) {
+          const staticData = await resStatic.json();
+          if (Array.isArray(staticData)) {
+            const found = staticData.find(t => t.id === templateId);
+            if (found && found.sections && found.sections.length > 0) {
+              tmpl = found;
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // Fail-safe 3: Built-in TEMPLATES registry
+    if ((!tmpl || !tmpl.sections || tmpl.sections.length === 0) && TEMPLATES[templateId]) {
       tmpl = TEMPLATES[templateId];
     }
+
     if (!tmpl) throw new Error('Template not found.');
 
     // Auto-install missing required add-ons if requested
@@ -297,9 +357,13 @@ export class TemplateStore {
 
     if (missing.length > 0 && options.autoInstall !== false) {
       for (const item of missing) {
-        if (item.catalogItem) {
+        let catalogItem = item.catalogItem;
+        if (!catalogItem) {
+          catalogItem = (addonStore.catalog || []).find(c => c.id === item.id);
+        }
+        if (catalogItem) {
           try {
-            addonManager.installAddon(item.catalogItem);
+            addonManager.installAddon(catalogItem);
           } catch (e) {
             console.warn(`[TemplateStore] Auto-install failed for ${item.id}:`, e);
           }
@@ -308,18 +372,33 @@ export class TemplateStore {
     }
 
     // Apply sections to canvas/state
-    if (tmpl.sections && tmpl.sections.length > 0) {
-      state.loadSections(JSON.parse(JSON.stringify(tmpl.sections)));
-    } else if (TEMPLATES[tmpl.id] && TEMPLATES[tmpl.id].sections) {
-      state.loadSections(JSON.parse(JSON.stringify(TEMPLATES[tmpl.id].sections)));
+    const sectionsToLoad = (tmpl.sections && tmpl.sections.length > 0)
+      ? tmpl.sections
+      : (TEMPLATES[tmpl.id]?.sections || []);
+
+    if (sectionsToLoad && sectionsToLoad.length > 0) {
+      if (typeof state.loadSections === 'function') {
+        state.loadSections(JSON.parse(JSON.stringify(sectionsToLoad)));
+      } else {
+        state.pushSnapshot();
+        state.sections = JSON.parse(JSON.stringify(sectionsToLoad));
+        state.activeElementId = null;
+        state.notify('loadTemplate');
+      }
+    } else {
+      throw new Error(`Template "${tmpl.name}" contains no section data.`);
     }
 
-    if (window.aetherApp && window.aetherApp.canvas) {
-      window.aetherApp.canvas.render();
-      window.aetherApp.canvas.showToast(`✨ Template "${tmpl.name}" successfully loaded!`, 'success');
+    const app = window._aetherApp || window.aetherApp;
+    if (app) {
+      if (app.canvas) {
+        app.canvas.render();
+        app.canvas.showToast(`✨ Template "${tmpl.name}" successfully loaded!`, 'success');
+      }
+      app.renderWidgetTray?.();
     }
 
-    return { success: true, installedAddons: missing.map(m => m.name) };
+    return { success: true, installedAddons: missing.map(m => m.name), template: tmpl };
   }
 
   ensureStoreStyles() {
@@ -950,9 +1029,16 @@ export class TemplateStore {
           if (ok) {
             btn.disabled = true;
             btn.innerHTML = `<span>⏳</span><span>Installing add-ons &amp; loading...</span>`;
-            await this.applyTemplate(id, { autoInstall: true });
-            modal.remove();
-            if (typeof onLoadCallback === 'function') onLoadCallback(tmpl);
+            try {
+              const res = await this.applyTemplate(id, { autoInstall: true });
+              modal.remove();
+              if (typeof onLoadCallback === 'function') onLoadCallback(res.template || tmpl);
+            } catch (err) {
+              console.error('[TemplateStore] Failed to apply template:', err);
+              alert('Failed to load template: ' + (err.message || err));
+              btn.disabled = false;
+              btn.innerHTML = `<span>Load Template</span>`;
+            }
             return;
           }
         }
@@ -960,9 +1046,16 @@ export class TemplateStore {
         if (confirm(`Load "${tmpl.name}" into current canvas? (You can undo with Ctrl+Z)`)) {
           btn.disabled = true;
           btn.innerHTML = `<span>⏳</span><span>Loading template...</span>`;
-          await this.applyTemplate(id, { autoInstall: true });
-          modal.remove();
-          if (typeof onLoadCallback === 'function') onLoadCallback(tmpl);
+          try {
+            const res = await this.applyTemplate(id, { autoInstall: true });
+            modal.remove();
+            if (typeof onLoadCallback === 'function') onLoadCallback(res.template || tmpl);
+          } catch (err) {
+            console.error('[TemplateStore] Failed to apply template:', err);
+            alert('Failed to load template: ' + (err.message || err));
+            btn.disabled = false;
+            btn.innerHTML = `<span>Load Template</span>`;
+          }
         }
       });
     });
