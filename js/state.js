@@ -132,6 +132,7 @@ class BuilderState {
       backToTop: {
         enabled: true
       },
+      globalMenu: null,
       templateAutosave: {
         enabled: true,
         templateName: 'live_canvas',
@@ -490,6 +491,165 @@ class BuilderState {
     this.notify('siteSettings');
   }
 
+  // ── Global Menu Management (Cross-Navbar Sync) ────────────────────────────
+  isNavWidget(widgetTypeOrSection) {
+    if (!widgetTypeOrSection) return false;
+    const type = typeof widgetTypeOrSection === 'string'
+      ? widgetTypeOrSection
+      : widgetTypeOrSection.widgetType || '';
+    const props = typeof widgetTypeOrSection === 'object' ? widgetTypeOrSection.props || {} : {};
+    return (
+      type === 'navbar' ||
+      type === 'advanced_nav_headerbar' ||
+      type === 'addon_ultra_nav_header' ||
+      type.toLowerCase().includes('nav') ||
+      type.toLowerCase().includes('header') ||
+      props.globalHeader !== undefined ||
+      Array.isArray(props.links) ||
+      Array.isArray(props.menuLinks) ||
+      Array.isArray(props.navItems)
+    );
+  }
+
+  getGlobalMenu() {
+    if (Array.isArray(this.siteSettings?.globalMenu) && this.siteSettings.globalMenu.length > 0) {
+      return this.siteSettings.globalMenu;
+    }
+    // Search existing sections on current page for any existing nav links
+    const navSection = (this.rawSections || []).find(s => this.isNavWidget(s));
+    if (navSection) {
+      const extracted = this.extractMenuFromSection(navSection);
+      if (extracted.length > 0) {
+        if (!this.siteSettings) this.siteSettings = {};
+        this.siteSettings.globalMenu = extracted;
+        return extracted;
+      }
+    }
+    // Fallback: build default menu from created pages
+    return this.buildMenuFromPages();
+  }
+
+  buildMenuFromPages() {
+    const pages = Array.isArray(this.pages) && this.pages.length > 0 ? this.pages : [];
+    if (pages.length > 0) {
+      return pages.map(p => ({
+        label: p.title || 'Page',
+        url: p.slug === 'index' ? 'index.html' : `?page=${p.slug}`,
+        children: []
+      }));
+    }
+    return [
+      { label: 'Home', url: 'index.html', children: [] },
+      { label: 'About', url: '#about', children: [] },
+      { label: 'Services', url: '#services', children: [] },
+      { label: 'Contact', url: '#contact', children: [] }
+    ];
+  }
+
+  extractMenuFromSection(section) {
+    if (!section || !section.props) return [];
+    const props = section.props;
+    const rawList = props.menuLinks || props.navItems || props.links || [];
+    if (!Array.isArray(rawList)) return [];
+
+    return rawList.map(item => {
+      const label = item.label || item.text || item.title || 'Link';
+      const url = item.url || item.link || '#';
+      const rawChildren = Array.isArray(item.children) ? item.children : [];
+      const children = rawChildren.map(c => ({
+        label: c.label || c.text || 'Sublink',
+        url: c.url || c.link || '#'
+      }));
+      return { label, url, children };
+    });
+  }
+
+  syncToGlobalMenu(section, fieldKey = null) {
+    if (!section || !section.props) return;
+    const menu = this.extractMenuFromSection(section);
+    if (menu.length > 0) {
+      if (!this.siteSettings) this.siteSettings = {};
+      this.siteSettings.globalMenu = menu;
+      this.saveDraft();
+      this.notify('globalMenu');
+    }
+  }
+
+  applyGlobalMenuToSection(section) {
+    if (!section || !section.props) return;
+    const menu = this.getGlobalMenu();
+    if (!menu || menu.length === 0) return;
+
+    const props = section.props;
+    const type = section.widgetType || '';
+
+    // 1. Built-in navbar uses `links` [{ label, url, children }]
+    if (Array.isArray(props.links) || type === 'navbar') {
+      props.links = menu.map(m => ({
+        label: m.label,
+        url: m.url,
+        children: (m.children || []).map(c => ({ label: c.label, url: c.url }))
+      }));
+    }
+
+    // 2. Advanced Nav Headerbar uses `menuLinks` [{ label, url, children }]
+    if (Array.isArray(props.menuLinks) || type === 'advanced_nav_headerbar') {
+      props.menuLinks = menu.map(m => ({
+        label: m.label,
+        url: m.url,
+        children: (m.children || []).map(c => ({ label: c.label, url: c.url }))
+      }));
+    }
+
+    // 3. Ultra Nav Header uses `navItems` [{ label, link, children: [{ label, link }] }]
+    if (Array.isArray(props.navItems) || type === 'addon_ultra_nav_header') {
+      props.navItems = menu.map(m => ({
+        label: m.label,
+        link: m.url,
+        children: (m.children || []).map(c => ({ label: c.label, link: c.url }))
+      }));
+    }
+
+    // Sync brand/logo from siteSettings if set
+    if (this.siteSettings?.siteName) {
+      if (props.brandText !== undefined) props.brandText = this.siteSettings.siteName;
+      if (props.logoText !== undefined) props.logoText = this.siteSettings.siteName;
+    }
+    if (this.siteSettings?.brandLogoUrl) {
+      if (props.logoImageUrl !== undefined) props.logoImageUrl = this.siteSettings.brandLogoUrl;
+      if (props.logoImage !== undefined) props.logoImage = this.siteSettings.brandLogoUrl;
+    }
+  }
+
+  applyGlobalMenuToAllNavs() {
+    const menu = this.getGlobalMenu();
+    if (!menu || menu.length === 0) return;
+    this.pushSnapshot();
+
+    // Active page sections
+    (this.rawSections || []).forEach(s => {
+      if (this.isNavWidget(s)) this.applyGlobalMenuToSection(s);
+    });
+
+    // Other pages
+    (this.pages || []).forEach(p => {
+      (p.sections || []).forEach(s => {
+        if (this.isNavWidget(s)) this.applyGlobalMenuToSection(s);
+      });
+    });
+
+    this.saveDraft();
+    this.notify('propUpdate');
+  }
+
+  syncGlobalMenuFromPages() {
+    const pageMenu = this.buildMenuFromPages();
+    if (!this.siteSettings) this.siteSettings = {};
+    this.siteSettings.globalMenu = pageMenu;
+    this.applyGlobalMenuToAllNavs();
+    return pageMenu;
+  }
+
   async publishToLive() {
     const payload = {
       publishedAt:   new Date().toISOString(),
@@ -769,6 +929,12 @@ class BuilderState {
     if (!widgetDef) { console.error(`Unknown widget: ${widgetType}`); return null; }
     const newId = `sec_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const newSection = { id: newId, widgetType, props: JSON.parse(JSON.stringify(widgetDef.defaultProps)) };
+
+    // Auto-inherit site-wide navigation menu if adding any nav/header widget
+    if (this.isNavWidget(newSection)) {
+      this.applyGlobalMenuToSection(newSection);
+    }
+
     const targetArray = this.rawSections;
 
     // Guaranteed insertion directly above a specific section by ID
@@ -805,6 +971,11 @@ class BuilderState {
     const targetArray = this.rawSections;
     const idx = targetArray.findIndex(s => s.id === id);
     if (idx !== -1) {
+      const removed = targetArray[idx];
+      // If deleting a nav widget, preserve its menu in siteSettings.globalMenu first!
+      if (this.isNavWidget(removed)) {
+        this.syncToGlobalMenu(removed);
+      }
       targetArray.splice(idx, 1);
       if (this.activeElementId === id) this.activeElementId = null;
       this.notify('delete');

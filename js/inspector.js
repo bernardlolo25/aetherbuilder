@@ -1274,6 +1274,12 @@ export class InspectorPanel {
       }
     });
 
+    const syncNavMenuIfApplicable = () => {
+      if (state.isNavWidget && state.isNavWidget(activeEl)) {
+        state.syncToGlobalMenu(activeEl, field.key);
+      }
+    };
+
     const rawNoun = field.label ? field.label.replace(/^[^ws]+/, '').trim() : 'Items';
 
     // Sticky Search & Filter Header
@@ -1377,6 +1383,7 @@ export class InspectorPanel {
         itemHeader.querySelector('.repeater-remove-btn').addEventListener('click', (e) => {
           e.stopPropagation();
           items.splice(idx, 1);
+          syncNavMenuIfApplicable();
           state.saveDraft();
           state.notify('propUpdate');
           this.render();
@@ -1447,6 +1454,7 @@ export class InspectorPanel {
                 delBtn.style.cssText = 'background:transparent;border:none;color:#ef4444;cursor:pointer;font-size:0.7rem;padding:2px 4px;';
                 delBtn.addEventListener('click', () => {
                   nestedItems.splice(si, 1);
+                  syncNavMenuIfApplicable();
                   state.saveDraft();
                   state.notify('propUpdate');
                   renderNestedItems();
@@ -1464,6 +1472,7 @@ export class InspectorPanel {
                 labelIn.style.cssText = 'font-size:0.78rem;padding:4px 8px;border-radius:4px;background:var(--bg-deep,#0d1525);border:1px solid var(--border-subtle,rgba(255,255,255,0.1));color:var(--text-main,#fff);';
                 labelIn.addEventListener('input', (e) => {
                   sub.label = e.target.value;
+                  syncNavMenuIfApplicable();
                   state.saveDraft();
                   state.notify('propUpdate');
                 });
@@ -1500,6 +1509,7 @@ export class InspectorPanel {
                     urlIn.value = e.target.value;
                     sub.url = e.target.value;
                     sub.link = e.target.value;
+                    syncNavMenuIfApplicable();
                     state.saveDraft();
                     state.notify('propUpdate');
                   }
@@ -1508,6 +1518,7 @@ export class InspectorPanel {
                 urlIn.addEventListener('input', (e) => {
                   sub.url = e.target.value;
                   sub.link = e.target.value;
+                  syncNavMenuIfApplicable();
                   state.saveDraft();
                   state.notify('propUpdate');
                 });
@@ -1525,6 +1536,7 @@ export class InspectorPanel {
               addSubBtn.style.cssText = 'font-size:0.74rem;font-weight:600;padding:5px 10px;border-radius:6px;background:rgba(99,102,241,0.15);border:1px dashed rgba(99,102,241,0.5);color:#c7d2fe;cursor:pointer;text-align:center;transition:all 0.15s ease;margin-top:2px;';
               addSubBtn.addEventListener('click', () => {
                 nestedItems.push({ label: 'New Sublink', url: '#', link: '#' });
+                syncNavMenuIfApplicable();
                 state.saveDraft();
                 state.notify('propUpdate');
                 renderNestedItems();
@@ -1573,6 +1585,7 @@ export class InspectorPanel {
                 item[subField.key] = e.target.value;
                 item.url = e.target.value;
                 item.link = e.target.value;
+                syncNavMenuIfApplicable();
                 state.saveDraft();
                 state.notify('propUpdate');
               }
@@ -1582,6 +1595,7 @@ export class InspectorPanel {
               item[subField.key] = e.target.value;
               item.url = e.target.value;
               item.link = e.target.value;
+              syncNavMenuIfApplicable();
               state.saveDraft();
               state.notify('propUpdate');
             });
@@ -1685,6 +1699,7 @@ export class InspectorPanel {
             subInput.addEventListener('input', (e) => {
               item[subField.key] = isNum ? (parseFloat(e.target.value) || 0) : e.target.value;
               updateHeader();
+              syncNavMenuIfApplicable();
               state.saveDraft();
               state.notify('propUpdate');
             });
@@ -1768,6 +1783,7 @@ export class InspectorPanel {
         children: []
       };
       items.push(newItem);
+      syncNavMenuIfApplicable();
       state.saveDraft();
       state.notify('propUpdate');
       this.render();

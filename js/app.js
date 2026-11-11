@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.17';
+export const APP_VERSION = '2.9.18';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -149,7 +149,7 @@ export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85
 import { addonManager, AddonMaker } from './addons.js';
 import { addonStore } from './addon-store.js';
 import { devAuth } from './dev-auth.js';
-import { templateStore } from './template-store.js?v=2.9.17';
+import { templateStore } from './template-store.js?v=2.9.18';
 import './receipt.js';
 
 // Expose auth globally so state.js publishToLive can access the admin password for API auth
@@ -990,7 +990,29 @@ class AetherApp {
                   </div>
                 </div>
 
-                                <!-- Pre-loader & Splash Screen Settings -->
+                <!-- Site Navigation Menu Builder -->
+                <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span>🧭</span> Navigation Menu</span>
+                    <button type="button" id="btn-sync-menu-from-pages" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;border-radius:4px;cursor:pointer;" title="Auto-populate menu links from created pages">⚡ Sync Pages</button>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4;">
+                    Site-wide menu source. When you switch or replace your Navigation Bar add-on, all links &amp; dropdowns stay intact automatically.
+                  </div>
+                  <div id="site-global-menu-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:260px;overflow-y:auto;">
+                    <!-- Dynamically rendered via renderGlobalMenuList() -->
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <button type="button" id="btn-add-global-menu-item" class="btn btn-sm" style="flex:1;font-size:0.75rem;padding:6px;background:rgba(99,102,241,0.15);border:1px dashed rgba(99,102,241,0.4);color:#c7d2fe;border-radius:6px;cursor:pointer;">
+                      + Add Menu Link
+                    </button>
+                    <button type="button" id="btn-apply-global-menu-active" class="btn btn-sm" style="font-size:0.75rem;padding:6px 12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;" title="Apply this menu to all navbars across your site">
+                      🚀 Apply to Navbars
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Pre-loader & Splash Screen Settings -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
                     <span style="display:flex;align-items:center;gap:6px;"><span>⚡</span> Splash Screen &amp; Pre-loader</span>
@@ -3801,6 +3823,38 @@ git push -u origin main</textarea>
       });
     }
 
+    // Global Navigation Menu Buttons
+    const syncMenuPagesBtn = document.getElementById('btn-sync-menu-from-pages');
+    if (syncMenuPagesBtn) {
+      syncMenuPagesBtn.addEventListener('click', () => {
+        state.syncGlobalMenuFromPages();
+        this.renderGlobalMenuList();
+        this.canvas?.render();
+        this.canvas?.showToast('⚡ Navigation menu synced from pages!', 'success');
+      });
+    }
+
+    const addMenuItemBtn = document.getElementById('btn-add-global-menu-item');
+    if (addMenuItemBtn) {
+      addMenuItemBtn.addEventListener('click', () => {
+        const menu = state.getGlobalMenu();
+        menu.push({ label: 'New Link', url: '#', children: [] });
+        state.setSiteSetting('globalMenu', menu);
+        state.applyGlobalMenuToAllNavs();
+        this.renderGlobalMenuList();
+        this.canvas?.render();
+      });
+    }
+
+    const applyMenuActiveBtn = document.getElementById('btn-apply-global-menu-active');
+    if (applyMenuActiveBtn) {
+      applyMenuActiveBtn.addEventListener('click', () => {
+        state.applyGlobalMenuToAllNavs();
+        this.canvas?.render();
+        this.canvas?.showToast('🚀 Navigation menu applied to all navbars!', 'success');
+      });
+    }
+
     // Loader & Splash Screen Settings Wiring
     const loaderEnableCb = document.getElementById('site-loader-enable');
     const loaderCapInput = document.getElementById('site-loader-caption');
@@ -4289,6 +4343,69 @@ git push -u origin main</textarea>
     if (loaderSubEnableEl) loaderSubEnableEl.checked = loaderShowSub;
 
     this.updateLoaderPreview();
+    this.renderGlobalMenuList();
+  }
+
+  renderGlobalMenuList() {
+    const listEl = document.getElementById('site-global-menu-list');
+    if (!listEl) return;
+    const menu = state.getGlobalMenu();
+
+    if (!menu || menu.length === 0) {
+      listEl.innerHTML = `
+        <div style="font-size:0.73rem;color:var(--text-dim);font-style:italic;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px;border:1px dashed var(--border-subtle);text-align:center;">
+          No menu links created yet. Click "+ Add Menu Link" or "⚡ Sync Pages".
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = menu.map((item, idx) => {
+      const childCount = (item.children || []).length;
+      return `
+        <div class="site-menu-item-row" data-idx="${idx}" style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:0.75rem;">
+          <span style="cursor:grab;color:var(--text-dim);font-size:0.75rem;">⠿</span>
+          <input type="text" class="site-menu-item-label" data-idx="${idx}" value="${item.label || ''}" placeholder="Label" style="width:85px;font-size:0.74rem;padding:3px 6px;border-radius:4px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:#fff;" />
+          <input type="text" class="site-menu-item-url" data-idx="${idx}" value="${item.url || ''}" placeholder="URL / slug" style="flex:1;min-width:0;font-size:0.74rem;padding:3px 6px;border-radius:4px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:#38bdf8;font-family:monospace;" />
+          ${childCount > 0 ? `<span style="font-size:0.65rem;color:#a5b4fc;background:rgba(99,102,241,0.2);padding:1px 5px;border-radius:4px;" title="${childCount} dropdown items">↳${childCount}</span>` : ''}
+          <button type="button" class="site-menu-item-del" data-idx="${idx}" style="background:transparent;border:none;color:#ef4444;cursor:pointer;font-size:0.75rem;padding:2px 4px;" title="Remove link">✕</button>
+        </div>
+      `;
+    }).join('');
+
+    // Wire inputs
+    listEl.querySelectorAll('.site-menu-item-label').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const i = parseInt(e.target.dataset.idx, 10);
+        if (menu[i]) {
+          menu[i].label = e.target.value;
+          state.setSiteSetting('globalMenu', menu);
+          state.applyGlobalMenuToAllNavs();
+        }
+      });
+    });
+
+    listEl.querySelectorAll('.site-menu-item-url').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const i = parseInt(e.target.dataset.idx, 10);
+        if (menu[i]) {
+          menu[i].url = e.target.value;
+          state.setSiteSetting('globalMenu', menu);
+          state.applyGlobalMenuToAllNavs();
+        }
+      });
+    });
+
+    listEl.querySelectorAll('.site-menu-item-del').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const i = parseInt(e.currentTarget.dataset.idx, 10);
+        menu.splice(i, 1);
+        state.setSiteSetting('globalMenu', menu);
+        state.applyGlobalMenuToAllNavs();
+        this.renderGlobalMenuList();
+        this.canvas?.render();
+      });
+    });
   }
 
   updateLoaderPreview() {
