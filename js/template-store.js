@@ -14,6 +14,8 @@ import { addonStore } from './addon-store.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { TEMPLATES } from './templates.js';
 
+export const DEFAULT_GOOGLE_THEMES_FEED_URL = 'https://script.google.com/macros/s/AKfycbwhcE67tXkWdZA8Hhttu9D6SU2ifk8KXUEBBRkaUhCgQfTejvI45KAaGiyZnHvN334Asw/exec?type=themes';
+
 export class TemplateStore {
   constructor() {
     this.templates = [];
@@ -26,24 +28,24 @@ export class TemplateStore {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    // 1. Try loading from server data/templates.json
+    // 1. Instant hydration from localStorage cache (0ms, no network wait)
     let serverTemplates = null;
     try {
-      const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
-      const res = await fetch(`${apiBase}?action=get_templates&_t=${Date.now()}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          serverTemplates = data;
-        }
-      }
+      const raw = localStorage.getItem('aether_template_store');
+      if (raw) serverTemplates = JSON.parse(raw);
     } catch {}
 
-    // 2. Try localStorage cache
+    // 2. Try loading from local PHP server data/templates.json
     if (!serverTemplates) {
       try {
-        const raw = localStorage.getItem('aether_template_store');
-        if (raw) serverTemplates = JSON.parse(raw);
+        const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
+        const res = await fetch(`${apiBase}?action=get_templates&_t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            serverTemplates = data;
+          }
+        }
       } catch {}
     }
 
@@ -72,6 +74,47 @@ export class TemplateStore {
       }
       return tmpl;
     });
+
+    // 5. Stale-While-Revalidate: background sync from Google Sheets Web App (non-blocking)
+    this.scheduleBackgroundSync();
+  }
+
+  scheduleBackgroundSync() {
+    if (typeof window === 'undefined') return;
+    setTimeout(async () => {
+      try {
+        const res = await fetch(DEFAULT_GOOGLE_THEMES_FEED_URL);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        // Merge incoming items: Google Sheets entries update or extend the local list
+        let changed = false;
+        data.forEach(item => {
+          if (!item.id || !item.name) return;
+          const idx = this.templates.findIndex(t => t.id === item.id);
+          if (idx !== -1) {
+            // Update existing — preserve local sections if remote has none
+            const merged = { ...this.templates[idx], ...item };
+            if (!merged.sections || merged.sections.length === 0) {
+              merged.sections = this.templates[idx].sections || [];
+            }
+            this.templates[idx] = merged;
+          } else {
+            // New entry from Google Sheets
+            this.templates.push(item);
+          }
+          changed = true;
+        });
+
+        if (changed) {
+          this.save(false); // Update localStorage, skip server POST
+          // Silently refresh the modal cards if template store is currently open
+          const modal = document.getElementById('aether-template-store-modal');
+          if (modal) this.renderTemplateCards(modal, null);
+        }
+      } catch {}
+    }, 1000);
   }
 
   getSeedTemplates() {

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.16';
+export const APP_VERSION = '2.9.17';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -149,7 +149,7 @@ export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85
 import { addonManager, AddonMaker } from './addons.js';
 import { addonStore } from './addon-store.js';
 import { devAuth } from './dev-auth.js';
-import { templateStore } from './template-store.js?v=2.9.16';
+import { templateStore } from './template-store.js?v=2.9.17';
 import './receipt.js';
 
 // Expose auth globally so state.js publishToLive can access the admin password for API auth

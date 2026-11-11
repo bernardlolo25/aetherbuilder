@@ -1243,6 +1243,8 @@ function onMount(el, props) {
   }
 ];
 
+export const DEFAULT_GOOGLE_ADDONS_FEED_URL = 'https://script.google.com/macros/s/AKfycbwhcE67tXkWdZA8Hhttu9D6SU2ifk8KXUEBBRkaUhCgQfTejvI45KAaGiyZnHvN334Asw/exec?type=addons';
+
 // ── Store Manager Class ─────────────────────────────────────────────────────
 export class AddonStore {
   constructor() {
@@ -1250,7 +1252,56 @@ export class AddonStore {
     this.activeFilter = 'all';
     this.searchQuery = '';
     this.unlockedAddons = this.loadUnlockedAddons();
-    this.remoteFeedUrl = (typeof localStorage !== 'undefined') ? (localStorage.getItem('aether_store_feed_url') || '') : '';
+    this.remoteFeedUrl = (typeof localStorage !== 'undefined' && localStorage.getItem('aether_store_feed_url'))
+      ? localStorage.getItem('aether_store_feed_url')
+      : DEFAULT_GOOGLE_ADDONS_FEED_URL;
+
+    // 1. Fast local cache hydration (0ms instant startup)
+    this.loadCachedCatalog();
+
+    // 2. Non-blocking Stale-While-Revalidate cloud background sync
+    this.scheduleBackgroundSync();
+  }
+
+  loadCachedCatalog() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const raw = localStorage.getItem('aether_cached_addons_catalog');
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (Array.isArray(cached) && cached.length > 0) {
+          cached.forEach(item => {
+            if (!item.id || !item.name) return;
+            const idx = this.catalog.findIndex(c => c.id === item.id);
+            if (idx !== -1) {
+              this.catalog[idx] = { ...this.catalog[idx], ...item };
+            } else {
+              this.catalog.push(item);
+            }
+          });
+        }
+      }
+    } catch {}
+  }
+
+  scheduleBackgroundSync() {
+    if (typeof window === 'undefined') return;
+    setTimeout(async () => {
+      try {
+        let feedUrl = this.remoteFeedUrl || DEFAULT_GOOGLE_ADDONS_FEED_URL;
+        if (feedUrl.includes('script.google.com') && !feedUrl.includes('type=')) {
+          feedUrl += (feedUrl.includes('?') ? '&' : '?') + 'type=addons';
+        }
+        const res = await this.syncRemoteFeed(feedUrl);
+        if (res && res.success && typeof localStorage !== 'undefined') {
+          localStorage.setItem('aether_cached_addons_catalog', JSON.stringify(this.catalog));
+          const modal = document.getElementById('aether-addon-store-modal');
+          if (modal && modal.style.display !== 'none') {
+            this.renderStoreCards(modal);
+          }
+        }
+      } catch (err) {}
+    }, 800);
   }
 
   loadUnlockedAddons() {
@@ -1302,9 +1353,15 @@ export class AddonStore {
   }
 
   async syncRemoteFeed(url) {
-    if (!url || !url.trim()) return { success: false, error: 'Feed URL is empty.' };
+    let cleanUrl = (url || this.remoteFeedUrl || DEFAULT_GOOGLE_ADDONS_FEED_URL).trim();
+    if (!cleanUrl) return { success: false, error: 'Feed URL is empty.' };
+
+    if (cleanUrl.includes('script.google.com') && !cleanUrl.includes('type=')) {
+      cleanUrl += (cleanUrl.includes('?') ? '&' : '?') + 'type=addons';
+    }
+
     try {
-      this.remoteFeedUrl = url.trim();
+      this.remoteFeedUrl = cleanUrl;
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('aether_store_feed_url', this.remoteFeedUrl);
       }
@@ -1335,6 +1392,11 @@ export class AddonStore {
             this.catalog.push(item);
           }
         });
+
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('aether_cached_addons_catalog', JSON.stringify(this.catalog));
+        }
+
         return { success: true, count: feedItems.length };
       }
       return { success: false, error: 'Feed contained no valid add-on records.' };
