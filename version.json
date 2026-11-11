@@ -1,8 +1,8 @@
 {
-  "version": "2.9.15",
-  "release_date": "2026-11-10",
-  "changelog": "v2.9.15: Dynamic OpenGraph & Twitter social cards, 5-attempt progressive brute force lockout timer, automatic WebP image compression on upload, and 1-click full site backup & restore (.zip) engine.",
+  "version": "2.9.16",
+  "release_date": "2026-11-11",
+  "changelog": "v2.9.16: Revamped Free Template Store with guaranteed vector SVG covers, non-collapsing card layout, pinned action buttons, and Figma-grade monochrome filters.",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
-  "requires": "2.9.15"
+  "requires": "2.9.16"
 }
