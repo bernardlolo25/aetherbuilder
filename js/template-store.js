@@ -362,10 +362,34 @@ export class TemplateStore {
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        min-height: 480px;
+        min-height: 520px;
         box-sizing: border-box;
         transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease;
         position: relative;
+      }
+      .tmpl-required-addons-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 160px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(99, 102, 241, 0.45) transparent;
+        padding-right: 2px;
+      }
+      .tmpl-required-addons-list::-webkit-scrollbar {
+        width: 5px;
+      }
+      .tmpl-required-addons-list::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 4px;
+      }
+      .tmpl-required-addons-list::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.4);
+        border-radius: 4px;
+      }
+      .tmpl-required-addons-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.7);
       }
       .template-item-card:hover {
         transform: translateY(-4px);
@@ -801,25 +825,28 @@ export class TemplateStore {
             <div style="font-weight: 800; font-size: 1rem; color: #ffffff; line-height: 1.35; margin-bottom: 6px;">
               ${item.name}
             </div>
-            <div style="font-size: 0.79rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px;">
+            <div style="font-size: 0.79rem; color: #94a3b8; line-height: 1.4; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.2em;" title="${item.description || ''}">
               ${item.description || ''}
             </div>
 
             <!-- 3. Required Add-ons Dependencies Box -->
-            <div style="margin-top: auto; padding: 10px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px;">
-              <div style="font-size: 0.70rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="margin-top: auto; padding: 10px 12px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px;">
+              <div style="font-size: 0.70rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                 <span style="display: flex; align-items: center; gap: 5px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
                   <span>Required Add-ons (${required.length}):</span>
                 </span>
                 ${missingCount === 0 
                   ? `<span style="color:#10b981;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Ready</span>` 
-                  : `<span style="color:#f59e0b;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${missingCount} to install</span>`}
+                  : `<div style="display:flex;align-items:center;gap:6px;">
+                      <span style="color:#f59e0b;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${missingCount} to install</span>
+                      ${missingCount > 1 ? `<button type="button" class="btn-install-all-addons" data-tmpl-id="${item.id}" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.6); color: #c7d2fe; border-radius: 4px; padding: 1px 6px; font-size: 0.65rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;" title="Install all ${missingCount} missing add-ons">⚡ Install All</button>` : ''}
+                    </div>`}
               </div>
               ${required.length > 0 ? `
-                <div style="display: flex; flex-direction: column; gap: 6px; max-height: 110px; overflow-y: auto;">
+                <div class="tmpl-required-addons-list">
                   ${required.map(r => `
-                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.73rem; padding: 5px 8px; border-radius: 6px; background: ${r.isInstalled ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)'}; border: 1px solid ${r.isInstalled ? 'rgba(16,185,129,0.22)' : 'rgba(245,158,11,0.28)'};">
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; background: ${r.isInstalled ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)'}; border: 1px solid ${r.isInstalled ? 'rgba(16,185,129,0.22)' : 'rgba(245,158,11,0.28)'}; min-height: 28px; box-sizing: border-box;">
                       <span style="display: flex; align-items: center; gap: 6px; color: #ffffff; min-width: 0;">
                         <span>${r.icon || '🧩'}</span>
                         <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.name}</span>
@@ -830,7 +857,7 @@ export class TemplateStore {
                           Installed
                         </span>
                       ` : `
-                        <button type="button" class="btn-quick-install-addon" data-addon-id="${r.id}" style="background: #6366f1; color: #fff; border: none; border-radius: 5px; padding: 3px 8px; font-size: 0.68rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; transition: background 0.15s;">
+                        <button type="button" class="btn-quick-install-addon" data-addon-id="${r.id}" style="background: #6366f1; color: #fff; border: none; border-radius: 5px; padding: 2px 7px; font-size: 0.67rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; transition: background 0.15s;">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                           Install
                         </button>
@@ -872,6 +899,37 @@ export class TemplateStore {
           } catch (err) {
             alert('Failed to install add-on: ' + err.message);
           }
+        }
+      });
+    });
+
+    // 1b. Install All Missing Add-ons for a Template in 1 Click
+    container.querySelectorAll('.btn-install-all-addons').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tmplId = e.currentTarget.dataset.tmplId;
+        const tmpl = this.templates.find(t => t.id === tmplId);
+        if (!tmpl) return;
+
+        const required = this.getRequiredAddonsDetails(tmpl.requiredAddons || []);
+        const missing = required.filter(r => !r.isInstalled);
+        let installedCount = 0;
+
+        missing.forEach(m => {
+          const catalogItem = (addonStore.catalog || []).find(c => c.id === m.id);
+          if (catalogItem) {
+            try {
+              addonManager.installAddon(catalogItem);
+              installedCount++;
+            } catch (err) {
+              console.warn('[TemplateStore] Failed to install addon:', m.id, err);
+            }
+          }
+        });
+
+        this.renderTemplateCards(modal, onLoadCallback);
+        if (window.aetherApp?.canvas) {
+          window.aetherApp.canvas.showToast(`✅ Installed ${installedCount} required add-ons!`, 'success');
         }
       });
     });

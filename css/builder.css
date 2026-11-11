@@ -1776,10 +1776,35 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 480px;
+  min-height: 520px;
   box-sizing: border-box;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease;
   position: relative;
+}
+
+.tmpl-required-addons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.45) transparent;
+  padding-right: 2px;
+}
+.tmpl-required-addons-list::-webkit-scrollbar {
+  width: 5px;
+}
+.tmpl-required-addons-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 4px;
+}
+.tmpl-required-addons-list::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+}
+.tmpl-required-addons-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
 }
 
 .template-item-card:hover {
