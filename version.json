@@ -1,7 +1,7 @@
 {
-    "version":  "2.9.25",
-    "release_date":  "2026-11-11",
-    "changelog":  "v2.9.25: Harmonized sidebar publish button with topbar publish SVG icon, added spinning state, and unified visual identity",
+    "version":  "2.9.26",
+    "release_date":  "2026-11-12",
+    "changelog":  "v2.9.26: Optional schema-constrained AI assistant with Gemini/OpenAI/Ollama support, diff preview, and BYOK settings",
     "download_url":  "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
     "min_php":  "7.4",
     "requires":  "2.9.20"

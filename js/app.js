@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.25';
+export const APP_VERSION = '2.9.26';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -14,6 +14,7 @@ import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
 import { commandPalette } from './command-palette.js?v=2.9.19';
 import { toolbarOverflow } from './toolbar-overflow.js?v=2.9.22';
+import { aiAssistant } from './ai-assistant.js';
 
 // -- Admin session token helper ----------------------------------
 export function getAdminToken() {
@@ -794,7 +795,7 @@ class AetherApp {
 
             <!-- Tab Navigation Header with Slide Controls -->
             <div class="sidebar-tabs-nav">
-              <button type="button" class="sidebar-tab-arrow prev" id="tab-arrow-prev" title="Scroll tabs left" aria-label="Previous tabs">‹</button>
+              <button type="button" class="sidebar-tab-arrow prev" id="tab-arrow-prev" title="Scroll tabs left" aria-label="Previous tabs">ï¿½</button>
               <div class="sidebar-tabs" id="sidebar-tabs">
                 <button type="button" class="sidebar-tab-btn active" data-side-tab="widgets">Widgets</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="inspector">Inspector</button>
@@ -804,7 +805,7 @@ class AetherApp {
                 <button type="button" class="sidebar-tab-btn" data-side-tab="addons">Add-ons</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="developer">Developer</button>
               </div>
-              <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">›</button>
+              <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">ï¿½</button>
               <!-- Mobile Close Button -->
               <button type="button" class="mobile-sidebar-close-btn" id="btn-mobile-sidebar-close" title="Close Panel">?</button>
             </div>
@@ -945,7 +946,7 @@ class AetherApp {
                   <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
                       <label class="prop-label" style="font-size:0.75rem;">Meta Description</label>
-                      <textarea id="page-meta-description" rows="3" placeholder="Brief summary of this page for search engines (150–160 chars recommended)..." style="font-size:0.78rem; width:100%; resize:vertical; padding:6px 8px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-deep); color:var(--text-main);"></textarea>
+                      <textarea id="page-meta-description" rows="3" placeholder="Brief summary of this page for search engines (150ï¿½160 chars recommended)..." style="font-size:0.78rem; width:100%; resize:vertical; padding:6px 8px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-deep); color:var(--text-main);"></textarea>
                     </div>
                     <div>
                       <label class="prop-label" style="font-size:0.75rem;">Meta Keywords <span style="color:var(--text-dim);font-weight:400;">(comma separated)</span></label>
@@ -1300,7 +1301,7 @@ class AetherApp {
                 <!-- Global Copyright Notice -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <label class="prop-label" style="font-size:0.75rem;">Global Copyright Text</label>
-                  <input type="text" id="site-copyright-input" placeholder="© 2026 My Organization. All rights reserved." style="font-size:0.78rem;" />
+                  <input type="text" id="site-copyright-input" placeholder="ï¿½ 2026 My Organization. All rights reserved." style="font-size:0.78rem;" />
                 </div>
 
                 <!-- 24/7 Automated Decision-Tree Chatbot -->
@@ -1717,7 +1718,7 @@ class AetherApp {
         <div class="media-asset-thumb">${thumb}</div>
         <div class="media-asset-info">
           <div class="media-asset-name" title="${asset.name}">${asset.name}</div>
-          <div class="media-asset-meta">${sizekb} KB · ${asset.ext.toUpperCase()}</div>
+          <div class="media-asset-meta">${sizekb} KB ï¿½ ${asset.ext.toUpperCase()}</div>
         </div>
       `;
 
@@ -2060,7 +2061,7 @@ class AetherApp {
             </button>
           </div>
           <div style="font-size:0.72rem;color:#475569;margin-top:12px;text-align:center;">
-            Replace overwrites the existing file · Keep Both saves with an incremented name
+            Replace overwrites the existing file ï¿½ Keep Both saves with an incremented name
           </div>
         </div>
       `;
@@ -2337,7 +2338,7 @@ class AetherApp {
       }
     });
 
-    // Double-click – only cycle widths when resizing is enabled
+    // Double-click ï¿½ only cycle widths when resizing is enabled
     resizer.addEventListener('dblclick', () => {
       if (document.body.classList.contains('sidebar-resizing-disabled')) return;
       const current = sidebar.getBoundingClientRect().width;
@@ -3407,7 +3408,7 @@ git push -u origin main</textarea>
             fileContent = JSON.stringify({ argon2_hash: devAuth.getStoredHash(), updated_at: new Date().toISOString() }, null, 2);
           } else if (item.path === 'data/templates.json') {
             if (!templateStore.templates || templateStore.templates.length === 0) {
-              resultsLog.push(`?? Skipped ${item.name} — in-memory templates is empty, refusing to overwrite`);
+              resultsLog.push(`?? Skipped ${item.name} ï¿½ in-memory templates is empty, refusing to overwrite`);
               continue;
             }
             fileContent = JSON.stringify(templateStore.templates, null, 2);
@@ -4125,7 +4126,7 @@ git push -u origin main</textarea>
         if (res && res.deleted > 0) {
           this.canvas?.showToast(`?? Cleaned up ${res.deleted} older template backup(s) to match the limit of ${max}!`, 'success');
         } else {
-          this.canvas?.showToast(`All backups are within the limit (${max}) — nothing to prune.`, 'info');
+          this.canvas?.showToast(`All backups are within the limit (${max}) ï¿½ nothing to prune.`, 'info');
         }
       });
     }
@@ -4572,6 +4573,7 @@ git push -u origin main</textarea>
     document.getElementById('btn-topbar-search')?.addEventListener('click', () => commandPalette.open());
 
     document.getElementById('btn-topbar-qr')?.addEventListener('click', () => this.showQrModal());
+    document.getElementById('btn-topbar-ai')?.addEventListener('click', () => aiAssistant.showSettingsModal());
     document.getElementById('btn-sidebar-qr')?.addEventListener('click', () => this.showQrModal());
     
 
@@ -5541,7 +5543,7 @@ ${varCss}
     initPublicChatbot(${JSON.stringify(siteSettings.chatbot)});
   </script>` : ''}
   ${addonManager.getAllActiveJs() ? `<script id="wb-addons-js">
-/* -- AetherBuilder • Custom Add-On JavaScript -- */
+/* -- AetherBuilder ï¿½ Custom Add-On JavaScript -- */
 (function() {
   function runAddonMounts() {
 ${addonManager.getAllActiveJs()}
@@ -5920,7 +5922,7 @@ ${addonManager.getAllActiveJs()}
 
         const subEl = modal.querySelector('#notif-modal-sub');
         if (subEl) {
-          subEl.textContent = `${allSubs.length} total submission${allSubs.length !== 1 ? 's' : ''} • ${unreadCount} unread`;
+          subEl.textContent = `${allSubs.length} total submission${allSubs.length !== 1 ? 's' : ''} ï¿½ ${unreadCount} unread`;
         }
         renderList();
       } catch (err) {
@@ -6377,7 +6379,7 @@ ${addonManager.getAllActiveJs()}
     // Check 2: Page Title
     const title = (ps.pageTitle || '').trim();
     if (title.length >= 30 && title.length <= 65) {
-      checks.push({ status: 'passed', icon: '?', title: `Page Title Length (${title.length} chars)`, desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30–65 chars).` });
+      checks.push({ status: 'passed', icon: '?', title: `Page Title Length (${title.length} chars)`, desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30ï¿½65 chars).` });
     } else if (title.length > 0 && title.length < 30) {
       score -= 6;
       checks.push({ status: 'warning', icon: '??', title: `Page Title is Short (${title.length} chars)`, desc: `Consider adding descriptive keywords or school name to expand: "${title}".` });
@@ -6392,10 +6394,10 @@ ${addonManager.getAllActiveJs()}
     // Check 3: Meta Description
     const metaDesc = (ps.metaDescription || '').trim();
     if (metaDesc.length >= 100 && metaDesc.length <= 165) {
-      checks.push({ status: 'passed', icon: '?', title: `Meta Description (${metaDesc.length} chars)`, desc: 'Optimal length for search result snippet previews (100–165 chars).' });
+      checks.push({ status: 'passed', icon: '?', title: `Meta Description (${metaDesc.length} chars)`, desc: 'Optimal length for search result snippet previews (100ï¿½165 chars).' });
     } else if (metaDesc.length > 0) {
       score -= 5;
-      checks.push({ status: 'warning', icon: '??', title: `Meta Description Length (${metaDesc.length} chars)`, desc: 'Aim for 120–160 characters for best organic search click-through rate.' });
+      checks.push({ status: 'warning', icon: '??', title: `Meta Description Length (${metaDesc.length} chars)`, desc: 'Aim for 120ï¿½160 characters for best organic search click-through rate.' });
     } else {
       score -= 12;
       checks.push({ status: 'warning', icon: '??', title: 'Missing Meta Description', desc: 'No meta description found. Search engines will generate an automatic fallback snippet.' });
@@ -6975,7 +6977,7 @@ ${addonManager.getAllActiveJs()}
       btnServerUnpack.disabled = true;
       btnServerUnpack.innerHTML = '<span>?</span> Unpacking on server...';
       try {
-        // No X-Admin-Token header — InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
+        // No X-Admin-Token header ï¿½ InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
         const res = await fetch('api.php?action=apply_update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -7057,7 +7059,7 @@ ${addonManager.getAllActiveJs()}
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
             <div>
               <div style="font-weight:600; font-size:0.83rem; color:#e2e8f0;">${b.filename}</div>
-              <div style="font-size:0.72rem; color:var(--text-dim);">${b.date} • ${Math.round(b.size / 1024)} KB</div>
+              <div style="font-size:0.72rem; color:var(--text-dim);">${b.date} ï¿½ ${Math.round(b.size / 1024)} KB</div>
             </div>
             <a href="data/backups/${b.filename}" download class="topbar-btn topbar-btn-sm" style="text-decoration:none; padding:4px 10px; font-size:0.75rem;">
               <span>??</span> Download

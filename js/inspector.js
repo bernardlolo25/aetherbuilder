@@ -6,6 +6,7 @@
 import { state } from './state.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { fetchGoogleSheetLecturers, fetchGoogleSheetSchedule, showAppsScriptModal } from './sheets.js';
+import { aiAssistant } from './ai-assistant.js';
 
 export class InspectorPanel {
   constructor(containerEl) {
@@ -51,6 +52,7 @@ export class InspectorPanel {
             <button class="tool-icon-btn" id="insp-move-up" title="Move Up">↑</button>
             <button class="tool-icon-btn" id="insp-move-down" title="Move Down">↓</button>
             <button class="tool-icon-btn" id="insp-duplicate" title="Duplicate">❐</button>
+            <button class="tool-icon-btn btn-insp-ai" id="insp-ai-magic" title="✨ AI Section Magic" style="color: #a5b4fc;">✨</button>
             <button class="tool-icon-btn" id="insp-delete" title="Delete" style="color: var(--danger);">🗑</button>
           </div>
         </div>

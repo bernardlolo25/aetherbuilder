@@ -7,6 +7,7 @@
 import { state } from './state.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { addonManager } from './addons.js';
+import { aiAssistant } from './ai-assistant.js';
 
 export class CommandPalette {
   constructor() {

@@ -11,6 +11,7 @@ function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') 
 import { WIDGET_REGISTRY, initCountdownTimers } from './widgets.js';
 import { normalizeGoogleSheetUrl, parseCsv, fetchGoogleSheetLecturers } from './sheets.js';
 import { showRegistrationReceiptModal } from './receipt.js';
+import { aiAssistant } from './ai-assistant.js';
 
 export class BuilderCanvas {
   constructor(viewportEl, isPublicMode = false) {
@@ -305,6 +306,7 @@ export class BuilderCanvas {
           <button class="section-handle-btn btn-add" title="Add Section Above">+</button>
           <button class="section-handle-btn btn-save-comp" title="Save as Reusable Block">💾</button>
           <button class="section-handle-btn btn-dup" title="Duplicate">❐</button>
+          <button class="section-handle-btn btn-ai-magic" title="✨ AI Section Magic" style="color: #a5b4fc;">✨</button>
           <button class="section-handle-btn btn-del" title="Delete" style="color: #fca5a5;">✕</button>
         `;
 
