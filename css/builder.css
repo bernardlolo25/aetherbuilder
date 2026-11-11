@@ -3945,3 +3945,198 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   background-repeat: no-repeat;
   transition: background 0.3s ease;
 }
+
+/* ── Google Workspace-Style Adaptive Toolbar Overflow Shelf ──────────────── */
+.topbar-item-overflowed {
+  display: none !important;
+}
+
+.topbar-overflow-trigger {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #94a3b8 !important;
+}
+
+.topbar-overflow-trigger:hover,
+.topbar-overflow-trigger.is-active {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #ffffff !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
+}
+
+.topbar-overflow-shelf {
+  position: fixed;
+  top: calc(var(--topbar-height) + 6px);
+  right: 18px;
+  z-index: 99998;
+  width: min(520px, calc(100vw - 36px));
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.98);
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.18s;
+  pointer-events: none;
+}
+
+.topbar-overflow-shelf.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.overflow-shelf-inner {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overflow-shelf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.overflow-shelf-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #cbd5e1;
+}
+
+.overflow-shelf-hint {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.overflow-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overflow-group-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.overflow-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.overflow-shelf-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  text-align: left;
+  user-select: none;
+  position: relative;
+}
+
+.overflow-shelf-btn:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.overflow-shelf-btn:active {
+  transform: translateY(0);
+}
+
+.overflow-shelf-btn.is-danger {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.overflow-shelf-btn.is-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #ffffff;
+}
+
+.overflow-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #a5b4fc;
+}
+
+.overflow-shelf-btn.is-danger .overflow-btn-icon {
+  color: #f87171;
+}
+
+.overflow-btn-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overflow-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+.overflow-badge.notif {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.overflow-badge.update {
+  color: #10b981;
+  font-size: 0.85rem;
+}
+
+.overflow-empty-msg {
+  text-align: center;
+  padding: 18px 12px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .topbar-overflow-shelf {
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+  .overflow-group-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

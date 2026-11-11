@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.21';
+export const APP_VERSION = '2.9.22';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -13,6 +13,7 @@ import { InspectorPanel } from './inspector.js';
 import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
 import { commandPalette } from './command-palette.js?v=2.9.19';
+import { toolbarOverflow } from './toolbar-overflow.js?v=2.9.22';
 
 // ── Admin session token helper ──────────────────────────────────
 export function getAdminToken() {
@@ -758,6 +759,15 @@ class AetherApp {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
 
+            <!-- Google Workspace-style 3-dots Overflow Trigger -->
+            <button class="tool-icon-btn topbar-overflow-trigger" id="btn-topbar-overflow" title="More tools & actions (Google Workspace overflow)" aria-label="More actions" style="display: none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1.5"></circle>
+                <circle cx="12" cy="5" r="1.5"></circle>
+                <circle cx="12" cy="19" r="1.5"></circle>
+              </svg>
+            </button>
+
             <!-- Publish Button -->
             <button class="topbar-btn topbar-btn-publish" id="btn-publish">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
@@ -1450,6 +1460,7 @@ class AetherApp {
     window.aetherApp = this;
     window._aetherApp = this;
     commandPalette.init(this);
+    toolbarOverflow.init();
 
     // Auto-switch to inspector tab when an element is clicked
     state.subscribe((_, action) => {

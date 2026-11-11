@@ -1,7 +1,7 @@
 {
-    "version":  "2.9.21",
+    "version":  "2.9.22",
     "release_date":  "2026-11-11",
-    "changelog":  "v2.9.21: Section background image, overlay, border radius/shadow, z-index, custom CSS injection, hide-on-tablet, custom element ID",
+    "changelog":  "v2.9.22: Google Workspace-style adaptive toolbar overflow menu with floating 3-dots shelf",
     "download_url":  "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
     "min_php":  "7.4",
     "requires":  "2.9.20"
