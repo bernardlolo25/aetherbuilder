@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.20';
+export const APP_VERSION = '2.9.21';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.

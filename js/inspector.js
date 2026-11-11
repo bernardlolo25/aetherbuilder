@@ -188,6 +188,98 @@ export class InspectorPanel {
       universalFields.forEach((field) => {
         fieldsContainer.appendChild(this.createControlElement(activeEl, field));
       });
+
+      // ── Section Background Image ─────────────────────────────────────────
+      const bgImgHeader = document.createElement('div');
+      bgImgHeader.style.cssText = 'margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--primary-light); margin-bottom: 8px; letter-spacing: 0.05em;';
+      bgImgHeader.innerHTML = '🖼 Section Background Image';
+      fieldsContainer.appendChild(bgImgHeader);
+
+      const bgImgFields = [
+        { key: 'bgImage', label: 'Image URL', type: 'text', default: '' },
+        { key: 'bgSize', label: 'Background Size', type: 'select', default: 'cover', options: [
+            { label: 'Cover (fill section)', value: 'cover' },
+            { label: 'Contain (fit inside)', value: 'contain' },
+            { label: 'Auto', value: 'auto' },
+            { label: '100% width', value: '100% auto' }
+          ]
+        },
+        { key: 'bgPosition', label: 'Background Position', type: 'select', default: 'center center', options: [
+            { label: 'Center Center', value: 'center center' },
+            { label: 'Top Center', value: 'top center' },
+            { label: 'Bottom Center', value: 'bottom center' },
+            { label: 'Top Left', value: 'top left' },
+            { label: 'Top Right', value: 'top right' },
+            { label: 'Bottom Left', value: 'bottom left' },
+            { label: 'Bottom Right', value: 'bottom right' }
+          ]
+        },
+        { key: 'bgRepeat', label: 'Repeat', type: 'select', default: 'no-repeat', options: [
+            { label: 'No Repeat', value: 'no-repeat' },
+            { label: 'Repeat', value: 'repeat' },
+            { label: 'Repeat X', value: 'repeat-x' },
+            { label: 'Repeat Y', value: 'repeat-y' }
+          ]
+        },
+        { key: 'bgOverlay', label: '🌑 Dark Overlay Opacity (0–100)', type: 'number', default: 0 }
+      ];
+      bgImgFields.forEach((field) => {
+        fieldsContainer.appendChild(this.createControlElement(activeEl, field));
+      });
+
+      // Live image preview thumbnail
+      const previewWrap = document.createElement('div');
+      previewWrap.style.cssText = 'margin-top: 6px; border-radius: 8px; overflow: hidden; height: 72px; background: var(--bg-deep); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center;';
+      const previewImg = document.createElement('div');
+      const imgUrl = activeEl.props.bgImage || '';
+      previewImg.style.cssText = `width: 100%; height: 100%; background: ${imgUrl ? `url('${imgUrl}') center/cover no-repeat` : 'transparent'}; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.78rem;`;
+      previewImg.textContent = imgUrl ? '' : 'No image set';
+      previewWrap.appendChild(previewImg);
+      fieldsContainer.appendChild(previewWrap);
+
+      // Update preview when bgImage input changes
+      const bgImgInput = fieldsContainer.querySelectorAll('.prop-group input[type="text"]');
+      bgImgInput.forEach(inp => {
+        if (inp.closest('.prop-group')?.querySelector('.prop-label')?.textContent === 'Image URL') {
+          inp.addEventListener('input', () => {
+            const v = inp.value.trim();
+            previewImg.style.background = v ? `url('${v}') center/cover no-repeat` : 'transparent';
+            previewImg.textContent = v ? '' : 'No image set';
+          });
+        }
+      });
+
+      // ── Section Border ───────────────────────────────────────────────────
+      const borderHeader = document.createElement('div');
+      borderHeader.style.cssText = 'margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--primary-light); margin-bottom: 8px; letter-spacing: 0.05em;';
+      borderHeader.innerHTML = '🔲 Section Border';
+      fieldsContainer.appendChild(borderHeader);
+
+      const borderFields = [
+        { key: 'borderRadius', label: 'Border Radius (e.g. 12px)', type: 'text', default: '' },
+        { key: 'borderWidth', label: 'Border Width (e.g. 2px)', type: 'text', default: '' },
+        { key: 'borderColor', label: 'Border Color', type: 'color', default: '#6366f1' },
+        { key: 'borderStyle', label: 'Border Style', type: 'select', default: 'solid', options: [
+            { label: 'Solid', value: 'solid' },
+            { label: 'Dashed', value: 'dashed' },
+            { label: 'Dotted', value: 'dotted' },
+            { label: 'Double', value: 'double' },
+            { label: 'None', value: 'none' }
+          ]
+        },
+        { key: 'boxShadow', label: '🌟 Box Shadow', type: 'select', default: '', options: [
+            { label: 'None', value: '' },
+            { label: 'Subtle', value: '0 4px 16px rgba(0,0,0,0.12)' },
+            { label: 'Medium', value: '0 8px 32px rgba(0,0,0,0.22)' },
+            { label: 'Strong', value: '0 16px 56px rgba(0,0,0,0.38)' },
+            { label: 'Glow (Primary)', value: '0 0 32px rgba(99,102,241,0.35)' },
+            { label: 'Glow (Cyan)', value: '0 0 32px rgba(14,165,233,0.35)' }
+          ]
+        }
+      ];
+      borderFields.forEach((field) => {
+        fieldsContainer.appendChild(this.createControlElement(activeEl, field));
+      });
     } else if (this.currentTab === 'advanced') {
       // Custom widget advanced properties (e.g. EmailJS credentials, custom endpoints)
       const widgetAdvFields = schema.advanced || [];
@@ -214,12 +306,33 @@ export class InspectorPanel {
 
       const advFields = [
         { key: 'customClass', label: 'Custom CSS Class', type: 'text' },
-        { key: 'zIndex', label: 'Z-Index Layer', type: 'number' },
-        { key: 'hideMobile', label: '📱 Hide on Mobile', type: 'toggle' }
+        { key: 'customId', label: 'Custom Element ID', type: 'text' },
+        { key: 'zIndex', label: 'Z-Index Layer (e.g. 10)', type: 'number' },
+        { key: 'hideMobile', label: '📱 Hide on Mobile (<768px)', type: 'toggle' },
+        { key: 'hideTablet', label: '📟 Hide on Tablet (768–1024px)', type: 'toggle' }
       ];
       advFields.forEach((field) => {
         fieldsContainer.appendChild(this.createControlElement(activeEl, field));
       });
+
+      // ── Custom CSS per Section ──────────────────────────────────────────
+      const cssHeader = document.createElement('div');
+      cssHeader.style.cssText = 'margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--primary-light); margin-bottom: 6px; letter-spacing: 0.05em;';
+      cssHeader.innerHTML = '💎 Custom CSS';
+      fieldsContainer.appendChild(cssHeader);
+
+      const cssNote = document.createElement('p');
+      cssNote.style.cssText = 'font-size: 0.75rem; color: var(--text-dim); margin: 0 0 8px; line-height: 1.5;';
+      cssNote.innerHTML = 'Scoped to this section. Use <code style="font-size:0.72rem;opacity:0.8;">&amp;selector { }</code> or plain CSS rules. Applies live on canvas.';
+      fieldsContainer.appendChild(cssNote);
+
+      fieldsContainer.appendChild(this.createControlElement(activeEl, {
+        key: 'customCss',
+        label: 'CSS Code',
+        type: 'code',
+        rows: 8,
+        default: ''
+      }));
 
       // Entrance Animation section
       const animHeader = document.createElement('div');

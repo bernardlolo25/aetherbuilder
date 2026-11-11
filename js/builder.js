@@ -70,6 +70,9 @@ export class BuilderCanvas {
   }
 
   render() {
+    // Clean up any stale per-section custom CSS style tags from previous render
+    document.head.querySelectorAll('style[id^="aether-custom-css-"]').forEach(el => el.remove());
+
     const params = new URLSearchParams(window.location.search);
     const currentSlug = params.get('page') || 'index';
     const sections = this.isPublicMode
@@ -204,6 +207,42 @@ export class BuilderCanvas {
         if (props.bgGradient) {
           secWrapper.style.background = props.bgGradient;
         }
+
+        // ── Per-Section Background Image ──────────────────────────────────
+        if (props.bgImage && props.bgImage.trim()) {
+          const imgUrl = props.bgImage.trim();
+          const overlayOp = props.bgOverlay !== undefined ? Math.min(100, Math.max(0, Number(props.bgOverlay))) / 100 : 0;
+          const bgSize     = props.bgSize     || 'cover';
+          const bgPosition = props.bgPosition || 'center center';
+          const bgRepeat   = props.bgRepeat   || 'no-repeat';
+          if (overlayOp > 0) {
+            secWrapper.style.backgroundImage    = `linear-gradient(rgba(0,0,0,${overlayOp}),rgba(0,0,0,${overlayOp})),url('${imgUrl}')`;
+          } else {
+            secWrapper.style.backgroundImage    = `url('${imgUrl}')`;
+          }
+          secWrapper.style.backgroundSize      = bgSize;
+          secWrapper.style.backgroundPosition  = bgPosition;
+          secWrapper.style.backgroundRepeat    = bgRepeat;
+          secWrapper.style.backgroundAttachment = 'scroll';
+        }
+
+        // ── Section Border ───────────────────────────────────────────────
+        if (props.borderRadius) secWrapper.style.borderRadius = props.borderRadius;
+        if (props.borderWidth && props.borderWidth !== '0' && props.borderWidth !== '0px') {
+          secWrapper.style.borderWidth = props.borderWidth;
+          secWrapper.style.borderStyle = props.borderStyle || 'solid';
+          secWrapper.style.borderColor = props.borderColor || '#6366f1';
+        }
+        if (props.boxShadow) secWrapper.style.boxShadow = props.boxShadow;
+
+        // ── Z-Index ──────────────────────────────────────────────────────
+        if (props.zIndex !== undefined && props.zIndex !== '' && props.zIndex !== 0) {
+          secWrapper.style.zIndex   = props.zIndex;
+          secWrapper.style.position = 'relative';
+        }
+
+        // ── Custom Element ID ────────────────────────────────────────────
+        if (props.customId) secWrapper.id = props.customId;
       }
 
       // Scroll-reveal entrance animation (public mode only)
@@ -222,6 +261,36 @@ export class BuilderCanvas {
       // Hide on mobile
       if (props.hideMobile) {
         secWrapper.classList.add('hide-on-mobile');
+      }
+
+      // Hide on tablet
+      if (props.hideTablet) {
+        secWrapper.classList.add('hide-on-tablet');
+      }
+
+      // ── Custom CSS per Section (scoped style injection) ──────────────────
+      if (props.customCss && props.customCss.trim()) {
+        const sectionId = sec.id;
+        const existingStyle = document.getElementById(`aether-custom-css-${sectionId}`);
+        if (existingStyle) existingStyle.remove();
+        const styleTag = document.createElement('style');
+        styleTag.id = `aether-custom-css-${sectionId}`;
+        // Scope all rules to the section wrapper by its data-section-id
+        const scopedCss = props.customCss.trim().replace(
+          /([^{}]+)\{/g,
+          (match, selectors) => {
+            const scoped = selectors.split(',').map(s => {
+              const trimmed = s.trim();
+              if (!trimmed) return '';
+              // If selector already contains the scope, don't double-scope
+              if (trimmed.startsWith(`[data-section-id="${sectionId}"]`)) return trimmed;
+              return `[data-section-id="${sectionId}"] ${trimmed}`;
+            }).filter(Boolean).join(', ');
+            return `${scoped} {`;
+          }
+        );
+        styleTag.textContent = scopedCss;
+        document.head.appendChild(styleTag);
       }
 
       // Section Handle Bar & Drag-to-Reorder (Only in Builder Mode)
