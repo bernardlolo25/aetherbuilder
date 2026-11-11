@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.23';
+export const APP_VERSION = '2.9.24';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -699,9 +699,9 @@ class AetherApp {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
               <span>SEO Audit</span>
             </button>
-            <button class="topbar-btn topbar-btn-sm" id="btn-export">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Export</span>
+            <button class="topbar-btn topbar-btn-sm" id="btn-export" title="Export & Import Project (.json, .html, .zip)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v12M4 7l4-4 4 4M16 21V9m-4 4l4 4 4-4"/></svg>
+              <span>Export/Import</span>
             </button>
             <button class="tool-icon-btn" id="btn-clear" title="Clear Canvas">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -4678,6 +4678,105 @@ git push -u origin main</textarea>
       this.canvas.render();
       this.renderWidgetTray();
       this.canvas.showToast(`Loaded Free Template: "${appliedTemplate.name}"`, 'success');
+    });
+  }
+
+  // Mobile Preview QR Code Modal
+  showQrModal() {
+    let modal = document.getElementById('aether-qr-modal');
+    if (modal) modal.remove();
+
+    const currentSlug = state.currentPage?.slug || 'index';
+    const baseUrl = window.location.origin + window.location.pathname.replace(/\/+$/, '');
+    const getPageUrl = (slug) => slug === 'index' ? `${baseUrl}?view=public` : `${baseUrl}?view=public&page=${encodeURIComponent(slug)}`;
+
+    let activeUrl = getPageUrl(currentSlug);
+
+    modal = document.createElement('div');
+    modal.id = 'aether-qr-modal';
+    modal.className = 'modal-overlay animate-fade-in';
+    modal.style.zIndex = '99999';
+
+    const hasMultiPages = Array.isArray(state.pages) && state.pages.length > 1;
+
+    modal.innerHTML = `
+      <div class="modal-box animate-scale-in" style="max-width: 440px; text-align: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; background: #0f172a; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 18px;">
+          <div class="modal-title" style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #f8fafc; font-size: 0.95rem;">
+            <span>📱</span> Mobile Live Test QR Code
+          </div>
+          <button class="tool-icon-btn" id="close-qr-modal" style="color: #94a3b8;">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 22px 20px;">
+          <p style="font-size: 0.84rem; color: #94a3b8; margin: 0 0 16px; line-height: 1.5;">
+            Point your smartphone camera at this QR code to test this page on mobile in real-time.
+          </p>
+
+          ${hasMultiPages ? `
+            <div style="margin-bottom: 14px; text-align: left;">
+              <label style="font-size: 0.74rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.04em;">Select Page to Test</label>
+              <select id="qr-page-select" style="width: 100%; margin-top: 5px; padding: 7px 10px; font-size: 0.82rem; border-radius: 8px; background: rgba(30,41,59,0.8); border: 1px solid rgba(255,255,255,0.12); color: #fff; cursor: pointer;">
+                ${state.pages.map(p => `<option value="${p.slug}" ${p.slug === currentSlug ? 'selected' : ''}>${p.title || p.slug} (${p.slug})</option>`).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          <!-- QR Code Image Box -->
+          <div class="qr-code-card" style="background: #ffffff; padding: 14px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin: 0 auto 16px;">
+            <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(activeUrl)}" alt="Mobile Preview QR Code" style="width: 200px; height: 200px; display: block; border-radius: 6px;" />
+          </div>
+
+          <!-- URL Text Pill & 1-Click Copy -->
+          <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px;">
+            <span id="qr-url-text" style="font-size: 0.76rem; color: #cbd5e1; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; flex: 1;">${activeUrl}</span>
+            <button type="button" class="topbar-btn topbar-btn-sm" id="btn-copy-qr-url" style="padding: 4px 10px; font-size: 0.75rem; flex-shrink: 0; background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #a5b4fc;">
+              <span>📋</span> Copy
+            </button>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <a href="${activeUrl}" target="_blank" class="topbar-btn topbar-btn-sm" id="qr-open-browser-link" style="text-decoration: none; padding: 8px 16px; font-size: 0.82rem; background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); color: #6ee7b7; display: inline-flex; align-items: center; gap: 6px;">
+              <span>🌐</span> Open Public Site
+            </a>
+            <button type="button" class="topbar-btn topbar-btn-sm" id="btn-close-qr-footer" style="padding: 8px 16px; font-size: 0.82rem; color: #94a3b8;">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('#close-qr-modal')?.addEventListener('click', closeModal);
+    modal.querySelector('#btn-close-qr-footer')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // Page switcher
+    const pageSelect = modal.querySelector('#qr-page-select');
+    const qrImg = modal.querySelector('#qr-image');
+    const qrText = modal.querySelector('#qr-url-text');
+    const openLink = modal.querySelector('#qr-open-browser-link');
+
+    pageSelect?.addEventListener('change', (e) => {
+      activeUrl = getPageUrl(e.target.value);
+      if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(activeUrl)}`;
+      if (qrText) qrText.textContent = activeUrl;
+      if (openLink) openLink.href = activeUrl;
+    });
+
+    // Copy URL
+    const copyBtn = modal.querySelector('#btn-copy-qr-url');
+    copyBtn?.addEventListener('click', () => {
+      navigator.clipboard.writeText(activeUrl).then(() => {
+        copyBtn.innerHTML = `<span>✓</span> Copied!`;
+        setTimeout(() => { copyBtn.innerHTML = `<span>📋</span> Copy`; }, 1800);
+        this.canvas?.showToast?.('🔗 Mobile URL copied to clipboard!', 'success');
+      }).catch(() => {
+        prompt('Copy live mobile test URL:', activeUrl);
+      });
     });
   }
 
