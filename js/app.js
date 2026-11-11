@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.24';
+export const APP_VERSION = '2.9.25';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -15,12 +15,12 @@ import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
 import { commandPalette } from './command-palette.js?v=2.9.19';
 import { toolbarOverflow } from './toolbar-overflow.js?v=2.9.22';
 
-// ── Admin session token helper ──────────────────────────────────
+// -- Admin session token helper ----------------------------------
 export function getAdminToken() {
   return sessionStorage.getItem('aether_admin_token') || '';
 }
 
-// ── Initial loader dismissal helper ────────────────────────────
+// -- Initial loader dismissal helper ----------------------------
 export function removeInitialLoader() {
   const loader = document.getElementById('aether-initial-loader');
   if (loader) {
@@ -31,7 +31,7 @@ export function removeInitialLoader() {
   }
 }
 
-// ── Back to Top Floating Button Helper ─────────────────────────────────────────
+// -- Back to Top Floating Button Helper -----------------------------------------
 export function initBackToTopButton() {
   if (document.getElementById('aether-back-to-top')) return;
   const btn = document.createElement('button');
@@ -96,7 +96,7 @@ export function initBackToTopButton() {
   }, { passive: true });
 }
 
-// ── Client-Side Photo Auto-Optimizer Helper ────────────────────────────────────
+// -- Client-Side Photo Auto-Optimizer Helper ------------------------------------
 export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
   if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file; // Do not touch SVGs or animated GIFs
@@ -136,7 +136,7 @@ export async function optimizeImageForUpload(file, maxDim = 1920, quality = 0.85
           type: 'image/webp',
           lastModified: Date.now()
         });
-        console.log(`⚡ Auto-optimized ${file.name} to WebP: ${(file.size / 1024).toFixed(0)}KB -> ${(optFile.size / 1024).toFixed(0)}KB`);
+        console.log(`? Auto-optimized ${file.name} to WebP: ${(file.size / 1024).toFixed(0)}KB -> ${(optFile.size / 1024).toFixed(0)}KB`);
         resolve(optFile);
       }, 'image/webp', quality);
     };
@@ -272,7 +272,7 @@ class AetherApp {
           const localTime = localPub.publishedAt ? new Date(localPub.publishedAt).getTime() : 0;
           const serverTime = (fromServer && liveData && liveData.publishedAt) ? new Date(liveData.publishedAt).getTime() : 0;
           if (localTime > serverTime) {
-            console.log('📌 Local published site is newer than server response. Retaining local latest published changes.');
+            console.log('?? Local published site is newer than server response. Retaining local latest published changes.');
             liveData = localPub;
             fromServer = false;
             // Background re-sync to update server with the latest snapshot
@@ -643,13 +643,13 @@ class AetherApp {
 
             <!-- Mobile Sidebar Drawer Toggle Button (visible on mobile <= 768px) -->
             <button type="button" class="mobile-drawer-btn" id="btn-mobile-sidebar-toggle" title="Toggle Studio Panel">
-              <span>☰</span>
+              <span>?</span>
               <span>Edit</span>
             </button>
 
             <!-- WordPress-style Update Available pill -->
             <div id="update-indicator-pill" class="update-available-pill" style="display:none;" title="A newer version is ready! Click to install update.">
-              <span>⚡</span>
+              <span>?</span>
               <span>Update Ready!</span>
             </div>
 
@@ -790,11 +790,11 @@ class AetherApp {
             <!-- Sidebar Resizer Handle -->
             <div class="sidebar-resizer" id="sidebar-resizer" title="Drag to resize sidebar width (Double-click to toggle)"></div>
             <!-- Toggle Resize Button -->
-            <button class="sidebar-resize-toggle" id="sidebar-resize-toggle" title="Toggle Sidebar Resizing">🔓</button>
+            <button class="sidebar-resize-toggle" id="sidebar-resize-toggle" title="Toggle Sidebar Resizing">??</button>
 
             <!-- Tab Navigation Header with Slide Controls -->
             <div class="sidebar-tabs-nav">
-              <button type="button" class="sidebar-tab-arrow prev" id="tab-arrow-prev" title="Scroll tabs left" aria-label="Previous tabs">‹</button>
+              <button type="button" class="sidebar-tab-arrow prev" id="tab-arrow-prev" title="Scroll tabs left" aria-label="Previous tabs">�</button>
               <div class="sidebar-tabs" id="sidebar-tabs">
                 <button type="button" class="sidebar-tab-btn active" data-side-tab="widgets">Widgets</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="inspector">Inspector</button>
@@ -804,16 +804,16 @@ class AetherApp {
                 <button type="button" class="sidebar-tab-btn" data-side-tab="addons">Add-ons</button>
                 <button type="button" class="sidebar-tab-btn" data-side-tab="developer">Developer</button>
               </div>
-              <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">›</button>
+              <button type="button" class="sidebar-tab-arrow next" id="tab-arrow-next" title="Scroll tabs right" aria-label="Next tabs">�</button>
               <!-- Mobile Close Button -->
-              <button type="button" class="mobile-sidebar-close-btn" id="btn-mobile-sidebar-close" title="Close Panel">✕</button>
+              <button type="button" class="mobile-sidebar-close-btn" id="btn-mobile-sidebar-close" title="Close Panel">?</button>
             </div>
 
             <div class="sidebar-content-area" id="sidebar-tab-content">
               <!-- Widgets Tray Container -->
               <div id="tab-widgets-panel">
                 <div class="widget-search-box" style="margin-bottom: 14px;">
-                  <span class="widget-search-icon">🔍</span>
+                  <span class="widget-search-icon">??</span>
                   <input type="text" class="widget-search-input" id="widget-search" placeholder="Search elements..." />
                 </div>
                 <div id="widgets-list-container">
@@ -856,27 +856,27 @@ class AetherApp {
                 <!-- Page Layout & Global Header / Footer Controls -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.88rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <span>🌐 Layout & Header / Footer</span>
+                    <span>?? Layout & Header / Footer</span>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 8px;">
                     <label style="font-size: 0.82rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;">
                       <input type="checkbox" id="page-hide-header" style="cursor: pointer;" />
-                      <span>🚫 Hide Header / Navbar on this Page</span>
+                      <span>?? Hide Header / Navbar on this Page</span>
                     </label>
                     <label style="font-size: 0.82rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;">
                       <input type="checkbox" id="page-hide-footer" style="cursor: pointer;" />
-                      <span>🚫 Hide Footer on this Page</span>
+                      <span>?? Hide Footer on this Page</span>
                     </label>
                     <label style="font-size: 0.82rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;">
                       <input type="checkbox" id="page-transparent-header" style="cursor: pointer;" />
-                      <span>🪟 Transparent Header Over Hero</span>
+                      <span>?? Transparent Header Over Hero</span>
                     </label>
                   </div>
                 </div>
                 <!-- Custom Palette & Theme Customizer -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.88rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <span>🎨 Custom Palette Builder</span>
+                    <span>?? Custom Palette Builder</span>
                     <label style="font-weight: 500; font-size: 0.78rem; color: var(--primary-light); cursor: pointer; display: flex; align-items: center; gap: 4px;">
                       <input type="checkbox" id="theme-custom-enable" /> Custom Colors
                     </label>
@@ -928,10 +928,10 @@ class AetherApp {
                     </div>
                     <div style="display: flex; gap: 6px; margin-top: 10px;">
                       <button type="button" id="btn-reset-theme-custom" class="btn btn-sm btn-outline-danger" style="flex: 1; font-size: 0.72rem; padding: 4px 6px;">
-                        ↺ Reset
+                        ? Reset
                       </button>
                       <button type="button" id="btn-apply-global-theme" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px;" title="Apply theme & palette to all pages">
-                        🌐 Apply All Pages
+                        ?? Apply All Pages
                       </button>
                     </div>
                   </div>
@@ -940,12 +940,12 @@ class AetherApp {
                 <!-- SEO & Social Meta -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.88rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                    <span>🔍</span> SEO &amp; Social Meta
+                    <span>??</span> SEO &amp; Social Meta
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
                       <label class="prop-label" style="font-size:0.75rem;">Meta Description</label>
-                      <textarea id="page-meta-description" rows="3" placeholder="Brief summary of this page for search engines (150–160 chars recommended)..." style="font-size:0.78rem; width:100%; resize:vertical; padding:6px 8px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-deep); color:var(--text-main);"></textarea>
+                      <textarea id="page-meta-description" rows="3" placeholder="Brief summary of this page for search engines (150�160 chars recommended)..." style="font-size:0.78rem; width:100%; resize:vertical; padding:6px 8px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-deep); color:var(--text-main);"></textarea>
                     </div>
                     <div>
                       <label class="prop-label" style="font-size:0.75rem;">Meta Keywords <span style="color:var(--text-dim);font-weight:400;">(comma separated)</span></label>
@@ -954,7 +954,7 @@ class AetherApp {
                     <div>
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <label class="prop-label" style="font-size:0.75rem; margin:0;">OG / Social Share Image URL</label>
-                        <button type="button" id="btn-pick-og-image" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">🖼️ Media</button>
+                        <button type="button" id="btn-pick-og-image" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">??? Media</button>
                       </div>
                       <input type="text" id="page-og-image" placeholder="https://... or assets/uploads/og-image.jpg" style="font-size:0.78rem;" />
                       <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">Shown when sharing on Facebook, Twitter, WhatsApp, etc.</div>
@@ -965,7 +965,7 @@ class AetherApp {
                     </div>
                     <label style="font-size: 0.82rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;">
                       <input type="checkbox" id="page-noindex" style="cursor: pointer;" />
-                      <span>🚫 No-Index (hide from search engines)</span>
+                      <span>?? No-Index (hide from search engines)</span>
                     </label>
                   </div>
                 </div>
@@ -974,14 +974,14 @@ class AetherApp {
               <!-- Site-Wide Settings Container -->
               <div id="tab-sitesettings-panel" style="display: none; padding-bottom: 24px;">
                 <div style="font-weight: 700; font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                  <span>⚙️ Site Settings</span>
+                  <span>?? Site Settings</span>
                   <span style="font-size: 0.72rem; color: var(--accent-light, #38bdf8); background: rgba(56,189,248,0.12); padding: 3px 8px; border-radius: 12px; font-weight: 700;">Global</span>
                 </div>
 
                 <!-- Site Identity -->
                 <div class="prop-group">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                    <span>🌐</span> Site Identity &amp; Branding
+                    <span>??</span> Site Identity &amp; Branding
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -991,7 +991,7 @@ class AetherApp {
                     <div>
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <label class="prop-label" style="font-size:0.75rem; margin:0;">Favicon URL</label>
-                        <button type="button" id="btn-pick-favicon" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">🖼️ Media</button>
+                        <button type="button" id="btn-pick-favicon" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">??? Media</button>
                       </div>
                       <div style="display: flex; align-items: center; gap: 6px;">
                         <input type="text" id="site-favicon-input" placeholder="assets/favicon.ico or https://..." style="font-size:0.78rem; flex: 1;" />
@@ -1001,7 +1001,7 @@ class AetherApp {
                     <div>
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <label class="prop-label" style="font-size:0.75rem; margin:0;">Default Header Logo URL</label>
-                        <button type="button" id="btn-pick-site-logo" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">🖼️ Media</button>
+                        <button type="button" id="btn-pick-site-logo" class="btn btn-sm" style="font-size:0.7rem; padding: 2px 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; border-radius: 4px; cursor: pointer;">??? Media</button>
                       </div>
                       <input type="text" id="site-logo-input" placeholder="https://... or assets/logo.png" style="font-size:0.78rem;" />
                     </div>
@@ -1011,8 +1011,8 @@ class AetherApp {
                 <!-- Site Navigation Menu Builder -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>🧭</span> Navigation Menu</span>
-                    <button type="button" id="btn-sync-menu-from-pages" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;border-radius:4px;cursor:pointer;" title="Auto-populate menu links from created pages">⚡ Sync Pages</button>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>??</span> Navigation Menu</span>
+                    <button type="button" id="btn-sync-menu-from-pages" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;border-radius:4px;cursor:pointer;" title="Auto-populate menu links from created pages">? Sync Pages</button>
                   </div>
                   <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4;">
                     Site-wide menu source. When you switch or replace your Navigation Bar add-on, all links &amp; dropdowns stay intact automatically.
@@ -1025,7 +1025,7 @@ class AetherApp {
                       + Add Menu Link
                     </button>
                     <button type="button" id="btn-apply-global-menu-active" class="btn btn-sm" style="font-size:0.75rem;padding:6px 12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;" title="Apply this menu to all navbars across your site">
-                      🚀 Apply to Navbars
+                      ?? Apply to Navbars
                     </button>
                   </div>
                 </div>
@@ -1033,7 +1033,7 @@ class AetherApp {
                 <!-- Pre-loader & Splash Screen Settings -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>⚡</span> Splash Screen &amp; Pre-loader</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>?</span> Splash Screen &amp; Pre-loader</span>
                     <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
                       <input type="checkbox" id="site-loader-enable" checked style="cursor:pointer;" />
                       <span id="site-loader-enable-label" style="font-weight:600;color:#a5b4fc;">Enable Splash Screen</span>
@@ -1046,7 +1046,7 @@ class AetherApp {
                   <!-- Instant Loading Notice when disabled -->
                   <div id="site-loader-disabled-notice" style="display:none;padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;text-align:center;margin-bottom:8px;">
                     <div style="font-size:0.8rem;font-weight:700;color:#34d399;display:flex;align-items:center;justify-content:center;gap:6px;">
-                      <span>⚡</span> Instant Page Loading Active
+                      <span>?</span> Instant Page Loading Active
                     </div>
                     <div style="font-size:0.72rem;color:#94a3b8;margin-top:4px;">
                       The black splash screen and initializing animation are completely disabled. Visitors see your header, layout, and background immediately.
@@ -1085,7 +1085,7 @@ class AetherApp {
                 <!-- Global Background Image -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>🖼️</span> Global Background Image</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>???</span> Global Background Image</span>
                     <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
                       <input type="checkbox" id="site-global-bg-enable" style="cursor:pointer;" />
                       <span>Enable</span>
@@ -1095,11 +1095,11 @@ class AetherApp {
                     <div>
                       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                         <label class="prop-label" style="font-size:0.75rem;margin:0;">Background Image URL</label>
-                        <button type="button" id="btn-pick-global-bg" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:4px;cursor:pointer;">🖼️ Media Library</button>
+                        <button type="button" id="btn-pick-global-bg" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:4px;cursor:pointer;">??? Media Library</button>
                       </div>
                       <div style="display:flex;align-items:center;gap:6px;">
                         <input type="text" id="site-global-bg-url" placeholder="assets/uploads/wallpaper.jpg or https://..." style="font-size:0.78rem;flex:1;" />
-                        <button type="button" id="btn-clear-global-bg" class="btn btn-sm" style="font-size:0.7rem;padding:2px 6px;color:#fca5a5;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:4px;cursor:pointer;" title="Clear image">✕</button>
+                        <button type="button" id="btn-clear-global-bg" class="btn btn-sm" style="font-size:0.7rem;padding:2px 6px;color:#fca5a5;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:4px;cursor:pointer;" title="Clear image">?</button>
                       </div>
                     </div>
 
@@ -1161,7 +1161,7 @@ class AetherApp {
                 <!-- Template Autosave & Media Backups -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>💾</span> Template Autosave &amp; Media Backups</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>??</span> Template Autosave &amp; Media Backups</span>
                     <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
                       <input type="checkbox" id="site-template-autosave-enable" checked style="cursor:pointer;" />
                       <span>Enable Autosave</span>
@@ -1199,17 +1199,17 @@ class AetherApp {
                         <label class="prop-label" style="font-size:0.75rem;">Existing Backups</label>
                         <div style="display:flex;align-items:center;gap:6px;">
                           <span id="site-template-count-badge" style="font-size:0.74rem;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);">Checking...</span>
-                          <button type="button" id="btn-prune-templates-now" class="btn btn-sm" style="font-size:0.7rem;padding:4px 8px;color:#fca5a5;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:4px;cursor:pointer;" title="Enforce limit & delete oldest templates now">🧹 Clean</button>
+                          <button type="button" id="btn-prune-templates-now" class="btn btn-sm" style="font-size:0.7rem;padding:4px 8px;color:#fca5a5;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:4px;cursor:pointer;" title="Enforce limit & delete oldest templates now">?? Clean</button>
                         </div>
                       </div>
                     </div>
 
                     <div style="display:flex;gap:8px;margin-top:4px;">
                       <button type="button" id="btn-save-template-now-site" class="btn btn-sm" style="flex:1;font-size:0.75rem;padding:6px 10px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
-                        💾 Save Snapshot to Media
+                        ?? Save Snapshot to Media
                       </button>
                       <button type="button" id="btn-open-media-templates-site" class="btn btn-sm" style="font-size:0.75rem;padding:6px 10px;background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid var(--border-subtle);border-radius:6px;cursor:pointer;">
-                        📁 Browse Templates
+                        ?? Browse Templates
                       </button>
                     </div>
                   </div>
@@ -1218,7 +1218,7 @@ class AetherApp {
                 <!-- Analytics & Integrations -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                    <span>📊</span> Analytics &amp; Tracking
+                    <span>??</span> Analytics &amp; Tracking
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -1236,7 +1236,7 @@ class AetherApp {
                 <!-- Site Verification -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                    <span>🔍</span> Site Verification
+                    <span>??</span> Site Verification
                     <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(99,102,241,0.15); color: #a5b4fc; font-weight: 700; margin-left: 4px;">SEO</span>
                   </div>
                   <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px;">Paste only the <code style="color:#a5f3fc;background:rgba(99,102,241,0.12);padding:1px 5px;border-radius:3px;">content="..."</code> value from each search engine's verification meta tag.</div>
@@ -1247,7 +1247,7 @@ class AetherApp {
                         Google Search Console
                       </label>
                       <input type="text" id="site-verify-google" placeholder="NcM2UD8GVMDC0zjg_Gt4GPl15Hx1IP_27AbZxK5ZQho" style="font-size:0.78rem; font-family: monospace;" />
-                      <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">From Google Search Console → Settings → Ownership Verification → HTML tag.</div>
+                      <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px;">From Google Search Console ? Settings ? Ownership Verification ? HTML tag.</div>
                     </div>
                     <div>
                       <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
@@ -1258,13 +1258,13 @@ class AetherApp {
                     </div>
                     <div>
                       <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:11px;">🟡</span> Yandex Webmaster
+                        <span style="font-size:11px;">??</span> Yandex Webmaster
                       </label>
                       <input type="text" id="site-verify-yandex" placeholder="Paste your Yandex verification code..." style="font-size:0.78rem; font-family: monospace;" />
                     </div>
                     <div>
                       <label class="prop-label" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:11px;">📌</span> Pinterest
+                        <span style="font-size:11px;">??</span> Pinterest
                       </label>
                       <input type="text" id="site-verify-pinterest" placeholder="Paste your Pinterest verification code..." style="font-size:0.78rem; font-family: monospace;" />
                     </div>
@@ -1274,7 +1274,7 @@ class AetherApp {
                 <!-- Custom Global CSS -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🎨</span> Global Custom CSS
+                    <span>??</span> Global Custom CSS
                   </div>
                   <div style="font-size:0.72rem; color:var(--text-dim); margin-bottom: 6px;">Injected into &lt;head&gt; across all pages.</div>
                   <textarea id="site-custom-css" rows="6" placeholder="/* Custom CSS rules */&#10;.custom-glow { filter: drop-shadow(0 0 10px #6366f1); }" style="font-family: monospace; font-size: 0.75rem; width: 100%; resize: vertical; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: #a5f3fc; line-height: 1.4;"></textarea>
@@ -1283,7 +1283,7 @@ class AetherApp {
                 <!-- Code Injections -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>💻</span> Custom Scripts &amp; Code Injection
+                    <span>??</span> Custom Scripts &amp; Code Injection
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -1300,13 +1300,13 @@ class AetherApp {
                 <!-- Global Copyright Notice -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <label class="prop-label" style="font-size:0.75rem;">Global Copyright Text</label>
-                  <input type="text" id="site-copyright-input" placeholder="© 2026 My Organization. All rights reserved." style="font-size:0.78rem;" />
+                  <input type="text" id="site-copyright-input" placeholder="� 2026 My Organization. All rights reserved." style="font-size:0.78rem;" />
                 </div>
 
                 <!-- 24/7 Automated Decision-Tree Chatbot -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>🤖</span> 24/7 Automated Chatbot</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>??</span> 24/7 Automated Chatbot</span>
                     <span style="font-size:0.68rem;padding:2px 6px;border-radius:10px;background:rgba(16,185,129,0.15);color:#34d399;font-weight:700;">Zero-API Cost</span>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1325,11 +1325,11 @@ class AetherApp {
                     <div>
                       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                         <label class="prop-label" style="font-size:0.75rem;margin:0;">Avatar Icon / Image</label>
-                        <button type="button" id="btn-pick-chatbot-avatar" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:4px;cursor:pointer;">🖼️ Media</button>
+                        <button type="button" id="btn-pick-chatbot-avatar" class="btn btn-sm" style="font-size:0.7rem;padding:2px 7px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:4px;cursor:pointer;">??? Media</button>
                       </div>
                       <div style="display:flex;align-items:center;gap:6px;">
-                        <input type="text" id="site-chatbot-avatar" placeholder="⚖️ or assets/uploads/bot.png" style="font-size:0.78rem;flex:1;" />
-                        <div id="site-chatbot-avatar-preview" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden;flex-shrink:0;">⚖️</div>
+                        <input type="text" id="site-chatbot-avatar" placeholder="?? or assets/uploads/bot.png" style="font-size:0.78rem;flex:1;" />
+                        <div id="site-chatbot-avatar-preview" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden;flex-shrink:0;">??</div>
                       </div>
                       <div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">Type an emoji or pick an image from the Media Library.</div>
                     </div>
@@ -1338,7 +1338,7 @@ class AetherApp {
                       <input type="text" id="site-chatbot-bubble" placeholder="Need help? Ask us!" style="font-size:0.78rem;" />
                     </div>
                     <button type="button" id="btn-edit-chatbot-flow" class="topbar-btn topbar-btn-sm" style="margin-top:4px;width:100%;justify-content:center;background:rgba(99,102,241,0.18);border-color:#6366f1;color:#a5b4fc;padding:6px;">
-                      <span>🌳 Customize Questions &amp; Flowchart</span>
+                      <span>?? Customize Questions &amp; Flowchart</span>
                     </button>
                   </div>
                 </div>
@@ -1346,7 +1346,7 @@ class AetherApp {
                 <!-- Admin Notification Alerts -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                    <span>🔔</span> Leads &amp; Form Notification Alerts
+                    <span>??</span> Leads &amp; Form Notification Alerts
                   </div>
                   <div>
                     <label class="prop-label" style="font-size:0.75rem;">Admin Alert Email Address</label>
@@ -1358,7 +1358,7 @@ class AetherApp {
                 <!-- Floating Back to Top Button Setting -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display:flex;align-items:center;gap:6px;"><span>⬆️</span> Floating Back-to-Top Button</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span>??</span> Floating Back-to-Top Button</span>
                     <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
                       <input type="checkbox" id="site-backtotop-enable" checked style="cursor:pointer;" />
                       <span>Enable</span>
@@ -1374,19 +1374,19 @@ class AetherApp {
               <div id="tab-addons-panel" style="display: none; padding-bottom: 24px;">
                 <div class="addons-header-sticky">
                   <div style="font-weight: 700; font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                  <span>🧩 Add-ons &amp; Plugins</span>
+                  <span>?? Add-ons &amp; Plugins</span>
                   <span style="font-size: 0.72rem; color: #a5b4fc; background: rgba(99,102,241,0.15); padding: 3px 8px; border-radius: 12px; font-weight: 700;">Extensible</span>
                 </div>
 
                 <div style="display:flex;gap:6px;margin-bottom:16px;">
                   <button type="button" id="btn-open-addon-store" class="btn btn-sm" style="flex:1.2;justify-content:center;padding:8px 8px;font-size:0.78rem;font-weight:700;color:#ffffff !important;background:linear-gradient(135deg,#6366f1,#4f46e5);border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 12px rgba(99,102,241,0.35);border-radius:6px;cursor:pointer;">
-                    <span style="color:#ffffff !important;font-weight:700;">🛒 Add-On Store</span>
+                    <span style="color:#ffffff !important;font-weight:700;">?? Add-On Store</span>
                   </button>
                   <button type="button" id="btn-open-addon-maker" class="btn btn-sm" style="flex:1;justify-content:center;padding:8px 6px;font-size:0.75rem;background:rgba(255,255,255,0.08);border:1px solid var(--border-subtle);color:#ffffff !important;font-weight:600;border-radius:6px;cursor:pointer;">
-                    <span style="color:#ffffff !important;">✨ Maker</span>
+                    <span style="color:#ffffff !important;">? Maker</span>
                   </button>
                   <button type="button" id="btn-upload-addon-pkg" class="btn btn-sm" style="flex:1;justify-content:center;padding:8px 6px;font-size:0.75rem;background:rgba(255,255,255,0.08);border:1px solid var(--border-subtle);color:#ffffff !important;font-weight:600;border-radius:6px;cursor:pointer;">
-                    <span style="color:#ffffff !important;">📁 .json</span>
+                    <span style="color:#ffffff !important;">?? .json</span>
                   </button>
                   <input type="file" id="addon-file-picker" accept=".json" style="display:none;" />
                 </div>
@@ -1394,7 +1394,7 @@ class AetherApp {
                 <!-- Quick Toggle for Built-in Chatbot Assistant -->
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.78rem;">
                   <span style="display:flex;align-items:center;gap:6px;color:var(--text-main,#f8fafc);font-weight:600;">
-                    <span>💬</span> Built-in Assistant
+                    <span>??</span> Built-in Assistant
                   </span>
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
                     <input type="checkbox" id="addons-quick-toggle-chatbot" style="cursor:pointer;accent-color:var(--primary,#6366f1);" />
@@ -1417,16 +1417,16 @@ class AetherApp {
             <!-- Sticky Bottom Publish Dock (Always accessible in Mobile Portrait & Desktop) -->
             <div class="sidebar-bottom-dock" id="sidebar-bottom-dock">
               <button type="button" class="sidebar-btn-publish" id="btn-sidebar-publish" title="Publish Canvas Changes to Live Website">
-                <span>🚀</span> <strong>Publish Live</strong>
+                <span>??</span> <strong>Publish Live</strong>
               </button>
               <button type="button" class="sidebar-dock-action-btn" id="btn-sidebar-copy-link" title="Copy Public Live URL">
-                <span>📋</span>
+                <span>??</span>
               </button>
               <button type="button" class="sidebar-dock-action-btn" id="btn-sidebar-qr" title="Show Mobile Test QR Code">
-                <span>📱</span>
+                <span>??</span>
               </button>
               <a href="index.html?view=public" target="_blank" class="sidebar-dock-action-btn" id="btn-sidebar-view-live" title="Open Live Site in New Tab">
-                <span>🌐</span>
+                <span>??</span>
               </a>
             </div>
           </aside>
@@ -1435,7 +1435,7 @@ class AetherApp {
           <section class="builder-canvas-viewport mode-desktop" id="builder-canvas-container">
             <!-- Mobile Floating Action Button to Open Drawer -->
             <button type="button" class="mobile-canvas-drawer-fab" id="btn-mobile-fab" title="Open Studio Controls">
-              <span>☰</span>
+              <span>?</span>
             </button>
             <!-- Live Canvas Frame Rendered Here -->
           </section>
@@ -1490,19 +1490,19 @@ class AetherApp {
       <div class="media-modal-panel">
         <div class="media-modal-header">
           <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:1.4rem;">🖼️</span>
+            <span style="font-size:1.4rem;">???</span>
             <div>
               <div style="font-weight:700;font-size:1.05rem;">Media Library</div>
               <div style="font-size:0.78rem;color:var(--text-dim);">Upload &amp; manage your site assets</div>
             </div>
           </div>
-          <button class="media-modal-close" id="media-modal-close">✕</button>
+          <button class="media-modal-close" id="media-modal-close">?</button>
         </div>
 
         <div class="media-upload-zone" id="media-upload-zone">
           <input type="file" id="media-file-input" multiple accept="image/*,video/mp4,video/webm,.pdf" style="display:none;" />
           <div class="media-upload-inner" id="media-upload-trigger">
-            <div style="font-size:1.8rem;line-height:1;">☁️</div>
+            <div style="font-size:1.8rem;line-height:1;">??</div>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:0.92rem;color:#fff;">Click to upload or drag &amp; drop files here</div>
               <div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px;">Supports JPG, PNG, GIF, WebP, SVG, MP4, WebM, PDF</div>
@@ -1516,13 +1516,13 @@ class AetherApp {
         </div>
 
         <div class="media-library-toolbar">
-          <input type="text" id="media-search" placeholder="🔍  Search assets..." class="media-search-input" />
+          <input type="text" id="media-search" placeholder="??  Search assets..." class="media-search-input" />
           <span id="media-asset-count" style="font-size:0.8rem;color:var(--text-dim);">0 files</span>
         </div>
 
         <div class="media-grid" id="media-grid">
           <div class="media-empty-state" id="media-empty-state">
-            <div style="font-size:2.5rem;margin-bottom:10px;">📂</div>
+            <div style="font-size:2.5rem;margin-bottom:10px;">??</div>
             <div style="font-weight:600;color:var(--text-muted);">No assets uploaded yet</div>
             <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px;">Upload images and files using the zone above</div>
           </div>
@@ -1531,11 +1531,11 @@ class AetherApp {
         <div class="media-modal-footer">
           <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
             <div id="media-selected-info" style="font-size:0.85rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No asset selected</div>
-            <button class="topbar-btn" id="media-btn-copy" style="display:none;padding:5px 12px;font-size:0.78rem;background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.3);color:#a5b4fc;" title="Copy file URL to clipboard">📋 Copy URL</button>
+            <button class="topbar-btn" id="media-btn-copy" style="display:none;padding:5px 12px;font-size:0.78rem;background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.3);color:#a5b4fc;" title="Copy file URL to clipboard">?? Copy URL</button>
           </div>
           <div style="display:flex;gap:10px;">
             <button class="topbar-btn" id="media-btn-cancel">Cancel</button>
-            <button class="topbar-btn topbar-btn-publish" id="media-btn-use" disabled>Use Selected ✓</button>
+            <button class="topbar-btn topbar-btn-publish" id="media-btn-use" disabled>Use Selected ?</button>
           </div>
         </div>
       </div>
@@ -1607,8 +1607,8 @@ class AetherApp {
         const btn = document.getElementById('media-btn-copy');
         try {
           await navigator.clipboard.writeText(_selectedAsset.url);
-          btn.innerHTML = '✅ Copied!';
-          setTimeout(() => { btn.innerHTML = '📋 Copy URL'; }, 2000);
+          btn.innerHTML = '? Copied!';
+          setTimeout(() => { btn.innerHTML = '?? Copy URL'; }, 2000);
         } catch {
           prompt('Copy asset URL:', _selectedAsset.url);
         }
@@ -1707,17 +1707,17 @@ class AetherApp {
       const isImage = imageExts.includes(asset.ext);
       const thumb = isImage
         ? `<img src="${asset.url}" alt="${asset.name}" loading="lazy" />`
-        : `<div class="media-asset-icon">${asset.ext === 'pdf' ? '📄' : asset.ext.includes('mp4') || asset.ext.includes('webm') ? '🎬' : '📁'}</div>`;
+        : `<div class="media-asset-icon">${asset.ext === 'pdf' ? '??' : asset.ext.includes('mp4') || asset.ext.includes('webm') ? '??' : '??'}</div>`;
 
       const sizekb = (asset.size / 1024).toFixed(1);
       card.innerHTML = `
-        <button class="media-asset-copy" data-url="${asset.url}" title="Copy file URL">📋</button>
-        <button class="media-asset-rename" data-name="${asset.name}" title="Rename file">✏️</button>
-        <button class="media-asset-delete" data-name="${asset.name}" title="Delete asset">🗑</button>
+        <button class="media-asset-copy" data-url="${asset.url}" title="Copy file URL">??</button>
+        <button class="media-asset-rename" data-name="${asset.name}" title="Rename file">??</button>
+        <button class="media-asset-delete" data-name="${asset.name}" title="Delete asset">??</button>
         <div class="media-asset-thumb">${thumb}</div>
         <div class="media-asset-info">
           <div class="media-asset-name" title="${asset.name}">${asset.name}</div>
-          <div class="media-asset-meta">${sizekb} KB · ${asset.ext.toUpperCase()}</div>
+          <div class="media-asset-meta">${sizekb} KB � ${asset.ext.toUpperCase()}</div>
         </div>
       `;
 
@@ -1739,9 +1739,9 @@ class AetherApp {
         const btn = e.currentTarget;
         try {
           await navigator.clipboard.writeText(asset.url);
-          btn.innerHTML = '✓';
+          btn.innerHTML = '?';
           btn.style.color = '#34d399';
-          setTimeout(() => { btn.innerHTML = '📋'; btn.style.color = ''; }, 1600);
+          setTimeout(() => { btn.innerHTML = '??'; btn.style.color = ''; }, 1600);
         } catch {
           prompt('Copy asset URL:', asset.url);
         }
@@ -1826,14 +1826,14 @@ class AetherApp {
       const isHome   = idx === 0;
       return `
         <div class="page-item ${isActive ? 'active' : ''}" data-page-id="${page.id}" data-index="${idx}" draggable="true">
-          <div class="page-item-drag">⠿</div>
+          <div class="page-item-drag">?</div>
           <div class="page-item-info" style="flex:1;min-width:0;">
             <div class="page-item-title">${page.title}</div>
             <div class="page-item-slug">${isHome ? '(homepage)' : page.slug + '.html'}</div>
           </div>
           <div class="page-item-actions">
-            <button class="page-action-btn" data-action="duplicate" data-page-id="${page.id}" title="Duplicate page">❐</button>
-            ${!isHome ? `<button class="page-action-btn danger" data-action="delete" data-page-id="${page.id}" title="Delete page">🗑</button>` : ''}
+            <button class="page-action-btn" data-action="duplicate" data-page-id="${page.id}" title="Duplicate page">?</button>
+            ${!isHome ? `<button class="page-action-btn danger" data-action="delete" data-page-id="${page.id}" title="Delete page">??</button>` : ''}
           </div>
         </div>
       `;
@@ -1841,12 +1841,12 @@ class AetherApp {
 
     panel.innerHTML = `
       <div style="padding: 14px 14px 0; font-weight: 700; font-size: 0.95rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-        <span>📄 Pages <span style="font-size:0.75rem;color:var(--text-dim);font-weight:400;">${state.pages.length} page${state.pages.length !== 1 ? 's' : ''}</span></span>
+        <span>?? Pages <span style="font-size:0.75rem;color:var(--text-dim);font-weight:400;">${state.pages.length} page${state.pages.length !== 1 ? 's' : ''}</span></span>
       </div>
       <div id="pages-list">${pagesHtml}</div>
       <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 10px;">
         <button class="topbar-btn" id="btn-add-page" style="width:100%; justify-content:center;">
-          <span>➕</span> Add New Page
+          <span>?</span> Add New Page
         </button>
       </div>
     `;
@@ -1991,9 +1991,9 @@ class AetherApp {
     if (uploaded > 0) parts.push(`${uploaded} uploaded`);
     if (skipped > 0) parts.push(`${skipped} skipped`);
     if (uploaded === 0 && skipped === 0) {
-      statusText.textContent = `❌ Upload failed. Please check file type and size.`;
+      statusText.textContent = `? Upload failed. Please check file type and size.`;
     } else {
-      statusText.textContent = `✅ ${parts.join(', ')}!`;
+      statusText.textContent = `? ${parts.join(', ')}!`;
     }
     setTimeout(() => {
       progressBar.classList.add('hidden');
@@ -2027,7 +2027,7 @@ class AetherApp {
           font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0;
         ">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-            <span style="font-size:1.5rem;">⚠️</span>
+            <span style="font-size:1.5rem;">??</span>
             <span style="font-weight:700;font-size:1.05rem;color:#fbbf24;">Duplicate File Detected</span>
           </div>
           <div style="font-size:0.88rem;color:#94a3b8;margin-bottom:6px;">
@@ -2042,25 +2042,25 @@ class AetherApp {
               background:rgba(239,68,68,0.15); color:#fca5a5; font-weight:600; font-size:0.85rem;
               cursor:pointer; transition:all 0.2s;
             " onmouseover="this.style.background='rgba(239,68,68,0.3)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">
-              🔄 Replace
+              ?? Replace
             </button>
             <button id="dup-btn-rename" style="
               flex:1; padding:10px 16px; border-radius:10px; border:1px solid rgba(99,102,241,0.4);
               background:rgba(99,102,241,0.15); color:#a5b4fc; font-weight:600; font-size:0.85rem;
               cursor:pointer; transition:all 0.2s;
             " onmouseover="this.style.background='rgba(99,102,241,0.3)'" onmouseout="this.style.background='rgba(99,102,241,0.15)'">
-              📝 Keep Both
+              ?? Keep Both
             </button>
             <button id="dup-btn-skip" style="
               flex:1; padding:10px 16px; border-radius:10px; border:1px solid rgba(100,116,139,0.4);
               background:rgba(100,116,139,0.12); color:#94a3b8; font-weight:600; font-size:0.85rem;
               cursor:pointer; transition:all 0.2s;
             " onmouseover="this.style.background='rgba(100,116,139,0.25)'" onmouseout="this.style.background='rgba(100,116,139,0.12)'">
-              ⏭ Skip
+              ? Skip
             </button>
           </div>
           <div style="font-size:0.72rem;color:#475569;margin-top:12px;text-align:center;">
-            Replace overwrites the existing file · Keep Both saves with an incremented name
+            Replace overwrites the existing file � Keep Both saves with an incremented name
           </div>
         </div>
       `;
@@ -2086,8 +2086,8 @@ class AetherApp {
       layout: { title: 'Layout & Structure', items: [] },
       content: { title: 'Content & Messaging', items: [] },
       media: { title: 'Media & Interactive', items: [] },
-      components: { title: '📦 Reusable Components', items: [] },
-      addons: { title: '🧩 Add-ons & Plugins', items: [] }
+      components: { title: '?? Reusable Components', items: [] },
+      addons: { title: '?? Add-ons & Plugins', items: [] }
     };
 
     Object.entries(WIDGET_REGISTRY).forEach(([key, w]) => {
@@ -2114,7 +2114,7 @@ class AetherApp {
 
         html += `
           <div class="widget-card ${item.isAddon ? 'is-addon-widget' : ''} ${isComp ? 'is-comp-widget' : ''}" data-widget-type="${item.key}" draggable="true" title="${item.description || ''}">
-            <div class="widget-card-icon">${item.icon || (isComp ? '📦' : '🧩')}</div>
+            <div class="widget-card-icon">${item.icon || (isComp ? '??' : '??')}</div>
             <div class="widget-card-name">
               <span>${item.name}</span>
               ${badge}
@@ -2279,15 +2279,15 @@ class AetherApp {
     const resizeEnabled = localStorage.getItem('aether_sidebar_resizable') !== 'false';
     if (!resizeEnabled) {
       document.body.classList.add('sidebar-resizing-disabled');
-      toggleBtn.textContent = '🔒';
+      toggleBtn.textContent = '??';
     } else {
-      toggleBtn.textContent = '🔓';
+      toggleBtn.textContent = '??';
     }
 
     // Helper to update toggle button icon
     const updateToggleIcon = () => {
       const disabled = document.body.classList.contains('sidebar-resizing-disabled');
-      toggleBtn.textContent = disabled ? '🔒' : '🔓';
+      toggleBtn.textContent = disabled ? '??' : '??';
     };
 
     // Toggle button click handler
@@ -2337,7 +2337,7 @@ class AetherApp {
       }
     });
 
-    // Double-click – only cycle widths when resizing is enabled
+    // Double-click � only cycle widths when resizing is enabled
     resizer.addEventListener('dblclick', () => {
       if (document.body.classList.contains('sidebar-resizing-disabled')) return;
       const current = sidebar.getBoundingClientRect().width;
@@ -2453,7 +2453,7 @@ class AetherApp {
         const curCb = state.siteSettings.chatbot || DEFAULT_CHATBOT_CONFIG;
         state.setSiteSetting('chatbot', { ...curCb, enabled: e.target.checked });
         updateQuickCbUI();
-        this.canvas?.showToast(e.target.checked ? '💬 Built-in Assistant enabled' : 'Built-in Assistant disabled', 'info');
+        this.canvas?.showToast(e.target.checked ? '?? Built-in Assistant enabled' : 'Built-in Assistant disabled', 'info');
         const siteCb = document.getElementById('site-chatbot-enable');
         if (siteCb) siteCb.checked = e.target.checked;
       });
@@ -2495,9 +2495,9 @@ class AetherApp {
     if (addons.length === 0) {
       listContainer.innerHTML = `
         <div style="text-align:center;padding:32px 14px;color:var(--text-dim);font-size:0.85rem;background:rgba(255,255,255,0.02);border:1px dashed var(--border-subtle);border-radius:10px;">
-          <div style="font-size:2rem;margin-bottom:8px;">🧩</div>
+          <div style="font-size:2rem;margin-bottom:8px;">??</div>
           <div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">No Custom Add-ons Installed</div>
-          <div>Click "✨ Create Add-On" to build a new widget or install a .json package.</div>
+          <div>Click "? Create Add-On" to build a new widget or install a .json package.</div>
         </div>
       `;
       return;
@@ -2509,7 +2509,7 @@ class AetherApp {
         <div class="addon-installed-card" data-addon-id="${addon.id}" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid ${isEnabled ? 'rgba(99,102,241,0.3)' : 'var(--border-subtle)'};border-radius:10px;display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:1.4rem;padding:6px;background:rgba(255,255,255,0.06);border-radius:8px;">${addon.icon || '🧩'}</span>
+              <span style="font-size:1.4rem;padding:6px;background:rgba(255,255,255,0.06);border-radius:8px;">${addon.icon || '??'}</span>
               <div>
                 <div style="font-weight:700;font-size:0.9rem;color:#ffffff;display:flex;align-items:center;gap:6px;">
                   <span>${addon.name}</span>
@@ -2531,14 +2531,14 @@ class AetherApp {
           <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:0.74rem;">
             <div style="display:flex;gap:6px;">
               <button type="button" class="btn btn-sm btn-edit-addon" style="padding:3px 8px;font-size:0.72rem;background:rgba(255,255,255,0.06);color:#e2e8f0;border:1px solid var(--border-subtle);">
-                ✏️ Edit
+                ?? Edit
               </button>
               <button type="button" class="btn btn-sm btn-export-addon" style="padding:3px 8px;font-size:0.72rem;background:rgba(255,255,255,0.06);color:#e2e8f0;border:1px solid var(--border-subtle);">
-                📦 Export
+                ?? Export
               </button>
             </div>
             <button type="button" class="tool-icon-btn btn-delete-addon" style="color:#f87171;padding:3px 6px;" title="Uninstall Add-on">
-              🗑️
+              ???
             </button>
           </div>
         </div>
@@ -2594,12 +2594,12 @@ class AetherApp {
       this.activeDevSubTab = 'feed';
     }
 
-    // ── 1. If Locked: Render Developer Security Gate ──
+    // -- 1. If Locked: Render Developer Security Gate --
     if (!devAuth.isAuthenticated()) {
       panel.innerHTML = `
         <div style="padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;">
           <div style="text-align: center; padding: 20px 14px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px;">
-            <div style="font-size: 2.4rem; margin-bottom: 8px;">🔒</div>
+            <div style="font-size: 2.4rem; margin-bottom: 8px;">??</div>
             <div style="font-weight: 800; font-size: 1.05rem; color: #ffffff; letter-spacing: -0.02em;">Developer Hub Gate</div>
             <div style="font-size: 0.74rem; color: #818cf8; font-weight: 600; margin-top: 2px;">Developer Authentication</div>
             <p style="font-size: 0.76rem; color: var(--text-dim); margin-top: 10px; line-height: 1.45;">
@@ -2618,7 +2618,7 @@ class AetherApp {
 
             <button type="submit" id="btn-dev-unlock-submit" class="wb-btn wb-btn-primary"
               style="width: 100%; justify-content: center; padding: 9px 12px; font-size: 0.82rem; font-weight: 700;">
-              <span>🔓</span> Unlock Developer Hub
+              <span>??</span> Unlock Developer Hub
             </button>
 
             <div id="dev-unlock-feedback" style="display: none; font-size: 0.74rem; padding: 8px 10px; border-radius: 6px; line-height: 1.4;"></div>
@@ -2640,7 +2640,7 @@ class AetherApp {
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span>⏳</span> Verifying credentials...`;
+        submitBtn.innerHTML = `<span>?</span> Verifying credentials...`;
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(99,102,241,0.15)';
         feedback.style.border = '1px solid rgba(99,102,241,0.3)';
@@ -2653,35 +2653,35 @@ class AetherApp {
             feedback.style.background = 'rgba(16,185,129,0.15)';
             feedback.style.border = '1px solid rgba(16,185,129,0.3)';
             feedback.style.color = '#6ee7b7';
-            feedback.textContent = `✅ Access granted in ${res.computeTime}ms. Opening Developer Hub...`;
-            this.canvas.showToast(`🔓 Developer Hub unlocked (${res.computeTime}ms)`, 'success');
+            feedback.textContent = `? Access granted in ${res.computeTime}ms. Opening Developer Hub...`;
+            this.canvas.showToast(`?? Developer Hub unlocked (${res.computeTime}ms)`, 'success');
             setTimeout(() => {
               this.renderDeveloperPanel();
             }, 300);
           } else {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>🔓</span> Unlock Developer Hub`;
+            submitBtn.innerHTML = `<span>??</span> Unlock Developer Hub`;
             feedback.style.background = 'rgba(239,68,68,0.15)';
             feedback.style.border = '1px solid rgba(239,68,68,0.3)';
             feedback.style.color = '#fca5a5';
-            feedback.textContent = `❌ ${res.error || 'Incorrect developer password.'}`;
+            feedback.textContent = `? ${res.error || 'Incorrect developer password.'}`;
             pwdInput.focus();
             pwdInput.select();
           }
         } catch (err) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = `<span>🔓</span> Unlock Developer Hub`;
+          submitBtn.innerHTML = `<span>??</span> Unlock Developer Hub`;
           feedback.style.background = 'rgba(239,68,68,0.15)';
           feedback.style.border = '1px solid rgba(239,68,68,0.3)';
           feedback.style.color = '#fca5a5';
-          feedback.textContent = `❌ Verification error: ${err.message}`;
+          feedback.textContent = `? Verification error: ${err.message}`;
         }
       });
 
       return;
     }
 
-    // ── 2. If Unlocked: Render Full Developer Hub ──
+    // -- 2. If Unlocked: Render Full Developer Hub --
     // Load store feed configuration
     let feedConfig = {
       remoteFeedUrl: 'https://raw.githubusercontent.com/aetherbuilder/addons-repo/main/addons.json',
@@ -2715,7 +2715,7 @@ class AetherApp {
           </div>
           <button type="button" id="btn-dev-lock-session" class="btn btn-sm"
             style="padding: 3px 8px; font-size: 0.72rem; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 4px; cursor: pointer;">
-            🔒 Lock Hub
+            ?? Lock Hub
           </button>
         </div>
 
@@ -2723,15 +2723,15 @@ class AetherApp {
         <div style="display: flex; gap: 4px; margin-bottom: 14px; background: rgba(15,23,42,0.6); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
           <button type="button" class="dev-subtab-btn ${curSubTab === 'feed' ? 'active' : ''}" data-dev-subtab="feed"
             style="flex: 1; padding: 6px 4px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; ${curSubTab === 'feed' ? 'background:#6366f1;color:#ffffff;' : 'background:transparent;color:var(--text-dim);'}">
-            📡 Feed &amp; Sales
+            ?? Feed &amp; Sales
           </button>
           <button type="button" class="dev-subtab-btn ${curSubTab === 'templates' ? 'active' : ''}" data-dev-subtab="templates"
             style="flex: 1; padding: 6px 4px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; ${curSubTab === 'templates' ? 'background:#6366f1;color:#ffffff;' : 'background:transparent;color:var(--text-dim);'}">
-            📋 Free Templates
+            ?? Free Templates
           </button>
           <button type="button" class="dev-subtab-btn ${curSubTab === 'security' ? 'active' : ''}" data-dev-subtab="security"
             style="flex: 1; padding: 6px 4px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; ${curSubTab === 'security' ? 'background:#6366f1;color:#ffffff;' : 'background:transparent;color:var(--text-dim);'}">
-            🔐 Dev Security
+            ?? Dev Security
           </button>
         </div>
 
@@ -2747,7 +2747,7 @@ class AetherApp {
     // Wire Lock Session
     panel.querySelector('#btn-dev-lock-session')?.addEventListener('click', () => {
       devAuth.lock();
-      this.canvas.showToast('🔒 Developer Hub locked', 'info');
+      this.canvas.showToast('?? Developer Hub locked', 'info');
       this.renderDeveloperPanel();
     });
 
@@ -2769,7 +2769,7 @@ class AetherApp {
     }
   }
 
-  // ── SUB-TAB 1: Remote Feed & Sales ──
+  // -- SUB-TAB 1: Remote Feed & Sales --
   getDevFeedSubTabHtml(feedConfig) {
     const catalog = addonStore.catalog || [];
     return `
@@ -2778,7 +2778,7 @@ class AetherApp {
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; padding: 12px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <label style="font-size: 0.76rem; font-weight: 700; color: #ffffff;">
-              📡 Remote Add-on Feed URL
+              ?? Remote Add-on Feed URL
             </label>
             <span style="font-size: 0.65rem; background: rgba(99,102,241,0.2); color: #c7d2fe; padding: 1px 6px; border-radius: 10px; font-weight: 700;">
               Hidden from Public
@@ -2793,11 +2793,11 @@ class AetherApp {
           <div style="display: flex; gap: 8px;">
             <button type="button" id="btn-dev-sync-feed" class="btn btn-sm"
               style="flex: 1; justify-content: center; padding: 7px; font-size: 0.75rem; background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.5); color: #ffffff; font-weight: 700; border-radius: 6px; cursor: pointer;">
-              🔄 Sync Remote Feed Now
+              ?? Sync Remote Feed Now
             </button>
             <button type="button" id="btn-dev-save-feed-url" class="btn btn-sm"
               style="padding: 7px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: #ffffff; border-radius: 6px; cursor: pointer;">
-              💾 Save URL
+              ?? Save URL
             </button>
           </div>
           <div id="dev-feed-sync-status" style="display: none; font-size: 0.72rem; margin-top: 8px; padding: 6px 8px; border-radius: 6px;"></div>
@@ -2806,7 +2806,7 @@ class AetherApp {
         <!-- Master License Key for Testing & Unlock -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
-            🔑 Master License Key
+            ?? Master License Key
           </label>
           <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 8px;">
             Overrides premium unlock for all add-ons during testing or client deployments.
@@ -2816,7 +2816,7 @@ class AetherApp {
               style="flex: 1; font-size: 0.76rem; font-family: var(--font-mono); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: #34d399; font-weight: 700;" />
             <button type="button" id="btn-dev-generate-key" class="btn btn-sm"
               style="padding: 6px 10px; font-size: 0.72rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: #ffffff; border-radius: 6px; cursor: pointer;">
-              🎲 Random
+              ?? Random
             </button>
           </div>
         </div>
@@ -2824,7 +2824,7 @@ class AetherApp {
         <!-- Marketplace Seller Pricing Quick View -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="font-weight: 700; font-size: 0.76rem; color: #ffffff; margin-bottom: 4px;">
-            🛒 Active Store Listings (${catalog.length})
+            ?? Active Store Listings (${catalog.length})
           </div>
           <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px;">
             Public marketplace listings and pricing visible in the Add-on Store:
@@ -2833,11 +2833,11 @@ class AetherApp {
             ${catalog.map(c => `
               <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; font-size: 0.74rem;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
-                  <span>${c.icon || '🧩'}</span>
+                  <span>${c.icon || '??'}</span>
                   <span style="color: #ffffff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
                 </div>
                 <span style="font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; ${c.price === 0 ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;' : 'background:rgba(99,102,241,0.25);color:#c7d2fe;'}">
-                  ${c.price === 0 ? 'FREE' : `₱${c.price}`}
+                  ${c.price === 0 ? 'FREE' : `?${c.price}`}
                 </span>
               </div>
             `).join('')}
@@ -2880,7 +2880,7 @@ class AetherApp {
         return;
       }
       syncBtn.disabled = true;
-      syncBtn.innerHTML = `<span>⏳</span> Syncing remote feed...`;
+      syncBtn.innerHTML = `<span>?</span> Syncing remote feed...`;
       statusBox.style.display = 'block';
       statusBox.style.background = 'rgba(99,102,241,0.15)';
       statusBox.style.color = '#c7d2fe';
@@ -2891,16 +2891,16 @@ class AetherApp {
         await saveFeedData({ remoteFeedUrl: url, lastSynced: new Date().toISOString() });
         statusBox.style.background = 'rgba(16,185,129,0.15)';
         statusBox.style.color = '#6ee7b7';
-        statusBox.textContent = `✅ Successfully synced ${result.count || 0} add-ons from remote feed!`;
-        this.canvas.showToast(`✅ Synced ${result.count || 0} add-ons from remote feed!`, 'success');
+        statusBox.textContent = `? Successfully synced ${result.count || 0} add-ons from remote feed!`;
+        this.canvas.showToast(`? Synced ${result.count || 0} add-ons from remote feed!`, 'success');
         this.renderDeveloperPanel();
       } catch (err) {
         statusBox.style.background = 'rgba(239,68,68,0.15)';
         statusBox.style.color = '#fca5a5';
-        statusBox.textContent = `❌ Remote sync failed: ${err.message}`;
+        statusBox.textContent = `? Remote sync failed: ${err.message}`;
       } finally {
         syncBtn.disabled = false;
-        syncBtn.innerHTML = `🔄 Sync Remote Feed Now`;
+        syncBtn.innerHTML = `?? Sync Remote Feed Now`;
       }
     });
 
@@ -2918,21 +2918,21 @@ class AetherApp {
     });
   }
 
-  // ── SUB-TAB 2: Free Template Store Management ──
+  // -- SUB-TAB 2: Free Template Store Management --
   getDevTemplatesSubTabHtml() {
     const tmpls = templateStore.templates || [];
     return `
       <div style="display: flex; flex-direction: column; gap: 14px;">
         <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 10px; padding: 12px;">
           <div style="font-weight: 700; font-size: 0.82rem; color: #6ee7b7; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-            <span>✨</span> 100% Free Template Policy
+            <span>?</span> 100% Free Template Policy
           </div>
           <div style="font-size: 0.73rem; color: var(--text-dim); line-height: 1.45;">
             All templates in this store are 100% free. Templates automatically declare and detect their required add-on dependencies so users never encounter missing widgets.
           </div>
           <button type="button" id="btn-dev-create-template-from-canvas" class="wb-btn wb-btn-primary"
             style="width: 100%; justify-content: center; padding: 8px 12px; font-size: 0.78rem; font-weight: 700; margin-top: 10px;">
-            <span>➕</span> Save Current Canvas as New Free Template
+            <span>?</span> Save Current Canvas as New Free Template
           </button>
         </div>
 
@@ -2940,7 +2940,7 @@ class AetherApp {
           <span style="font-size: 0.78rem; font-weight: 700; color: #ffffff;">Available Templates (${tmpls.length})</span>
           <button type="button" id="btn-dev-restore-seed-templates" class="btn btn-sm"
             style="padding: 3px 8px; font-size: 0.7rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: #cbd5e1; border-radius: 4px; cursor: pointer;">
-            ↺ Reset Defaults
+            ? Reset Defaults
           </button>
         </div>
 
@@ -2967,9 +2967,9 @@ class AetherApp {
                   ${reqList.length === 0 ? '<span style="color:var(--text-dim);">(Core widgets only)</span>' : ''}
                   ${reqList.map(r => `
                     <span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; ${r.isInstalled ? 'background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);'}">
-                      <span>${r.icon || '🧩'}</span>
+                      <span>${r.icon || '??'}</span>
                       <span>${r.name}</span>
-                      <span>${r.isInstalled ? '✓' : '⚠️'}</span>
+                      <span>${r.isInstalled ? '?' : '??'}</span>
                     </span>
                   `).join('')}
                 </div>
@@ -2977,10 +2977,10 @@ class AetherApp {
                 <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 2px;">
                   <button type="button" class="btn btn-sm btn-dev-load-tmpl" data-id="${tmpl.id}"
                     style="padding: 3px 8px; font-size: 0.72rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe; border-radius: 4px; cursor: pointer;">
-                    🚀 Test Load
+                    ?? Test Load
                   </button>
                   <button type="button" class="tool-icon-btn btn-dev-delete-tmpl" data-id="${tmpl.id}" style="color: #f87171; padding: 3px 6px;" title="Delete Template">
-                    🗑️
+                    ???
                   </button>
                 </div>
               </div>
@@ -3027,7 +3027,7 @@ class AetherApp {
 
       templateStore.templates.unshift(newTemplate);
       templateStore.save();
-      this.canvas.showToast(`✅ Saved template "${name}" with ${detected.length} detected add-on(s)!`, 'success');
+      this.canvas.showToast(`? Saved template "${name}" with ${detected.length} detected add-on(s)!`, 'success');
       this.renderDeveloperPanel();
     });
 
@@ -3074,7 +3074,7 @@ class AetherApp {
     });
   }
 
-  // ── SUB-TAB 3: Developer Security & GitHub Remote Master Pitcher ──
+  // -- SUB-TAB 3: Developer Security & GitHub Remote Master Pitcher --
   getDevSecuritySubTabHtml() {
     const curHash = devAuth.getStoredHash();
     const storedPat = devAuth.getStoredPat();
@@ -3102,7 +3102,7 @@ class AetherApp {
           <div style="display: flex; gap: 8px; margin-top: 10px;">
             <button type="button" id="btn-dev-pull-github-hash" class="btn btn-sm"
               style="flex: 1; justify-content: center; padding: 6px 10px; font-size: 0.72rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe; border-radius: 6px; cursor: pointer;">
-              🔄 Check &amp; Pull Latest Hash from GitHub
+              ?? Check &amp; Pull Latest Hash from GitHub
             </button>
           </div>
           <div id="dev-pull-github-feedback" style="display: none; font-size: 0.71rem; margin-top: 6px; padding: 6px 8px; border-radius: 4px;"></div>
@@ -3111,7 +3111,7 @@ class AetherApp {
         <!-- Master Password Form with Automatic GitHub Pitch -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; padding: 12px;">
           <div style="font-weight: 700; font-size: 0.82rem; color: #ffffff; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-            <span>🔑</span> Update Master Developer Password
+            <span>??</span> Update Master Developer Password
           </div>
           <p style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4;">
             Saves encrypted credentials to <code style="color:#a5b4fc;">data/dev_auth.json</code>.
@@ -3149,7 +3149,7 @@ class AetherApp {
                   GitHub Personal Access Token (PAT)
                 </label>
                 <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" style="font-size: 0.68rem; color: #38bdf8; text-decoration: underline;">
-                  Generate Token ↗
+                  Generate Token ?
                 </a>
               </div>
               <input type="password" id="dev-github-pat" value="${storedPat}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx (repo scope)"
@@ -3157,13 +3157,13 @@ class AetherApp {
               
               <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.7rem; color: #cbd5e1; cursor: pointer;">
                 <input type="checkbox" id="dev-auto-push-github-cb" checked style="accent-color: #6366f1; cursor: pointer;" />
-                <span>🚀 Automatically sync new credentials to GitHub repo</span>
+                <span>?? Automatically sync new credentials to GitHub repo</span>
               </label>
             </div>
 
             <button type="submit" id="btn-dev-pwd-submit" class="wb-btn wb-btn-primary"
               style="width: 100%; justify-content: center; padding: 8px 12px; font-size: 0.78rem; font-weight: 700; margin-top: 6px;">
-              🛡️ Save &amp; Pitch New Developer Password
+              ??? Save &amp; Pitch New Developer Password
             </button>
 
             <div id="dev-pwd-feedback" style="display: none; font-size: 0.72rem; padding: 6px 8px; border-radius: 6px;"></div>
@@ -3173,14 +3173,14 @@ class AetherApp {
         <!-- 1-Click Push Core Files to GitHub Tool -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="font-weight: 700; font-size: 0.8rem; color: #ffffff; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-            <span>📦</span> GitHub Core Sync Engine
+            <span>??</span> GitHub Core Sync Engine
           </div>
           <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4;">
             Directly commit and push core system files (<code style="color:#a5b4fc;">dev_auth.json</code>, <code style="color:#a5b4fc;">templates.json</code>, <code style="color:#a5b4fc;">store_feed.json</code>, <code style="color:#a5b4fc;">version.json</code>) to <strong style="color:#fff;">bernardlolo25/aetherbuilder</strong>.
           </div>
           <button type="button" id="btn-dev-push-all-core" class="btn btn-sm"
             style="width: 100%; justify-content: center; padding: 7px; font-size: 0.75rem; background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #6ee7b7; font-weight: 700; border-radius: 6px; cursor: pointer;">
-            🚀 Push Core Files to GitHub Now
+            ?? Push Core Files to GitHub Now
           </button>
           <div id="dev-push-core-status" style="display: none; font-size: 0.71rem; margin-top: 8px; padding: 6px 8px; border-radius: 6px;"></div>
         </div>
@@ -3189,11 +3189,11 @@ class AetherApp {
         <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <div style="font-size: 0.74rem; font-weight: 700; color: #ffffff;">
-              💻 Git CLI Commands (Terminal)
+              ?? Git CLI Commands (Terminal)
             </div>
             <button type="button" id="btn-copy-git-cli" class="btn btn-sm"
               style="padding: 2px 6px; font-size: 0.68rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; border-radius: 4px; cursor: pointer;">
-              📋 Copy Commands
+              ?? Copy Commands
             </button>
           </div>
           <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">
@@ -3213,7 +3213,7 @@ git push -u origin main</textarea>
             </label>
             <button type="button" id="btn-copy-dev-hash" class="btn btn-sm"
               style="padding: 2px 6px; font-size: 0.68rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; border-radius: 4px; cursor: pointer;">
-              📋 Copy
+              ?? Copy
             </button>
           </div>
           <textarea id="dev-hash-readonly" readonly rows="3"
@@ -3261,7 +3261,7 @@ git push -u origin main</textarea>
     // Pull Latest Master Hash from GitHub
     pullGithubBtn?.addEventListener('click', async () => {
       pullGithubBtn.disabled = true;
-      pullGithubBtn.innerHTML = `<span>⏳</span> Checking GitHub repository...`;
+      pullGithubBtn.innerHTML = `<span>?</span> Checking GitHub repository...`;
       pullFeedback.style.display = 'block';
       pullFeedback.style.background = 'rgba(99,102,241,0.15)';
       pullFeedback.style.color = '#c7d2fe';
@@ -3273,22 +3273,22 @@ git push -u origin main</textarea>
           pullFeedback.style.background = 'rgba(16,185,129,0.15)';
           pullFeedback.style.color = '#6ee7b7';
           pullFeedback.textContent = res.updated
-            ? '✅ Successfully pulled and synchronized updated credentials from GitHub!'
-            : '✅ Local master hash is already in sync with GitHub supreme authority.';
+            ? '? Successfully pulled and synchronized updated credentials from GitHub!'
+            : '? Local master hash is already in sync with GitHub supreme authority.';
           hashArea.value = res.hash;
-          this.canvas.showToast('✅ Synced with GitHub security authority!', 'success');
+          this.canvas.showToast('? Synced with GitHub security authority!', 'success');
         } else {
           pullFeedback.style.background = 'rgba(245,158,11,0.15)';
           pullFeedback.style.color = '#fde68a';
-          pullFeedback.textContent = '⚠️ GitHub dev_auth.json not found yet (repository might not have this file committed yet). Push the security hash below!';
+          pullFeedback.textContent = '?? GitHub dev_auth.json not found yet (repository might not have this file committed yet). Push the security hash below!';
         }
       } catch (err) {
         pullFeedback.style.background = 'rgba(239,68,68,0.15)';
         pullFeedback.style.color = '#fca5a5';
-        pullFeedback.textContent = `❌ Error: ${err.message}`;
+        pullFeedback.textContent = `? Error: ${err.message}`;
       } finally {
         pullGithubBtn.disabled = false;
-        pullGithubBtn.innerHTML = `🔄 Check &amp; Pull Latest Hash from GitHub`;
+        pullGithubBtn.innerHTML = `?? Check &amp; Pull Latest Hash from GitHub`;
       }
     });
 
@@ -3309,14 +3309,14 @@ git push -u origin main</textarea>
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(239,68,68,0.15)';
         feedback.style.color = '#fca5a5';
-        feedback.textContent = '❌ New password and confirmation do not match.';
+        feedback.textContent = '? New password and confirmation do not match.';
         return;
       }
       if (next.length < 5) {
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(239,68,68,0.15)';
         feedback.style.color = '#fca5a5';
-        feedback.textContent = '❌ Password must be at least 5 characters.';
+        feedback.textContent = '? Password must be at least 5 characters.';
         return;
       }
 
@@ -3328,7 +3328,7 @@ git push -u origin main</textarea>
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳</span> Updating &amp; pitching...`;
+      submitBtn.innerHTML = `<span>?</span> Updating &amp; pitching...`;
       feedback.style.display = 'block';
       feedback.style.background = 'rgba(99,102,241,0.15)';
       feedback.style.color = '#c7d2fe';
@@ -3346,29 +3346,29 @@ git push -u origin main</textarea>
           newPwd.value = '';
           confPwd.value = '';
 
-          let msg = '✅ Master developer password successfully updated!';
+          let msg = '? Master developer password successfully updated!';
           if (res.githubPushResult && res.githubPushResult.success) {
-            msg += `<br>🚀 <strong>Pitched to GitHub repository!</strong> All installed user systems worldwide will automatically enforce your new password.`;
+            msg += `<br>?? <strong>Pitched to GitHub repository!</strong> All installed user systems worldwide will automatically enforce your new password.`;
           } else if (res.githubPushResult && res.githubPushResult.error) {
-            msg += `<br>⚠️ Local password updated, but GitHub push failed: ${res.githubPushResult.error}. Use "Push Core Files" below with a valid token.`;
+            msg += `<br>?? Local password updated, but GitHub push failed: ${res.githubPushResult.error}. Use "Push Core Files" below with a valid token.`;
           }
 
           feedback.style.background = 'rgba(16,185,129,0.15)';
           feedback.style.color = '#6ee7b7';
           feedback.innerHTML = msg;
-          this.canvas.showToast('✅ Developer password updated!', 'success');
+          this.canvas.showToast('? Developer password updated!', 'success');
         } else {
           feedback.style.background = 'rgba(239,68,68,0.15)';
           feedback.style.color = '#fca5a5';
-          feedback.textContent = `❌ ${res.error || 'Failed to update password.'}`;
+          feedback.textContent = `? ${res.error || 'Failed to update password.'}`;
         }
       } catch (err) {
         feedback.style.background = 'rgba(239,68,68,0.15)';
         feedback.style.color = '#fca5a5';
-        feedback.textContent = `❌ Error: ${err.message}`;
+        feedback.textContent = `? Error: ${err.message}`;
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `🛡️ Hash &amp; Pitch New Developer Password`;
+        submitBtn.innerHTML = `??? Hash &amp; Pitch New Developer Password`;
       }
     });
 
@@ -3382,7 +3382,7 @@ git push -u origin main</textarea>
       }
 
       pushAllCoreBtn.disabled = true;
-      pushAllCoreBtn.innerHTML = `<span>⏳</span> Pushing core files to GitHub...`;
+      pushAllCoreBtn.innerHTML = `<span>?</span> Pushing core files to GitHub...`;
       pushCoreStatus.style.display = 'block';
       pushCoreStatus.style.background = 'rgba(99,102,241,0.15)';
       pushCoreStatus.style.color = '#c7d2fe';
@@ -3407,7 +3407,7 @@ git push -u origin main</textarea>
             fileContent = JSON.stringify({ argon2_hash: devAuth.getStoredHash(), updated_at: new Date().toISOString() }, null, 2);
           } else if (item.path === 'data/templates.json') {
             if (!templateStore.templates || templateStore.templates.length === 0) {
-              resultsLog.push(`⚠️ Skipped ${item.name} — in-memory templates is empty, refusing to overwrite`);
+              resultsLog.push(`?? Skipped ${item.name} � in-memory templates is empty, refusing to overwrite`);
               continue;
             }
             fileContent = JSON.stringify(templateStore.templates, null, 2);
@@ -3426,26 +3426,26 @@ git push -u origin main</textarea>
             `Core update: sync ${item.path} via AetherBuilder Developer Hub [v${APP_VERSION}]`,
             pat
           );
-          resultsLog.push(`✓ ${item.name} (${item.path})`);
+          resultsLog.push(`? ${item.name} (${item.path})`);
         } catch (err) {
           allSuccess = false;
-          resultsLog.push(`❌ ${item.name}: ${err.message}`);
+          resultsLog.push(`? ${item.name}: ${err.message}`);
         }
       }
 
       if (allSuccess) {
         pushCoreStatus.style.background = 'rgba(16,185,129,0.15)';
         pushCoreStatus.style.color = '#6ee7b7';
-        pushCoreStatus.innerHTML = `<strong>✅ All core files successfully pushed to GitHub!</strong><br>${resultsLog.join('<br>')}`;
-        this.canvas.showToast('🚀 Core files successfully pushed to GitHub!', 'success');
+        pushCoreStatus.innerHTML = `<strong>? All core files successfully pushed to GitHub!</strong><br>${resultsLog.join('<br>')}`;
+        this.canvas.showToast('?? Core files successfully pushed to GitHub!', 'success');
       } else {
         pushCoreStatus.style.background = 'rgba(239,68,68,0.15)';
         pushCoreStatus.style.color = '#fca5a5';
-        pushCoreStatus.innerHTML = `<strong>⚠️ Some files could not be pushed:</strong><br>${resultsLog.join('<br>')}`;
+        pushCoreStatus.innerHTML = `<strong>?? Some files could not be pushed:</strong><br>${resultsLog.join('<br>')}`;
       }
 
       pushAllCoreBtn.disabled = false;
-      pushAllCoreBtn.innerHTML = `🚀 Push Core Files to GitHub Now`;
+      pushAllCoreBtn.innerHTML = `?? Push Core Files to GitHub Now`;
     });
   }
 
@@ -3522,7 +3522,7 @@ git push -u origin main</textarea>
     fontSelect.addEventListener('change', (e) => {
       const fontVal = e.target.value;
       state.setPageSetting('fontFamily', fontVal);
-      this.canvas.showToast(`🔤 Base font updated`, 'info');
+      this.canvas.showToast(`?? Base font updated`, 'info');
     });
 
     // Page Layout (Hide Header, Hide Footer, Transparent Header)
@@ -3534,7 +3534,7 @@ git push -u origin main</textarea>
       hideHeaderCb.addEventListener('change', (e) => {
         state.setPageSetting('hideHeader', e.target.checked);
         this.canvas.render();
-        this.canvas.showToast(e.target.checked ? '🚫 Header hidden on this page' : '👁️ Header visible on this page', 'info');
+        this.canvas.showToast(e.target.checked ? '?? Header hidden on this page' : '??? Header visible on this page', 'info');
       });
     }
 
@@ -3542,7 +3542,7 @@ git push -u origin main</textarea>
       hideFooterCb.addEventListener('change', (e) => {
         state.setPageSetting('hideFooter', e.target.checked);
         this.canvas.render();
-        this.canvas.showToast(e.target.checked ? '🚫 Footer hidden on this page' : '👁️ Footer visible on this page', 'info');
+        this.canvas.showToast(e.target.checked ? '?? Footer hidden on this page' : '??? Footer visible on this page', 'info');
       });
     }
 
@@ -3550,7 +3550,7 @@ git push -u origin main</textarea>
       transparentHeaderCb.addEventListener('change', (e) => {
         state.setPageSetting('transparentHeader', e.target.checked);
         this.canvas.render();
-        this.canvas.showToast(e.target.checked ? '🪟 Transparent header enabled' : 'Header background restored', 'info');
+        this.canvas.showToast(e.target.checked ? '?? Transparent header enabled' : 'Header background restored', 'info');
       });
     }
 
@@ -3622,7 +3622,7 @@ git push -u origin main</textarea>
         if (customControlsBox) customControlsBox.style.display = isChecked ? 'block' : 'none';
         if (!isChecked) {
           state.setPageSetting('themeCustom', { enabled: false });
-          this.canvas.showToast('🎨 Reverted to preset colors', 'info');
+          this.canvas.showToast('?? Reverted to preset colors', 'info');
         } else {
           // Fill inputs from current preset if no custom values exist
           const activePreset = THEME_PRESETS[state.pageSettings.themePreset || 'dark-neon'];
@@ -3645,7 +3645,7 @@ git push -u origin main</textarea>
             });
           }
           updateCustomThemeFromInputs();
-          this.canvas.showToast('🎨 Custom color palette enabled', 'success');
+          this.canvas.showToast('?? Custom color palette enabled', 'success');
         }
       });
     }
@@ -3673,7 +3673,7 @@ git push -u origin main</textarea>
         if (customControlsBox) customControlsBox.style.display = 'none';
         state.setPageSetting('themeCustom', { enabled: false });
         this.syncPageSettingsInputs();
-        this.canvas.showToast('🎨 Palette reset to theme preset', 'info');
+        this.canvas.showToast('?? Palette reset to theme preset', 'info');
       });
     }
 
@@ -3690,7 +3690,7 @@ git push -u origin main</textarea>
           pg.pageSettings.themeCustom = curCustom;
         });
         state.saveAndPublish();
-        this.canvas.showToast('🌐 Applied theme & palette globally to all pages', 'success');
+        this.canvas.showToast('?? Applied theme & palette globally to all pages', 'success');
       });
     }
 
@@ -3706,7 +3706,7 @@ git push -u origin main</textarea>
     if (!THEME_PRESETS[themeId]) return;
     state.setPageSetting('themePreset', themeId);
     this.syncPageSettingsInputs();
-    this.canvas.showToast(`🎨 Theme preset applied: ${THEME_PRESETS[themeId].name}`, 'success');
+    this.canvas.showToast(`?? Theme preset applied: ${THEME_PRESETS[themeId].name}`, 'success');
   }
 
   syncPageSettingsInputs() {
@@ -3860,7 +3860,7 @@ git push -u origin main</textarea>
         state.syncGlobalMenuFromPages();
         this.renderGlobalMenuList();
         this.canvas?.render();
-        this.canvas?.showToast('⚡ Navigation menu synced from pages!', 'success');
+        this.canvas?.showToast('? Navigation menu synced from pages!', 'success');
       });
     }
 
@@ -3881,7 +3881,7 @@ git push -u origin main</textarea>
       applyMenuActiveBtn.addEventListener('click', () => {
         state.applyGlobalMenuToAllNavs();
         this.canvas?.render();
-        this.canvas?.showToast('🚀 Navigation menu applied to all navbars!', 'success');
+        this.canvas?.showToast('?? Navigation menu applied to all navbars!', 'success');
       });
     }
 
@@ -3949,7 +3949,7 @@ git push -u origin main</textarea>
       bttEnableCb.addEventListener('change', (e) => {
         const cur = state.siteSettings.backToTop || { enabled: true };
         state.setSiteSetting('backToTop', { ...cur, enabled: e.target.checked });
-        this.canvas?.showToast(e.target.checked ? '⬆️ Back-to-top button enabled' : 'Back-to-top button disabled', 'info');
+        this.canvas?.showToast(e.target.checked ? '?? Back-to-top button enabled' : 'Back-to-top button disabled', 'info');
       });
     }
 
@@ -3959,7 +3959,7 @@ git push -u origin main</textarea>
       cbEnableCb.addEventListener('change', (e) => {
         const curCb = state.siteSettings.chatbot || DEFAULT_CHATBOT_CONFIG;
         state.setSiteSetting('chatbot', { ...curCb, enabled: e.target.checked });
-        this.canvas?.showToast(e.target.checked ? '🤖 24/7 Chatbot enabled' : 'Chatbot disabled', 'info');
+        this.canvas?.showToast(e.target.checked ? '?? 24/7 Chatbot enabled' : 'Chatbot disabled', 'info');
       });
     }
 
@@ -4021,7 +4021,7 @@ git push -u origin main</textarea>
       globalBgEnable.addEventListener('change', (e) => {
         updateGlobalBgSetting('enabled', e.target.checked);
         if (globalBgControls) globalBgControls.style.display = e.target.checked ? 'flex' : 'none';
-        this.canvas?.showToast(e.target.checked ? '🖼️ Global Background Image enabled' : 'Global Background Image disabled', 'info');
+        this.canvas?.showToast(e.target.checked ? '??? Global Background Image enabled' : 'Global Background Image disabled', 'info');
       });
     }
 
@@ -4090,7 +4090,7 @@ git push -u origin main</textarea>
         updateTemplateAutosaveSetting('enabled', e.target.checked);
         const controls = document.getElementById('site-template-autosave-controls');
         if (controls) controls.style.opacity = e.target.checked ? '1' : '0.5';
-        this.canvas?.showToast(e.target.checked ? '💾 Template autosave enabled' : 'Template autosave disabled', 'info');
+        this.canvas?.showToast(e.target.checked ? '?? Template autosave enabled' : 'Template autosave disabled', 'info');
       });
     }
 
@@ -4120,12 +4120,12 @@ git push -u origin main</textarea>
         const max = state.getTemplateMaxBackups();
         const res = await state.pruneTemplateBackups(max);
         btnPruneNow.disabled = false;
-        btnPruneNow.textContent = '🧹 Clean';
+        btnPruneNow.textContent = '?? Clean';
         await this.refreshTemplateBackupsCounter();
         if (res && res.deleted > 0) {
-          this.canvas?.showToast(`🧹 Cleaned up ${res.deleted} older template backup(s) to match the limit of ${max}!`, 'success');
+          this.canvas?.showToast(`?? Cleaned up ${res.deleted} older template backup(s) to match the limit of ${max}!`, 'success');
         } else {
-          this.canvas?.showToast(`All backups are within the limit (${max}) — nothing to prune.`, 'info');
+          this.canvas?.showToast(`All backups are within the limit (${max}) � nothing to prune.`, 'info');
         }
       });
     }
@@ -4137,12 +4137,12 @@ git push -u origin main</textarea>
         try {
           const res = await state.saveTemplateToMedia();
           await this.refreshTemplateBackupsCounter();
-          this.canvas?.showToast(`💾 Snapshot saved to Media: ${res.fileName}`, 'success');
+          this.canvas?.showToast(`?? Snapshot saved to Media: ${res.fileName}`, 'success');
         } catch (err) {
           this.canvas?.showToast('Failed to save snapshot to Media Library', 'error');
         } finally {
           btnSaveNowSite.disabled = false;
-          btnSaveNowSite.textContent = '💾 Save Snapshot to Media';
+          btnSaveNowSite.textContent = '?? Save Snapshot to Media';
         }
       });
     }
@@ -4161,7 +4161,7 @@ git push -u origin main</textarea>
                     if (state.importJSON(txt)) {
                       await state.saveAndPublish();
                       this.canvas?.render();
-                      this.canvas?.showToast('✅ Template successfully loaded onto canvas!', 'success');
+                      this.canvas?.showToast('? Template successfully loaded onto canvas!', 'success');
                     }
                   }
                 } catch (e) {
@@ -4224,7 +4224,7 @@ git push -u origin main</textarea>
   updateChatbotAvatarPreview(val) {
     const preview = document.getElementById('site-chatbot-avatar-preview');
     if (!preview) return;
-    const str = String(val || '💬').trim();
+    const str = String(val || '??').trim();
     if (
       str.startsWith('http://') ||
       str.startsWith('https://') ||
@@ -4234,7 +4234,7 @@ git push -u origin main</textarea>
     ) {
       preview.innerHTML = `<img src="${str}" alt="Bot" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
     } else {
-      preview.innerHTML = str || '💬';
+      preview.innerHTML = str || '??';
     }
   }
 
@@ -4384,7 +4384,7 @@ git push -u origin main</textarea>
     if (!menu || menu.length === 0) {
       listEl.innerHTML = `
         <div style="font-size:0.73rem;color:var(--text-dim);font-style:italic;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px;border:1px dashed var(--border-subtle);text-align:center;">
-          No menu links created yet. Click "+ Add Menu Link" or "⚡ Sync Pages".
+          No menu links created yet. Click "+ Add Menu Link" or "? Sync Pages".
         </div>
       `;
       return;
@@ -4394,11 +4394,11 @@ git push -u origin main</textarea>
       const childCount = (item.children || []).length;
       return `
         <div class="site-menu-item-row" data-idx="${idx}" style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:0.75rem;">
-          <span style="cursor:grab;color:var(--text-dim);font-size:0.75rem;">⠿</span>
+          <span style="cursor:grab;color:var(--text-dim);font-size:0.75rem;">?</span>
           <input type="text" class="site-menu-item-label" data-idx="${idx}" value="${item.label || ''}" placeholder="Label" style="width:85px;font-size:0.74rem;padding:3px 6px;border-radius:4px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:#fff;" />
           <input type="text" class="site-menu-item-url" data-idx="${idx}" value="${item.url || ''}" placeholder="URL / slug" style="flex:1;min-width:0;font-size:0.74rem;padding:3px 6px;border-radius:4px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:#38bdf8;font-family:monospace;" />
-          ${childCount > 0 ? `<span style="font-size:0.65rem;color:#a5b4fc;background:rgba(99,102,241,0.2);padding:1px 5px;border-radius:4px;" title="${childCount} dropdown items">↳${childCount}</span>` : ''}
-          <button type="button" class="site-menu-item-del" data-idx="${idx}" style="background:transparent;border:none;color:#ef4444;cursor:pointer;font-size:0.75rem;padding:2px 4px;" title="Remove link">✕</button>
+          ${childCount > 0 ? `<span style="font-size:0.65rem;color:#a5b4fc;background:rgba(99,102,241,0.2);padding:1px 5px;border-radius:4px;" title="${childCount} dropdown items">?${childCount}</span>` : ''}
+          <button type="button" class="site-menu-item-del" data-idx="${idx}" style="background:transparent;border:none;color:#ef4444;cursor:pointer;font-size:0.75rem;padding:2px 4px;" title="Remove link">?</button>
         </div>
       `;
     }).join('');
@@ -4524,7 +4524,7 @@ git push -u origin main</textarea>
       const pubUrl = `${base}index.html?view=public`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(pubUrl).then(() => {
-          this.canvas?.showToast('📋 Public live link copied to clipboard!', 'success');
+          this.canvas?.showToast('?? Public live link copied to clipboard!', 'success');
         }).catch(() => {
           prompt('Copy public website URL:', pubUrl);
         });
@@ -4538,14 +4538,16 @@ git push -u origin main</textarea>
       const topbarBtn = document.getElementById('btn-publish');
       const sidebarBtn = document.getElementById('btn-sidebar-publish');
 
+      const publishIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>`;
       const setPublishState = (disabled, text) => {
+        const icon = disabled ? `<span class="animate-spin">?</span>` : publishIconSvg;
         if (topbarBtn) {
           topbarBtn.disabled = disabled;
-          topbarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> ${text}`;
+          topbarBtn.innerHTML = `${icon} <span>${text}</span>`;
         }
         if (sidebarBtn) {
           sidebarBtn.disabled = disabled;
-          sidebarBtn.innerHTML = `<span>${disabled ? '⏳' : '🚀'}</span> <span class="publish-label">${text}</span>`;
+          sidebarBtn.innerHTML = `${icon} <span class="publish-label">${text}</span>`;
         }
       };
 
@@ -4553,11 +4555,11 @@ git push -u origin main</textarea>
       try {
         await state.publishToLive();
         setPublishState(false, 'Publish Live');
-        this.canvas.showToast('🚀 Changes published live! Synced to server.', 'success');
+        this.canvas.showToast('?? Changes published live! Synced to server.', 'success');
       } catch (err) {
         setPublishState(false, 'Publish Live');
-        this.canvas.showToast('❌ Publish failed: ' + (err.message || 'Server error'), 'error');
-        alert('⚠️ Publish to server failed: ' + (err.message || 'Network/Server Error') + '\n\nPlease check your admin session or hard-refresh.');
+        this.canvas.showToast('? Publish failed: ' + (err.message || 'Server error'), 'error');
+        alert('?? Publish to server failed: ' + (err.message || 'Network/Server Error') + '\n\nPlease check your admin session or hard-refresh.');
       }
     };
 
@@ -4585,9 +4587,9 @@ git push -u origin main</textarea>
           btnSync.style.opacity = '1';
           if (ok) {
             this.canvas.render();
-            this.canvas.showToast('✅ Synced latest published content from server!', 'success');
+            this.canvas.showToast('? Synced latest published content from server!', 'success');
           } else {
-            this.canvas.showToast('⚠️ No published server data found to sync.', 'warning');
+            this.canvas.showToast('?? No published server data found to sync.', 'warning');
           }
         }
       });
@@ -4662,7 +4664,7 @@ git push -u origin main</textarea>
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         state.publishToLive();
-        this.canvas.showToast('🚀 Published live via shortcut!', 'success');
+        this.canvas.showToast('?? Published live via shortcut!', 'success');
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         commandPalette.toggle();
@@ -4703,9 +4705,9 @@ git push -u origin main</textarea>
       <div class="modal-box animate-scale-in" style="max-width: 440px; text-align: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; background: #0f172a; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
         <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 18px;">
           <div class="modal-title" style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #f8fafc; font-size: 0.95rem;">
-            <span>📱</span> Mobile Live Test QR Code
+            <span>??</span> Mobile Live Test QR Code
           </div>
-          <button class="tool-icon-btn" id="close-qr-modal" style="color: #94a3b8;">✕</button>
+          <button class="tool-icon-btn" id="close-qr-modal" style="color: #94a3b8;">?</button>
         </div>
         <div class="modal-body" style="padding: 22px 20px;">
           <p style="font-size: 0.84rem; color: #94a3b8; margin: 0 0 16px; line-height: 1.5;">
@@ -4730,14 +4732,14 @@ git push -u origin main</textarea>
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px;">
             <span id="qr-url-text" style="font-size: 0.76rem; color: #cbd5e1; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; flex: 1;">${activeUrl}</span>
             <button type="button" class="topbar-btn topbar-btn-sm" id="btn-copy-qr-url" style="padding: 4px 10px; font-size: 0.75rem; flex-shrink: 0; background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #a5b4fc;">
-              <span>📋</span> Copy
+              <span>??</span> Copy
             </button>
           </div>
 
           <!-- Action Buttons -->
           <div style="display: flex; gap: 8px; justify-content: center;">
             <a href="${activeUrl}" target="_blank" class="topbar-btn topbar-btn-sm" id="qr-open-browser-link" style="text-decoration: none; padding: 8px 16px; font-size: 0.82rem; background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); color: #6ee7b7; display: inline-flex; align-items: center; gap: 6px;">
-              <span>🌐</span> Open Public Site
+              <span>??</span> Open Public Site
             </a>
             <button type="button" class="topbar-btn topbar-btn-sm" id="btn-close-qr-footer" style="padding: 8px 16px; font-size: 0.82rem; color: #94a3b8;">
               Close
@@ -4771,9 +4773,9 @@ git push -u origin main</textarea>
     const copyBtn = modal.querySelector('#btn-copy-qr-url');
     copyBtn?.addEventListener('click', () => {
       navigator.clipboard.writeText(activeUrl).then(() => {
-        copyBtn.innerHTML = `<span>✓</span> Copied!`;
-        setTimeout(() => { copyBtn.innerHTML = `<span>📋</span> Copy`; }, 1800);
-        this.canvas?.showToast?.('🔗 Mobile URL copied to clipboard!', 'success');
+        copyBtn.innerHTML = `<span>?</span> Copied!`;
+        setTimeout(() => { copyBtn.innerHTML = `<span>??</span> Copy`; }, 1800);
+        this.canvas?.showToast?.('?? Mobile URL copied to clipboard!', 'success');
       }).catch(() => {
         prompt('Copy live mobile test URL:', activeUrl);
       });
@@ -4794,15 +4796,15 @@ git push -u origin main</textarea>
     modal.innerHTML = `
       <div class="modal-box modal-wide animate-scale-in">
         <div class="modal-header">
-          <div class="modal-title"><span>📤</span> Export & Import Project</div>
-          <button class="tool-icon-btn" id="close-export-modal">✕</button>
+          <div class="modal-title"><span>??</span> Export & Import Project</div>
+          <button class="tool-icon-btn" id="close-export-modal">?</button>
         </div>
         <div class="modal-body">
           <div class="inspector-tabs" style="margin-bottom: 12px;">
             <button class="inspector-tab-btn active" id="tab-export-json">Export JSON</button>
             <button class="inspector-tab-btn" id="tab-export-html">Standalone HTML</button>
             <button class="inspector-tab-btn" id="tab-import-json">Import JSON</button>
-            <button class="inspector-tab-btn" id="tab-site-backup">📦 Full Site Backup (.zip)</button>
+            <button class="inspector-tab-btn" id="tab-site-backup">?? Full Site Backup (.zip)</button>
           </div>
 
           <div id="export-json-view">
@@ -4810,7 +4812,7 @@ git push -u origin main</textarea>
             <textarea id="export-json-textarea" rows="12" style="width: 100%; font-family: var(--font-mono); font-size: 0.8rem;" readonly>${jsonContent}</textarea>
             <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
               <button class="wb-btn wb-btn-primary" id="btn-copy-json" style="padding: 8px 16px; font-size: 0.85rem;">Copy JSON</button>
-              <button class="wb-btn wb-btn-secondary" id="btn-save-media-template" style="padding: 8px 16px; font-size: 0.85rem;">📁 Save to Media Assets</button>
+              <button class="wb-btn wb-btn-secondary" id="btn-save-media-template" style="padding: 8px 16px; font-size: 0.85rem;">?? Save to Media Assets</button>
               <button class="wb-btn wb-btn-outline" id="btn-download-json" style="padding: 8px 16px; font-size: 0.85rem;">Download .json</button>
             </div>
           </div>
@@ -4818,7 +4820,7 @@ git push -u origin main</textarea>
           <div id="export-html-view" style="display: none;">
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Download a standalone production HTML file containing all rendered elements, widgets, and styles for immediate hosting:</p>
             <button class="wb-btn wb-btn-primary" id="btn-download-html" style="padding: 10px 24px; font-size: 0.95rem;">
-              <span>💾</span> Download index.html Bundle
+              <span>??</span> Download index.html Bundle
             </button>
           </div>
 
@@ -4827,7 +4829,7 @@ git push -u origin main</textarea>
             <textarea id="import-json-textarea" rows="9" placeholder="Paste JSON here..." style="width: 100%; font-family: var(--font-mono); font-size: 0.8rem;"></textarea>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
               <button class="wb-btn wb-btn-primary" id="btn-perform-import" style="padding: 8px 16px; font-size: 0.85rem;">Import and Replace Canvas</button>
-              <button class="wb-btn wb-btn-secondary" id="btn-load-media-template" style="padding: 8px 16px; font-size: 0.85rem;">📁 Load Latest Media Template</button>
+              <button class="wb-btn wb-btn-secondary" id="btn-load-media-template" style="padding: 8px 16px; font-size: 0.85rem;">?? Load Latest Media Template</button>
             </div>
           </div>
 
@@ -4840,7 +4842,7 @@ git push -u origin main</textarea>
               <div style="font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 4px;">Download Full Website Backup</div>
               <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">Bundles all pages, settings, revisions, and media images into a single .zip file.</p>
               <button class="wb-btn wb-btn-primary" id="btn-download-full-backup" style="padding: 9px 18px; font-size: 0.86rem;">
-                <span>📦</span> Download Complete Site (.zip)
+                <span>??</span> Download Complete Site (.zip)
               </button>
               <span id="backup-status-text" style="font-size: 0.8rem; margin-left: 10px; color: var(--accent);"></span>
             </div>
@@ -4851,7 +4853,7 @@ git push -u origin main</textarea>
               <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="file" id="input-restore-zip" accept=".zip" style="font-size: 0.8rem; color: #cbd5e1;" />
                 <button class="wb-btn wb-btn-secondary" id="btn-perform-restore" style="padding: 9px 18px; font-size: 0.86rem;">
-                  <span>📥</span> Restore Website Now
+                  <span>??</span> Restore Website Now
                 </button>
               </div>
               <div id="restore-status-text" style="font-size: 0.82rem; margin-top: 8px; min-height: 18px;"></div>
@@ -4899,7 +4901,7 @@ git push -u origin main</textarea>
         const res = await fetch(`api.php?action=backup_full_site&token=${encodeURIComponent(token)}`);
         const data = await res.json();
         if (data && data.success && data.url) {
-          backupStatus.textContent = `✓ Backup ready (${data.size_kb} KB)`;
+          backupStatus.textContent = `? Backup ready (${data.size_kb} KB)`;
           window.location.href = data.url;
         } else {
           backupStatus.textContent = 'Failed: ' + (data?.error || 'Unknown error');
@@ -4941,7 +4943,7 @@ git push -u origin main</textarea>
         });
         const data = await res.json();
         if (data && data.success) {
-          restoreStatus.textContent = '✓ ' + data.message;
+          restoreStatus.textContent = '? ' + data.message;
           restoreStatus.style.color = 'var(--success)';
           setTimeout(() => {
             window.location.reload();
@@ -4968,7 +4970,7 @@ git push -u origin main</textarea>
     modal.querySelector('#btn-save-media-template')?.addEventListener('click', async () => {
       try {
         const res = await state.saveTemplateToMedia();
-        this.canvas.showToast(`📁 Template saved to Media Library Assets (${res.fileName})`, 'success');
+        this.canvas.showToast(`?? Template saved to Media Library Assets (${res.fileName})`, 'success');
       } catch (err) {
         this.canvas.showToast('Error saving template to Media Library', 'error');
       }
@@ -5032,7 +5034,7 @@ git push -u origin main</textarea>
           await state.saveAndPublish();
           this.canvas.render();
           this.renderPagesPanel();
-          this.canvas.showToast(`✅ Successfully loaded template: ${templateName}`, 'success');
+          this.canvas.showToast(`? Successfully loaded template: ${templateName}`, 'success');
           modal.remove();
         } else {
           this.canvas.showToast('Invalid template file format in Media Library', 'error');
@@ -5138,12 +5140,12 @@ ${varCss}
             navbar.classList.add('is-open');
             toggleBtn.setAttribute('aria-expanded', 'true');
             mobileMenu.setAttribute('aria-hidden', 'false');
-            toggleIcon.textContent = '✕';
+            toggleIcon.textContent = '?';
           } else {
             navbar.classList.remove('is-open');
             toggleBtn.setAttribute('aria-expanded', 'false');
             mobileMenu.setAttribute('aria-hidden', 'true');
-            toggleIcon.textContent = '☰';
+            toggleIcon.textContent = '?';
           }
         }
         toggleBtn.addEventListener('click', function(e) {
@@ -5275,7 +5277,7 @@ ${varCss}
         });
       });
 
-      // ── Dynamic Registration Form Handler (with Google Sheets sync) ──
+      // -- Dynamic Registration Form Handler (with Google Sheets sync) --
       document.querySelectorAll('.wb-reg-form').forEach(function(form) {
         // Real-time file size check on change
         form.querySelectorAll('.wb-reg-file-input').forEach(function(fileInput) {
@@ -5290,7 +5292,7 @@ ${varCss}
               if (sizeMB > maxMB) {
                 fileInput.value = ''; // Reset invalid file
                 if (errEl) {
-                  errEl.textContent = '⚠️ File "' + file.name + '" (' + sizeMB.toFixed(1) + ' MB) exceeds the ' + maxMB + ' MB limit. Please select a smaller file.';
+                  errEl.textContent = '?? File "' + file.name + '" (' + sizeMB.toFixed(1) + ' MB) exceeds the ' + maxMB + ' MB limit. Please select a smaller file.';
                   errEl.style.display = 'block';
                 }
               } else {
@@ -5353,7 +5355,7 @@ ${varCss}
           }
           if (fileValidationError) {
             if (statusEl) {
-              statusEl.textContent = '⚠️ ' + fileValidationError;
+              statusEl.textContent = '?? ' + fileValidationError;
               statusEl.className = 'wb-reg-status is-error';
               statusEl.style.display = 'block';
             }
@@ -5419,7 +5421,7 @@ ${varCss}
           // Wait for all file uploads to finish
           if (fileUploadPromises.length > 0) {
             if (statusEl) {
-              statusEl.textContent = '⏳ Uploading files & submitting...';
+              statusEl.textContent = '? Uploading files & submitting...';
               statusEl.className = 'wb-reg-status';
               statusEl.style.display = 'block';
             }
@@ -5438,7 +5440,7 @@ ${varCss}
             if (!localData.success) throw new Error(localData.message || 'Local save failed');
           } catch(err) {
             if (statusEl) {
-              statusEl.textContent = '⚠️ Submission failed. Please try again. (' + err.message + ')';
+              statusEl.textContent = '?? Submission failed. Please try again. (' + err.message + ')';
               statusEl.className = 'wb-reg-status is-error';
               statusEl.style.display = 'block';
             }
@@ -5539,7 +5541,7 @@ ${varCss}
     initPublicChatbot(${JSON.stringify(siteSettings.chatbot)});
   </script>` : ''}
   ${addonManager.getAllActiveJs() ? `<script id="wb-addons-js">
-/* ══ AetherBuilder • Custom Add-On JavaScript ══ */
+/* -- AetherBuilder � Custom Add-On JavaScript -- */
 (function() {
   function runAddonMounts() {
 ${addonManager.getAllActiveJs()}
@@ -5589,9 +5591,9 @@ ${addonManager.getAllActiveJs()}
       <div class="modal-box animate-scale-in" style="max-width: 440px;">
         <div class="modal-header">
           <div class="modal-title">
-            <span>🔒</span> Admin Password Settings
+            <span>??</span> Admin Password Settings
           </div>
-          <button class="tool-icon-btn" id="close-sec-modal">✕</button>
+          <button class="tool-icon-btn" id="close-sec-modal">?</button>
         </div>
         <div class="modal-body">
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
@@ -5650,7 +5652,7 @@ ${addonManager.getAllActiveJs()}
       try {
         const res = await auth.updatePassword(curPass, newPass);
         if (res.success) {
-          msg.textContent = '✓ Password successfully updated!';
+          msg.textContent = '? Password successfully updated!';
           msg.style.color = 'var(--success)';
           setTimeout(() => modal.remove(), 1400);
         } else {
@@ -5691,7 +5693,7 @@ ${addonManager.getAllActiveJs()}
           badge.style.display = 'block';
           if (unread > this.unreadNotifsCount && this.unreadNotifsCount !== 0) {
             this.playNotificationChime();
-            this.canvas?.showToast(`🔔 New lead received! (${unread} unread)`, 'info');
+            this.canvas?.showToast(`?? New lead received! (${unread} unread)`, 'info');
           }
         } else {
           badge.style.display = 'none';
@@ -5728,7 +5730,7 @@ ${addonManager.getAllActiveJs()}
       <div class="media-modal-panel" style="max-width: 820px; height: 600px; display: flex; flex-direction: column;">
         <div class="media-modal-header" style="padding: 14px 18px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">📬</span>
+            <span style="font-size: 1.5rem;">??</span>
             <div>
               <div style="font-weight: 700; font-size: 1.05rem; color: #f8fafc;">Leads &amp; Notifications Hub</div>
               <div style="font-size: 0.74rem; color: var(--text-dim);" id="notif-modal-sub">Loading submissions...</div>
@@ -5736,12 +5738,12 @@ ${addonManager.getAllActiveJs()}
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
             <button id="notif-btn-export-csv" class="topbar-btn topbar-btn-sm" style="background: rgba(16,185,129,0.18); border-color: #10b981; color: #6ee7b7;" title="Export all submissions as CSV spreadsheet">
-              📥 Export CSV
+              ?? Export CSV
             </button>
             <button id="notif-btn-mark-all" class="topbar-btn topbar-btn-sm" title="Mark all submissions as read">
-              ✓ Mark All Read
+              ? Mark All Read
             </button>
-            <button class="media-modal-close" id="close-notif-modal">✕</button>
+            <button class="media-modal-close" id="close-notif-modal">?</button>
           </div>
         </div>
 
@@ -5749,11 +5751,11 @@ ${addonManager.getAllActiveJs()}
         <div style="padding: 10px 18px; background: rgba(15,23,42,0.6); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
           <div style="display: flex; gap: 6px;" id="notif-filter-group">
             <button class="btn btn-sm active-filter" data-filter="all" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(99,102,241,0.4); background: rgba(99,102,241,0.25); color: #fff; cursor: pointer;">All</button>
-            <button class="btn btn-sm" data-filter="chatbot" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">🤖 Chatbot</button>
-            <button class="btn btn-sm" data-filter="contact" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">📝 Contact</button>
-            <button class="btn btn-sm" data-filter="registration" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">🎫 Registrations</button>
+            <button class="btn btn-sm" data-filter="chatbot" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">?? Chatbot</button>
+            <button class="btn btn-sm" data-filter="contact" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">?? Contact</button>
+            <button class="btn btn-sm" data-filter="registration" style="font-size:0.75rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">?? Registrations</button>
           </div>
-          <input type="text" id="notif-search-input" placeholder="🔍 Search name, email, phone..." style="width: 220px; font-size: 0.76rem; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: var(--text-main);" />
+          <input type="text" id="notif-search-input" placeholder="?? Search name, email, phone..." style="width: 220px; font-size: 0.76rem; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: var(--text-main);" />
         </div>
 
         <!-- Submissions Stream Container -->
@@ -5764,7 +5766,7 @@ ${addonManager.getAllActiveJs()}
         <!-- Footer -->
         <div class="media-modal-footer" style="padding: 10px 18px; justify-content: space-between;">
           <button id="notif-btn-clear-all" class="topbar-btn topbar-btn-sm" style="color: var(--danger); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">
-            🗑️ Clear All History
+            ??? Clear All History
           </button>
           <button class="topbar-btn topbar-btn-publish" id="notif-btn-done">Done</button>
         </div>
@@ -5781,7 +5783,7 @@ ${addonManager.getAllActiveJs()}
     // Export CSV
     modal.querySelector('#notif-btn-export-csv').addEventListener('click', () => {
       window.open('api.php?action=export_submissions_csv', '_blank');
-      this.canvas?.showToast('📥 Downloading submissions CSV...', 'info');
+      this.canvas?.showToast('?? Downloading submissions CSV...', 'info');
     });
 
     let allSubs = [];
@@ -5803,7 +5805,7 @@ ${addonManager.getAllActiveJs()}
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="text-align: center; color: var(--text-dim); padding: 50px 20px;">
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">📭</div>
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">??</div>
             <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-muted);">No submissions found</div>
             <div style="font-size: 0.78rem; margin-top: 4px;">Leads from the chatbot and contact forms will appear here in real time.</div>
           </div>
@@ -5814,7 +5816,7 @@ ${addonManager.getAllActiveJs()}
       container.innerHTML = filtered.map(s => {
         const isUnread = !s.is_read;
         const dateStr = s.submitted_at ? new Date(s.submitted_at).toLocaleString() : 'Recent';
-        const typeBadge = s.type === 'chatbot' ? '🤖 Chatbot Lead' : s.type === 'registration' ? '🎫 Registration' : '📝 Contact Form';
+        const typeBadge = s.type === 'chatbot' ? '?? Chatbot Lead' : s.type === 'registration' ? '?? Registration' : '?? Contact Form';
         const typeBg = s.type === 'chatbot' ? 'rgba(99,102,241,0.2)' : s.type === 'registration' ? 'rgba(16,185,129,0.2)' : 'rgba(56,189,248,0.2)';
         const typeColor = s.type === 'chatbot' ? '#a5b4fc' : s.type === 'registration' ? '#6ee7b7' : '#7dd3fc';
 
@@ -5830,9 +5832,9 @@ ${addonManager.getAllActiveJs()}
             </div>
 
             <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted);">
-              ${s.email ? `<span>✉️ <a href="mailto:${s.email}" style="color:#38bdf8;text-decoration:none;">${s.email}</a></span>` : ''}
-              ${s.phone ? `<span>📞 <a href="tel:${s.phone}" style="color:#38bdf8;text-decoration:none;">${s.phone}</a></span>` : ''}
-              ${s.page ? `<span>📄 Page: <code style="color:#a5b4fc;background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px;">${s.page}</code></span>` : ''}
+              ${s.email ? `<span>?? <a href="mailto:${s.email}" style="color:#38bdf8;text-decoration:none;">${s.email}</a></span>` : ''}
+              ${s.phone ? `<span>?? <a href="tel:${s.phone}" style="color:#38bdf8;text-decoration:none;">${s.phone}</a></span>` : ''}
+              ${s.page ? `<span>?? Page: <code style="color:#a5b4fc;background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px;">${s.page}</code></span>` : ''}
             </div>
 
             ${s.message ? `<div style="font-size: 0.78rem; color: #cbd5e1; background: rgba(15,23,42,0.6); padding: 8px 10px; border-radius: 6px; line-height: 1.5; border-left: 3px solid #6366f1; white-space: pre-wrap; word-break: break-word;">${s.message}</div>` : ''}
@@ -5845,7 +5847,7 @@ ${addonManager.getAllActiveJs()}
                   if (seen.has(v)) continue;
                   seen.add(v);
                   const label = k.replace(/_url$/, '').replace(/^field_\d+_?/, '').replace(/_/g, ' ');
-                  fileLinks.push(`<a href="${v}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;padding:4px 10px;border-radius:6px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);color:#38bdf8;text-decoration:none;font-weight:600;">📎 ${label || 'Uploaded Attachment'} ↗</a>`);
+                  fileLinks.push(`<a href="${v}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;padding:4px 10px;border-radius:6px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);color:#38bdf8;text-decoration:none;font-weight:600;">?? ${label || 'Uploaded Attachment'} ?</a>`);
                 }
               }
               return fileLinks.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;">${fileLinks.join('')}</div>` : '';
@@ -5918,7 +5920,7 @@ ${addonManager.getAllActiveJs()}
 
         const subEl = modal.querySelector('#notif-modal-sub');
         if (subEl) {
-          subEl.textContent = `${allSubs.length} total submission${allSubs.length !== 1 ? 's' : ''} • ${unreadCount} unread`;
+          subEl.textContent = `${allSubs.length} total submission${allSubs.length !== 1 ? 's' : ''} � ${unreadCount} unread`;
         }
         renderList();
       } catch (err) {
@@ -5990,13 +5992,13 @@ ${addonManager.getAllActiveJs()}
       <div class="media-modal-panel" style="max-width: 860px; height: 640px; display: flex; flex-direction: column;">
         <div class="media-modal-header" style="padding: 14px 18px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">🌳</span>
+            <span style="font-size: 1.5rem;">??</span>
             <div>
               <div style="font-weight: 700; font-size: 1.05rem; color: #f8fafc;">Chatbot Decision-Tree Flowchart</div>
               <div style="font-size: 0.74rem; color: var(--text-dim);">Customize bot questions, quick-reply choice buttons, and lead capture steps</div>
             </div>
           </div>
-          <button class="media-modal-close" id="close-cb-flow-modal">✕</button>
+          <button class="media-modal-close" id="close-cb-flow-modal">?</button>
         </div>
 
         <div style="flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px;" id="cb-nodes-container">
@@ -6009,12 +6011,12 @@ ${addonManager.getAllActiveJs()}
               + Add Question / Step
             </button>
             <button type="button" id="btn-restore-cb-default" class="topbar-btn topbar-btn-sm" style="color: var(--text-dim);">
-              🔄 Restore Default MCLE Flow
+              ?? Restore Default MCLE Flow
             </button>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="topbar-btn" id="btn-cancel-cb-flow">Cancel</button>
-            <button class="topbar-btn topbar-btn-publish" id="btn-save-cb-flow">Save Flowchart ✓</button>
+            <button class="topbar-btn topbar-btn-publish" id="btn-save-cb-flow">Save Flowchart ?</button>
           </div>
         </div>
       </div>
@@ -6045,7 +6047,7 @@ ${addonManager.getAllActiveJs()}
               <input type="text" class="node-id-input" value="${node.id}" style="font-family: monospace; font-size: 0.78rem; font-weight: 700; background: var(--bg-deep); border: 1px solid var(--border-subtle); color: #38bdf8; border-radius: 4px; padding: 3px 6px; width: 140px;" ${node.id === 'start' ? 'disabled title="start is the initial entry node"' : ''} />
               ${node.id === 'start' ? '<span style="font-size:0.68rem;color:#10b981;font-weight:700;">(Entry Node)</span>' : ''}
             </div>
-            ${node.id !== 'start' ? `<button class="btn-del-node" style="font-size:0.75rem;color:var(--danger);background:transparent;border:none;cursor:pointer;" title="Delete this step">🗑️ Delete Step</button>` : ''}
+            ${node.id !== 'start' ? `<button class="btn-del-node" style="font-size:0.75rem;color:var(--danger);background:transparent;border:none;cursor:pointer;" title="Delete this step">??? Delete Step</button>` : ''}
           </div>
 
           <div>
@@ -6055,7 +6057,7 @@ ${addonManager.getAllActiveJs()}
 
           <label style="font-size: 0.78rem; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <input type="checkbox" class="node-lead-capture-cb" ${node.isLeadCapture ? 'checked' : ''} style="cursor: pointer;" />
-            <span>✍️ Include Lead Capture Form at this step (Name &amp; Phone/Email inputs)</span>
+            <span>?? Include Lead Capture Form at this step (Name &amp; Phone/Email inputs)</span>
           </label>
 
           <!-- Choices List -->
@@ -6067,12 +6069,12 @@ ${addonManager.getAllActiveJs()}
             <div class="choices-container" style="display:flex;flex-direction:column;gap:6px;">
               ${(node.options || []).map((opt, optIdx) => `
                 <div class="choice-row" style="display:flex;gap:6px;align-items:center;">
-                  <input type="text" class="choice-label-input" value="${opt.label || ''}" placeholder="Button Text (e.g. 📅 Seminar Schedules)" style="flex:1;font-size:0.76rem;padding:4px 8px;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:var(--text-main);" />
-                  <span style="font-size:0.72rem;color:var(--text-dim);">➜</span>
+                  <input type="text" class="choice-label-input" value="${opt.label || ''}" placeholder="Button Text (e.g. ?? Seminar Schedules)" style="flex:1;font-size:0.76rem;padding:4px 8px;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:var(--text-main);" />
+                  <span style="font-size:0.72rem;color:var(--text-dim);">?</span>
                   <select class="choice-next-select" style="font-size:0.74rem;padding:4px 6px;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:#38bdf8;width:150px;">
                     ${allNodeIds.map(nid => `<option value="${nid}" ${nid === opt.next ? 'selected' : ''}>${nid}</option>`).join('')}
                   </select>
-                  <button class="btn-del-choice" data-opt-idx="${optIdx}" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem;" title="Remove choice">✕</button>
+                  <button class="btn-del-choice" data-opt-idx="${optIdx}" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem;" title="Remove choice">?</button>
                 </div>
               `).join('')}
             </div>
@@ -6131,7 +6133,7 @@ ${addonManager.getAllActiveJs()}
         id: newId,
         message: 'New information message...',
         options: [
-          { label: '↩️ Return to Menu', next: 'start' }
+          { label: '?? Return to Menu', next: 'start' }
         ]
       });
       renderNodes();
@@ -6150,7 +6152,7 @@ ${addonManager.getAllActiveJs()}
     modal.querySelector('#btn-save-cb-flow').addEventListener('click', () => {
       const curCb = state.siteSettings?.chatbot || DEFAULT_CHATBOT_CONFIG;
       state.setSiteSetting('chatbot', { ...curCb, nodes });
-      this.canvas?.showToast('🌳 Chatbot flowchart saved successfully!', 'success');
+      this.canvas?.showToast('?? Chatbot flowchart saved successfully!', 'success');
       closeModal();
     });
   }
@@ -6169,16 +6171,16 @@ ${addonManager.getAllActiveJs()}
       <div class="modal-box modal-wide animate-scale-in" style="max-width: 780px;">
         <div class="modal-header">
           <div class="modal-title">
-            <span>🕒</span> Publish Version History &amp; 1-Click Rollback
+            <span>??</span> Publish Version History &amp; 1-Click Rollback
           </div>
-          <button class="tool-icon-btn" id="close-revisions-modal">✕</button>
+          <button class="tool-icon-btn" id="close-revisions-modal">?</button>
         </div>
         <div class="modal-body" style="padding: 20px 24px;">
           <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5;">
             Every time you publish to live, an immutable snapshot of your entire multi-page site and settings is archived. You can inspect revisions and restore any version with 1-click.
           </div>
           <div id="revisions-loading" style="text-align: center; padding: 40px; color: var(--text-dim);">
-            <span>⏳ Fetching version history...</span>
+            <span>? Fetching version history...</span>
           </div>
           <div id="revisions-list" class="revisions-timeline" style="display: none;"></div>
         </div>
@@ -6220,11 +6222,11 @@ ${addonManager.getAllActiveJs()}
       if (revs.length === 0) {
         list.innerHTML = `
           <div style="text-align: center; padding: 48px 20px; color: var(--text-dim);">
-            <div style="font-size: 2.2rem; margin-bottom: 10px;">🕒</div>
+            <div style="font-size: 2.2rem; margin-bottom: 10px;">??</div>
             <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 4px;">No Published Revisions Yet</div>
             <div style="font-size: 0.82rem; margin-bottom: 16px;">Publish your site for the first time to create an automatic recovery point.</div>
             <button class="topbar-btn topbar-btn-publish" id="btn-rev-publish-now" style="display: inline-flex;">
-              <span>🚀</span> Publish Now
+              <span>??</span> Publish Now
             </button>
           </div>
         `;
@@ -6251,15 +6253,15 @@ ${addonManager.getAllActiveJs()}
                 ${i === 0 ? `<span style="font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 700;">Active Live Version</span>` : ''}
               </div>
               <div class="revision-meta-sub">
-                <span>📅 ${displayDate}</span>
-                <span>📄 ${pCount} Page${pCount !== 1 ? 's' : ''}</span>
-                <span>🧩 ${secCount} Section${secCount !== 1 ? 's' : ''}</span>
-                <span>💾 ${sizeKb} KB</span>
+                <span>?? ${displayDate}</span>
+                <span>?? ${pCount} Page${pCount !== 1 ? 's' : ''}</span>
+                <span>?? ${secCount} Section${secCount !== 1 ? 's' : ''}</span>
+                <span>?? ${sizeKb} KB</span>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <button class="topbar-btn btn-rollback" data-id="${r.id}" data-date="${displayDate}" style="padding: 6px 14px; font-size: 0.8rem; background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #c7d2fe;">
-                <span>🔄</span> Rollback
+                <span>??</span> Rollback
               </button>
             </div>
           </div>
@@ -6273,7 +6275,7 @@ ${addonManager.getAllActiveJs()}
           if (!confirm(`Are you sure you want to rollback to revision from ${revDate}?\n\nYour current canvas state will be restored to this snapshot.`)) return;
 
           btn.disabled = true;
-          btn.innerHTML = '<span>⏳</span> Restoring...';
+          btn.innerHTML = '<span>?</span> Restoring...';
           try {
             const rbRes = await fetch('api.php?action=rollback_revision', {
               method: 'POST',
@@ -6286,23 +6288,23 @@ ${addonManager.getAllActiveJs()}
               await state.syncFromServer(true);
               this.canvas.render();
               modal.remove();
-              this.canvas.showToast(`✅ Successfully rolled back to revision ${revId}!`, 'success');
+              this.canvas.showToast(`? Successfully rolled back to revision ${revId}!`, 'success');
             } else {
               alert(rbData.error || 'Failed to rollback revision.');
               btn.disabled = false;
-              btn.innerHTML = '<span>🔄</span> Rollback';
+              btn.innerHTML = '<span>??</span> Rollback';
             }
           } catch (err) {
             alert('Network error while rolling back revision.');
             btn.disabled = false;
-            btn.innerHTML = '<span>🔄</span> Rollback';
+            btn.innerHTML = '<span>??</span> Rollback';
           }
         });
       });
 
     } catch (err) {
       const loading = modal.querySelector('#revisions-loading');
-      if (loading) loading.innerHTML = `<span style="color: #f87171;">⚠️ Error loading revisions: ${err.message}</span>`;
+      if (loading) loading.innerHTML = `<span style="color: #f87171;">?? Error loading revisions: ${err.message}</span>`;
     }
   }
 
@@ -6363,67 +6365,67 @@ ${addonManager.getAllActiveJs()}
 
     // Check 1: Primary H1
     if (h1Count === 1) {
-      checks.push({ status: 'passed', icon: '✅', title: 'Single Primary <h1> Heading', desc: 'Optimal SEO hierarchy. Found exactly 1 primary H1 heading on this page.' });
+      checks.push({ status: 'passed', icon: '?', title: 'Single Primary <h1> Heading', desc: 'Optimal SEO hierarchy. Found exactly 1 primary H1 heading on this page.' });
     } else if (h1Count === 0) {
       score -= 15;
-      checks.push({ status: 'error', icon: '❌', title: 'Missing <h1> Heading', desc: 'No primary <h1> found. Add a Hero Banner or Heading element set to H1 for strong search engine indexing.' });
+      checks.push({ status: 'error', icon: '?', title: 'Missing <h1> Heading', desc: 'No primary <h1> found. Add a Hero Banner or Heading element set to H1 for strong search engine indexing.' });
     } else {
       score -= 8;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Multiple <h1> Headings Found (' + h1Count + ')', desc: 'Best SEO practice recommends having only one <h1> heading per page for clear topical hierarchy.' });
+      checks.push({ status: 'warning', icon: '??', title: 'Multiple <h1> Headings Found (' + h1Count + ')', desc: 'Best SEO practice recommends having only one <h1> heading per page for clear topical hierarchy.' });
     }
 
     // Check 2: Page Title
     const title = (ps.pageTitle || '').trim();
     if (title.length >= 30 && title.length <= 65) {
-      checks.push({ status: 'passed', icon: '✅', title: `Page Title Length (${title.length} chars)`, desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30–65 chars).` });
+      checks.push({ status: 'passed', icon: '?', title: `Page Title Length (${title.length} chars)`, desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30�65 chars).` });
     } else if (title.length > 0 && title.length < 30) {
       score -= 6;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Page Title is Short (${title.length} chars)`, desc: `Consider adding descriptive keywords or school name to expand: "${title}".` });
+      checks.push({ status: 'warning', icon: '??', title: `Page Title is Short (${title.length} chars)`, desc: `Consider adding descriptive keywords or school name to expand: "${title}".` });
     } else if (title.length > 65) {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Page Title Exceeds 65 Chars (${title.length} chars)`, desc: 'Long titles may get truncated with "..." on Google search results.' });
+      checks.push({ status: 'warning', icon: '??', title: `Page Title Exceeds 65 Chars (${title.length} chars)`, desc: 'Long titles may get truncated with "..." on Google search results.' });
     } else {
       score -= 20;
-      checks.push({ status: 'error', icon: '❌', title: 'Missing Page Title', desc: 'Page title is empty. Set a title under the Page settings tab.' });
+      checks.push({ status: 'error', icon: '?', title: 'Missing Page Title', desc: 'Page title is empty. Set a title under the Page settings tab.' });
     }
 
     // Check 3: Meta Description
     const metaDesc = (ps.metaDescription || '').trim();
     if (metaDesc.length >= 100 && metaDesc.length <= 165) {
-      checks.push({ status: 'passed', icon: '✅', title: `Meta Description (${metaDesc.length} chars)`, desc: 'Optimal length for search result snippet previews (100–165 chars).' });
+      checks.push({ status: 'passed', icon: '?', title: `Meta Description (${metaDesc.length} chars)`, desc: 'Optimal length for search result snippet previews (100�165 chars).' });
     } else if (metaDesc.length > 0) {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Meta Description Length (${metaDesc.length} chars)`, desc: 'Aim for 120–160 characters for best organic search click-through rate.' });
+      checks.push({ status: 'warning', icon: '??', title: `Meta Description Length (${metaDesc.length} chars)`, desc: 'Aim for 120�160 characters for best organic search click-through rate.' });
     } else {
       score -= 12;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Missing Meta Description', desc: 'No meta description found. Search engines will generate an automatic fallback snippet.' });
+      checks.push({ status: 'warning', icon: '??', title: 'Missing Meta Description', desc: 'No meta description found. Search engines will generate an automatic fallback snippet.' });
     }
 
     // Check 4: Social Share Image (OpenGraph)
     if (ps.ogImage) {
-      checks.push({ status: 'passed', icon: '✅', title: 'Social Share Image (og:image)', desc: 'Banner image configured for Facebook, LinkedIn, Twitter/X, and Viber previews.' });
+      checks.push({ status: 'passed', icon: '?', title: 'Social Share Image (og:image)', desc: 'Banner image configured for Facebook, LinkedIn, Twitter/X, and Viber previews.' });
     } else {
       score -= 8;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Missing Social Share Image', desc: 'Set an OpenGraph banner in Page Settings so link previews look rich and attractive on social media.' });
+      checks.push({ status: 'warning', icon: '??', title: 'Missing Social Share Image', desc: 'Set an OpenGraph banner in Page Settings so link previews look rich and attractive on social media.' });
     }
 
     // Check 5: Image Alt Tags
     if (missingAltCount === 0 && totalImages > 0) {
-      checks.push({ status: 'passed', icon: '✅', title: `Accessible Images (${totalImages} images)`, desc: 'All images contain descriptive alternative text for accessibility and image search.' });
+      checks.push({ status: 'passed', icon: '?', title: `Accessible Images (${totalImages} images)`, desc: 'All images contain descriptive alternative text for accessibility and image search.' });
     } else if (missingAltCount > 0) {
       score -= Math.min(15, missingAltCount * 4);
-      checks.push({ status: 'warning', icon: '⚠️', title: `${missingAltCount} Image(s) Missing Alt Text`, desc: 'Add descriptive alt text to images to improve accessibility and image ranking.' });
+      checks.push({ status: 'warning', icon: '??', title: `${missingAltCount} Image(s) Missing Alt Text`, desc: 'Add descriptive alt text to images to improve accessibility and image ranking.' });
     }
 
     // Check 6: Mobile Navigation & Viewport
-    checks.push({ status: 'passed', icon: '✅', title: 'Mobile Viewport & Drawer Health', desc: 'Responsive viewport meta tag and automated mobile slide-out drawer are active.' });
+    checks.push({ status: 'passed', icon: '?', title: 'Mobile Viewport & Drawer Health', desc: 'Responsive viewport meta tag and automated mobile slide-out drawer are active.' });
 
     // Check 7: Lead Collection & Inquiries
     if (ss.notificationEmail) {
-      checks.push({ status: 'passed', icon: '✅', title: `Admin Lead Alert (${ss.notificationEmail})`, desc: 'Registrations and chatbot inquiries are routed directly to admin inbox.' });
+      checks.push({ status: 'passed', icon: '?', title: `Admin Lead Alert (${ss.notificationEmail})`, desc: 'Registrations and chatbot inquiries are routed directly to admin inbox.' });
     } else {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'No Admin Notification Email Configured', desc: 'Set an email in Site Settings (⚙️) to receive immediate email notifications for new leads.' });
+      checks.push({ status: 'warning', icon: '??', title: 'No Admin Notification Email Configured', desc: 'Set an email in Site Settings (??) to receive immediate email notifications for new leads.' });
     }
 
     score = Math.max(10, Math.min(100, score));
@@ -6436,8 +6438,8 @@ ${addonManager.getAllActiveJs()}
     modal.innerHTML = `
       <div class="modal-box modal-wide animate-scale-in" style="max-width: 720px;">
         <div class="modal-header">
-          <div class="modal-title"><span>🛡️</span> Pre-Publish SEO &amp; Health Pre-Flight Audit</div>
-          <button class="tool-icon-btn" id="close-seo-modal">✕</button>
+          <div class="modal-title"><span>???</span> Pre-Publish SEO &amp; Health Pre-Flight Audit</div>
+          <button class="tool-icon-btn" id="close-seo-modal">?</button>
         </div>
         <div class="modal-body" style="padding: 22px;">
           <div class="seo-audit-container">
@@ -6452,7 +6454,7 @@ ${addonManager.getAllActiveJs()}
                 </div>
                 <div style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;">
                   ${score >= 90 
-                    ? '🎉 Outstanding! Your page adheres to high-performance SEO, semantic hierarchy, and mobile usability standards.' 
+                    ? '?? Outstanding! Your page adheres to high-performance SEO, semantic hierarchy, and mobile usability standards.' 
                     : 'Review the recommendations below to maximize your organic Google visibility and attendee engagement.'}
                 </div>
               </div>
@@ -6472,10 +6474,10 @@ ${addonManager.getAllActiveJs()}
 
             <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
               <button class="topbar-btn" id="btn-seo-fix-settings" style="font-size: 0.85rem;">
-                <span>⚙️</span> Open Page Settings
+                <span>??</span> Open Page Settings
               </button>
               <button class="topbar-btn topbar-btn-publish" id="btn-seo-publish-now" style="padding: 8px 20px;">
-                <span>🚀</span> Ready to Publish Live
+                <span>??</span> Ready to Publish Live
               </button>
             </div>
           </div>
@@ -6563,7 +6565,7 @@ ${addonManager.getAllActiveJs()}
       if (isNewer) {
         if (pill) {
           pill.style.display = 'inline-flex';
-          pill.innerHTML = `<span>⚡</span> <span>v${remoteVer} Ready!</span>`;
+          pill.innerHTML = `<span>?</span> <span>v${remoteVer} Ready!</span>`;
         }
         if (dot) dot.style.display = 'block';
         if (badge) {
@@ -6605,7 +6607,7 @@ ${addonManager.getAllActiveJs()}
             <img src="assets/logo.png" alt="AetherBuilder" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.08); padding: 2px;" />
             <span>AetherBuilder Update & System Hub</span>
           </div>
-          <button class="tool-icon-btn" id="close-update-modal">✕</button>
+          <button class="tool-icon-btn" id="close-update-modal">?</button>
         </div>
         <div class="modal-body" style="padding: 16px 22px; overflow-y: auto; flex: 1; max-height: calc(88vh - 130px); min-height: 0;">
           <!-- System Status Bar -->
@@ -6630,22 +6632,22 @@ ${addonManager.getAllActiveJs()}
 
           <!-- Tabs -->
           <div class="update-modal-tabs">
-            <button class="update-modal-tab active" data-tab="auto">⚡ 1-Click Update</button>
-            <button class="update-modal-tab" data-tab="manual">📦 Manual ZIP Drop</button>
-            <button class="update-modal-tab" data-tab="backups">🕒 Backups & Rollback</button>
+            <button class="update-modal-tab active" data-tab="auto">? 1-Click Update</button>
+            <button class="update-modal-tab" data-tab="manual">?? Manual ZIP Drop</button>
+            <button class="update-modal-tab" data-tab="backups">?? Backups & Rollback</button>
           </div>
 
           <!-- Tab 1: 1-Click Auto Update -->
           <div id="tab-auto-content" class="update-tab-content">
             <div class="update-changelog-card" style="max-height: 150px; overflow-y: auto;">
-              <h4>📋 What's in this Release</h4>
+              <h4>?? What's in this Release</h4>
               <ul class="update-changelog-list" id="update-changelog-list">
                 <li>Loading release notes...</li>
               </ul>
             </div>
 
             <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.82rem; color: #a7f3d0; display: flex; align-items: flex-start; gap: 8px;">
-              <span>🛡️</span>
+              <span>???</span>
               <div>
                 <strong>Zero-Risk Data Guarantee:</strong> Updating will overwrite system files only. Your published pages, layout drafts, uploaded media in <code>assets/uploads/</code>, and custom add-ons will <strong>NEVER</strong> be overwritten or deleted.
               </div>
@@ -6677,7 +6679,7 @@ ${addonManager.getAllActiveJs()}
             </div>
             
             <div class="update-dropzone" id="update-zip-dropzone">
-              <div style="font-size: 2.2rem; margin-bottom: 8px;">📦</div>
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">??</div>
               <div style="font-size: 0.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px;">Drag & Drop Update ZIP Here</div>
               <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 12px;">or click to browse your computer</div>
               <input type="file" id="update-zip-file-input" accept=".zip" style="display: none;">
@@ -6690,14 +6692,14 @@ ${addonManager.getAllActiveJs()}
                 <div style="font-size: 0.72rem; color: var(--text-dim);">Instant server-side unpack (no browser upload needed).</div>
               </div>
               <button type="button" class="topbar-btn topbar-btn-publish" id="btn-unpack-server-zip" style="padding: 6px 14px; font-size: 0.78rem; white-space: nowrap;">
-                <span>⚡</span> Unpack Server ZIP
+                <span>?</span> Unpack Server ZIP
               </button>
             </div>
 
             <div id="manual-file-selected-info" style="display:none; margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 0.82rem; justify-content: space-between; align-items: center;">
               <span id="selected-zip-name" style="color: #a5b4fc; font-weight: 600;">package.zip</span>
               <button class="topbar-btn topbar-btn-publish" id="btn-upload-manual-zip" style="padding: 6px 14px; font-size: 0.8rem;">
-                <span>🚀</span> Unpack & Install
+                <span>??</span> Unpack & Install
               </button>
             </div>
           </div>
@@ -6718,7 +6720,7 @@ ${addonManager.getAllActiveJs()}
         <div class="modal-footer" id="update-modal-footer" style="padding: 12px 22px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0; z-index: 10;">
           <button class="topbar-btn" id="btn-cancel-update" style="background: rgba(255,255,255,0.08); font-size: 0.84rem; padding: 8px 16px;">Close</button>
           <button class="topbar-btn topbar-btn-publish" id="btn-start-auto-update" style="padding: 9px 22px; font-size: 0.88rem; font-weight: 700; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
-            <span>⚡</span> Install Update Now
+            <span>?</span> Install Update Now
           </button>
         </div>
       </div>
@@ -6760,9 +6762,9 @@ ${addonManager.getAllActiveJs()}
         const zipEl = modal.querySelector('#stat-zip-status');
         if (zipEl) {
           if (sys.zip_supported) {
-            zipEl.innerHTML = '<span style="color:#10b981;">✓ Enabled</span>';
+            zipEl.innerHTML = '<span style="color:#10b981;">? Enabled</span>';
           } else {
-            zipEl.innerHTML = '<span style="color:#ef4444;">✗ Disabled</span>';
+            zipEl.innerHTML = '<span style="color:#ef4444;">? Disabled</span>';
           }
         }
       }
@@ -6803,7 +6805,7 @@ ${addonManager.getAllActiveJs()}
               const badge = document.createElement('div');
               badge.id = 'staged-update-banner';
               badge.style.cssText = 'background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:8px 12px;font-size:0.78rem;color:#c7d2fe;margin-bottom:12px;display:flex;align-items:center;gap:8px;';
-              badge.innerHTML = `<span>💾</span> <div><strong>Pre-staged on server:</strong> <code>${stageData.filename}</code> (${stageData.size_kb} KB) is cached on your hosting. Ready for 1-click install without external downloads!</div>`;
+              badge.innerHTML = `<span>??</span> <div><strong>Pre-staged on server:</strong> <code>${stageData.filename}</code> (${stageData.size_kb} KB) is cached on your hosting. Ready for 1-click install without external downloads!</div>`;
               chkCard.parentNode.insertBefore(badge, chkCard);
             }
           }
@@ -6812,9 +6814,9 @@ ${addonManager.getAllActiveJs()}
 
       if (updateBtn) {
         if (!isNewer) {
-          updateBtn.innerHTML = '<span>🔄</span> Reinstall / Repair Core';
+          updateBtn.innerHTML = '<span>??</span> Reinstall / Repair Core';
         } else {
-          updateBtn.innerHTML = `<span>⚡</span> Install Update (v${remoteVer})`;
+          updateBtn.innerHTML = `<span>?</span> Install Update (v${remoteVer})`;
         }
 
         updateBtn.onclick = () => this.executeAutoUpdate(modal, manifest);
@@ -6891,7 +6893,7 @@ ${addonManager.getAllActiveJs()}
 
       if (data && data.success) {
         setProgress(100, 'Update complete! Refreshing AetherBuilder in 2 seconds...');
-        this.canvas?.showToast('🎉 Core successfully updated! Reloading...', 'success');
+        this.canvas?.showToast('?? Core successfully updated! Reloading...', 'success');
         setTimeout(() => {
           window.location.reload(true);
         }, 1800);
@@ -6900,7 +6902,7 @@ ${addonManager.getAllActiveJs()}
         if (fill) fill.style.background = '#ef4444';
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<span>⚠️</span> Try Again or Use Manual ZIP';
+          btn.innerHTML = '<span>??</span> Try Again or Use Manual ZIP';
         }
       }
     } catch (err) {
@@ -6909,7 +6911,7 @@ ${addonManager.getAllActiveJs()}
       if (fill) fill.style.background = '#ef4444';
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<span>⚠️</span> Retry';
+        btn.innerHTML = '<span>??</span> Retry';
       }
     }
   }
@@ -6971,9 +6973,9 @@ ${addonManager.getAllActiveJs()}
     const btnServerUnpack = modal.querySelector('#btn-unpack-server-zip');
     btnServerUnpack?.addEventListener('click', async () => {
       btnServerUnpack.disabled = true;
-      btnServerUnpack.innerHTML = '<span>⏳</span> Unpacking on server...';
+      btnServerUnpack.innerHTML = '<span>?</span> Unpacking on server...';
       try {
-        // No X-Admin-Token header — InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
+        // No X-Admin-Token header � InfinityFree intercepts OPTIONS preflight. Token goes in JSON body.
         const res = await fetch('api.php?action=apply_update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -6993,26 +6995,26 @@ ${addonManager.getAllActiveJs()}
         }
 
         if (data && data.success) {
-          btnServerUnpack.innerHTML = '<span>✅</span> Installed!';
-          alert('🎉 Update successfully unpacked and applied! AetherBuilder will now reload.');
+          btnServerUnpack.innerHTML = '<span>?</span> Installed!';
+          alert('?? Update successfully unpacked and applied! AetherBuilder will now reload.');
           window.location.reload(true);
         } else {
           alert('Server unpack error: ' + (data.error || 'Failed to unpack server zip'));
           btnServerUnpack.disabled = false;
-          btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
+          btnServerUnpack.innerHTML = '<span>?</span> Unpack Server ZIP';
         }
       } catch (err) {
         console.error('Server unpack error:', err);
-        alert('⚠️ Update Request Failed: ' + (err.message || 'Unknown network error') + '\n\nTip: Verify that aetherbuilder-update.zip (or aetherbuilder.zip) is uploaded directly into your site root folder (e.g. htdocs/).');
+        alert('?? Update Request Failed: ' + (err.message || 'Unknown network error') + '\n\nTip: Verify that aetherbuilder-update.zip (or aetherbuilder.zip) is uploaded directly into your site root folder (e.g. htdocs/).');
         btnServerUnpack.disabled = false;
-        btnServerUnpack.innerHTML = '<span>⚡</span> Unpack Server ZIP';
+        btnServerUnpack.innerHTML = '<span>?</span> Unpack Server ZIP';
       }
     });
 
     btnUpload?.addEventListener('click', async () => {
       if (!selectedFile) return;
       btnUpload.disabled = true;
-      btnUpload.innerHTML = '<span>⏳</span> Installing...';
+      btnUpload.innerHTML = '<span>?</span> Installing...';
 
       const formData = new FormData();
       formData.append('update_zip', selectedFile);
@@ -7026,19 +7028,19 @@ ${addonManager.getAllActiveJs()}
         });
         const data = await res.json();
         if (data.success) {
-          btnUpload.innerHTML = '<span>✅</span> Installed!';
+          btnUpload.innerHTML = '<span>?</span> Installed!';
           alert('Update successfully applied! AetherBuilder will now reload.');
           window.location.reload(true);
         } else {
           alert('Update error: ' + (data.error || 'Failed to install zip'));
           btnUpload.disabled = false;
-          btnUpload.innerHTML = '<span>🚀</span> Unpack & Install';
+          btnUpload.innerHTML = '<span>??</span> Unpack & Install';
         }
       } catch (err) {
         console.error('Manual ZIP upload error:', err);
-        alert('Hosting upload limit reached or connection reset by InfinityFree.\n\nTip: Upload "aetherbuilder-update.zip" to your site root using FTP, then click "⚡ Unpack Server ZIP" right above!');
+        alert('Hosting upload limit reached or connection reset by InfinityFree.\n\nTip: Upload "aetherbuilder-update.zip" to your site root using FTP, then click "? Unpack Server ZIP" right above!');
         btnUpload.disabled = false;
-        btnUpload.innerHTML = '<span>🚀</span> Unpack & Install';
+        btnUpload.innerHTML = '<span>??</span> Unpack & Install';
       }
     });
   }
@@ -7055,10 +7057,10 @@ ${addonManager.getAllActiveJs()}
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
             <div>
               <div style="font-weight:600; font-size:0.83rem; color:#e2e8f0;">${b.filename}</div>
-              <div style="font-size:0.72rem; color:var(--text-dim);">${b.date} • ${Math.round(b.size / 1024)} KB</div>
+              <div style="font-size:0.72rem; color:var(--text-dim);">${b.date} � ${Math.round(b.size / 1024)} KB</div>
             </div>
             <a href="data/backups/${b.filename}" download class="topbar-btn topbar-btn-sm" style="text-decoration:none; padding:4px 10px; font-size:0.75rem;">
-              <span>⬇️</span> Download
+              <span>??</span> Download
             </a>
           </div>
         `).join('');

@@ -1,7 +1,7 @@
 {
-    "version":  "2.9.24",
+    "version":  "2.9.25",
     "release_date":  "2026-11-11",
-    "changelog":  "v2.9.24: Added Mobile Test QR code modal with 1-click copy \u0026 page switcher, renamed Export to Export/Import with dual-arrow icon",
+    "changelog":  "v2.9.25: Harmonized sidebar publish button with topbar publish SVG icon, added spinning state, and unified visual identity",
     "download_url":  "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
     "min_php":  "7.4",
     "requires":  "2.9.20"
