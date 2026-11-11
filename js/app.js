@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.18';
+export const APP_VERSION = '2.9.19';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -12,6 +12,7 @@ import { BuilderCanvas } from './builder.js';
 import { InspectorPanel } from './inspector.js';
 import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
+import { commandPalette } from './command-palette.js?v=2.9.19';
 
 // ── Admin session token helper ──────────────────────────────────
 export function getAdminToken() {
@@ -666,6 +667,13 @@ class AetherApp {
                 <span>Mobile</span>
               </button>
             </div>
+
+            <!-- Command Palette Trigger Pill -->
+            <button class="topbar-search-trigger" id="btn-topbar-search" title="Universal Command Palette (Ctrl+K)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Search...</span>
+              <kbd style="font-size:0.62rem; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); color:#94a3b8; margin-left:6px;">Ctrl K</kbd>
+            </button>
           </div>
 
           <!-- History & Tools Center -->
@@ -1439,6 +1447,8 @@ class AetherApp {
 
     this.canvas = new BuilderCanvas(canvasContainer, false);
     this.inspector = new InspectorPanel(inspectorContainer);
+    window._aetherApp = this;
+    commandPalette.init(this);
 
     // Auto-switch to inspector tab when an element is clicked
     state.subscribe((_, action) => {
@@ -2064,12 +2074,15 @@ class AetherApp {
       layout: { title: 'Layout & Structure', items: [] },
       content: { title: 'Content & Messaging', items: [] },
       media: { title: 'Media & Interactive', items: [] },
+      components: { title: '📦 Reusable Components', items: [] },
       addons: { title: '🧩 Add-ons & Plugins', items: [] }
     };
 
     Object.entries(WIDGET_REGISTRY).forEach(([key, w]) => {
       let catKey = w.category;
-      if (w.isAddon || catKey === 'addons') {
+      if (catKey === 'components') {
+        catKey = 'components';
+      } else if (w.isAddon || catKey === 'addons') {
         catKey = 'addons';
       }
       const cat = categories[catKey] || categories.content;
@@ -2082,12 +2095,17 @@ class AetherApp {
       html += `<div class="widget-category-title">${cat.title}</div>`;
       html += `<div class="widget-grid" style="margin-bottom: 16px;">`;
       cat.items.forEach((item) => {
+        const isComp = item.category === 'components';
+        const badge = isComp
+          ? '<span style="font-size:0.62rem;background:rgba(16,185,129,0.25);color:#6ee7b7;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700;">Block</span>'
+          : (item.isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.25);color:#a5b4fc;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700;">Add-on</span>' : '');
+
         html += `
-          <div class="widget-card ${item.isAddon ? 'is-addon-widget' : ''}" data-widget-type="${item.key}" draggable="true" title="${item.description || ''}">
-            <div class="widget-card-icon">${item.icon || '🧩'}</div>
+          <div class="widget-card ${item.isAddon ? 'is-addon-widget' : ''} ${isComp ? 'is-comp-widget' : ''}" data-widget-type="${item.key}" draggable="true" title="${item.description || ''}">
+            <div class="widget-card-icon">${item.icon || (isComp ? '📦' : '🧩')}</div>
             <div class="widget-card-name">
               <span>${item.name}</span>
-              ${item.isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.25);color:#a5b4fc;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700;">Add-on</span>' : ''}
+              ${badge}
             </div>
           </div>
         `;
@@ -4537,6 +4555,8 @@ git push -u origin main</textarea>
     document.getElementById('btn-topbar-copy-link')?.addEventListener('click', copyPublicLiveUrl);
     document.getElementById('btn-sidebar-copy-link')?.addEventListener('click', copyPublicLiveUrl);
 
+    document.getElementById('btn-topbar-search')?.addEventListener('click', () => commandPalette.open());
+
     document.getElementById('btn-topbar-qr')?.addEventListener('click', () => this.showQrModal());
     document.getElementById('btn-sidebar-qr')?.addEventListener('click', () => this.showQrModal());
     
@@ -4631,6 +4651,9 @@ git push -u origin main</textarea>
         e.preventDefault();
         state.publishToLive();
         this.canvas.showToast('🚀 Published live via shortcut!', 'success');
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        commandPalette.toggle();
       } else if (e.key === 'Escape') {
         state.setActiveElement(null);
       }

@@ -4,6 +4,7 @@
  */
 
 import { state } from './state.js';
+import { addonManager } from './addons.js';
 
 // Admin token helper (server-side session)
 function _getAdminToken() { return sessionStorage.getItem('aether_admin_token') || ''; }
@@ -233,6 +234,7 @@ export class BuilderCanvas {
           <button class="section-handle-btn btn-up" title="Move Up">↑</button>
           <button class="section-handle-btn btn-down" title="Move Down">↓</button>
           <button class="section-handle-btn btn-add" title="Add Section Above">+</button>
+          <button class="section-handle-btn btn-save-comp" title="Save as Reusable Block">💾</button>
           <button class="section-handle-btn btn-dup" title="Duplicate">❐</button>
           <button class="section-handle-btn btn-del" title="Delete" style="color: #fca5a5;">✕</button>
         `;
@@ -273,6 +275,10 @@ export class BuilderCanvas {
           const insertIndex = rawIdx !== -1 ? rawIdx : 0;
           this.showAddSectionModal(insertIndex, sec.id);
         });
+        handleBar.querySelector('.btn-save-comp').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.saveSectionAsComponent(sec);
+        });
         handleBar.querySelector('.btn-dup').addEventListener('click', (e) => {
           e.stopPropagation();
           state.duplicateElement(sec.id);
@@ -285,6 +291,14 @@ export class BuilderCanvas {
         });
 
         secWrapper.appendChild(handleBar);
+
+        // Right-Click Context Menu for section actions
+        secWrapper.addEventListener('contextmenu', (e) => {
+          if (this.isPublicMode) return;
+          e.preventDefault();
+          e.stopPropagation();
+          this.showContextMenu(e, sec);
+        });
 
         // Dragover & Drop on this section (from sidebar or reorder)
         secWrapper.addEventListener('dragover', (e) => {
@@ -1457,27 +1471,33 @@ export class BuilderCanvas {
 
     const entries = Object.entries(WIDGET_REGISTRY);
     const totalCount = entries.length;
-    const addonCount = entries.filter(([_, w]) => w.isAddon).length;
-    const coreCount = totalCount - addonCount;
+    const compCount = entries.filter(([_, w]) => w.category === 'components').length;
+    const addonCount = entries.filter(([_, w]) => (w.isAddon || w.category === 'addons') && w.category !== 'components').length;
+    const coreCount = totalCount - compCount - addonCount;
 
     const widgetsHtml = entries
       .map(([type, w]) => {
-        const isAddon = !!w.isAddon;
+        const isComp = w.category === 'components';
+        const isAddon = !!w.isAddon && !isComp;
         const cat = w.category || (isAddon ? 'addons' : 'general');
         const desc = w.description || '';
         const name = w.name || type;
+        const badge = isComp 
+          ? '<span style="font-size:0.62rem;background:rgba(16,185,129,0.22);color:#6ee7b7;padding:1px 5px;border-radius:4px;font-weight:700;">Block</span>'
+          : (isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.22);color:#a5b4fc;padding:1px 5px;border-radius:4px;font-weight:700;">Add-on</span>' : '');
         return `
-          <div class="widget-card add-widget-card ${isAddon ? 'is-addon-widget' : ''}" 
+          <div class="widget-card add-widget-card ${isAddon ? 'is-addon-widget' : ''} ${isComp ? 'is-comp-widget' : ''}" 
                data-widget="${type}"
                data-name="${name.toLowerCase()}"
                data-category="${cat.toLowerCase()}"
                data-desc="${desc.toLowerCase()}"
                data-is-addon="${isAddon ? '1' : '0'}"
+               data-is-comp="${isComp ? '1' : '0'}"
                title="${name}: ${desc}">
-            <div class="widget-card-icon">${w.icon || '🧩'}</div>
+            <div class="widget-card-icon">${w.icon || (isComp ? '📦' : '🧩')}</div>
             <div class="widget-card-name" style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">
               <span>${name}</span>
-              ${isAddon ? '<span style="font-size:0.62rem;background:rgba(99,102,241,0.22);color:#a5b4fc;padding:1px 5px;border-radius:4px;font-weight:700;">Add-on</span>' : ''}
+              ${badge}
             </div>
             <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; line-height: 1.35;">${desc}</div>
           </div>
@@ -1514,6 +1534,7 @@ export class BuilderCanvas {
             </div>
             <div class="add-section-filter-pills" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <button type="button" class="add-section-pill active" data-filter="all" style="border:1px solid rgba(99,102,241,1);background:rgba(99,102,241,1);color:#fff;font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">All (${totalCount})</button>
+              ${compCount > 0 ? `<button type="button" class="add-section-pill" data-filter="components" style="border:1px solid rgba(16,185,129,0.7);background:rgba(16,185,129,0.2);color:#6ee7b7;font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">📦 Components (${compCount})</button>` : ''}
               <button type="button" class="add-section-pill" data-filter="addons" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">🧩 Add-ons (${addonCount})</button>
               <button type="button" class="add-section-pill" data-filter="core" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">⚡ Core Widgets (${coreCount})</button>
             </div>
@@ -1556,6 +1577,7 @@ export class BuilderCanvas {
 
       cards.forEach((card) => {
         const isAddon = card.getAttribute('data-is-addon') === '1';
+        const isComp = card.getAttribute('data-is-comp') === '1';
         const name = card.getAttribute('data-name') || '';
         const cat = card.getAttribute('data-category') || '';
         const desc = card.getAttribute('data-desc') || '';
@@ -1563,13 +1585,14 @@ export class BuilderCanvas {
 
         // Category/tab filter
         let matchesTab = true;
-        if (activeFilter === 'addons' && !isAddon) matchesTab = false;
-        if (activeFilter === 'core' && isAddon) matchesTab = false;
+        if (activeFilter === 'components' && !isComp) matchesTab = false;
+        if (activeFilter === 'addons' && (!isAddon || isComp)) matchesTab = false;
+        if (activeFilter === 'core' && (isAddon || isComp)) matchesTab = false;
 
         // Query search
         let matchesQuery = true;
         if (query) {
-          const haystack = `${name} ${cat} ${desc} ${widgetType} ${isAddon ? 'addon add-on plugin' : 'core widget'}`;
+          const haystack = `${name} ${cat} ${desc} ${widgetType} ${isComp ? 'component block' : (isAddon ? 'addon add-on plugin' : 'core widget')}`;
           matchesQuery = haystack.includes(query);
         }
 
@@ -2520,5 +2543,161 @@ export class BuilderCanvas {
       const activeEl = sidebarList.querySelector('.wb-lg-sidebar-item.is-active');
       if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
     }, 50);
+  }
+
+  // ── Context Menu on Canvas Sections ────────────────────────────────────────
+  showContextMenu(e, sec) {
+    const existing = document.getElementById('aether-context-menu');
+    if (existing) existing.remove();
+
+    state.setActiveElement(sec.id);
+
+    const menu = document.createElement('div');
+    menu.id = 'aether-context-menu';
+    menu.className = 'canvas-context-menu';
+
+    const widgetDef = WIDGET_REGISTRY[sec.widgetType] || { name: 'Section' };
+    const rawIdx = state.rawSections.findIndex(s => s.id === sec.id);
+
+    menu.innerHTML = `
+      <div style="padding: 6px 12px 8px 12px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+        <span>${widgetDef.name}</span>
+        <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">#${sec.id.slice(-5)}</span>
+      </div>
+      <div class="context-menu-item" data-action="duplicate">
+        <span style="width: 18px; text-align: center;">❐</span>
+        <span>Duplicate Section</span>
+      </div>
+      <div class="context-menu-item" data-action="save-component">
+        <span style="width: 18px; text-align: center;">💾</span>
+        <span>Save as Reusable Block</span>
+      </div>
+      <div class="context-menu-divider"></div>
+      <div class="context-menu-item" data-action="move-up">
+        <span style="width: 18px; text-align: center;">↑</span>
+        <span>Move Up</span>
+      </div>
+      <div class="context-menu-item" data-action="move-down">
+        <span style="width: 18px; text-align: center;">↓</span>
+        <span>Move Down</span>
+      </div>
+      <div class="context-menu-item" data-action="add-above">
+        <span style="width: 18px; text-align: center;">➕</span>
+        <span>Add Section Above</span>
+      </div>
+      <div class="context-menu-divider"></div>
+      <div class="context-menu-item" data-action="copy-json">
+        <span style="width: 18px; text-align: center;">📋</span>
+        <span>Copy Section JSON</span>
+      </div>
+      <div class="context-menu-item danger" data-action="delete">
+        <span style="width: 18px; text-align: center;">✕</span>
+        <span>Delete Section</span>
+      </div>
+    `;
+
+    // Viewport bound calculation
+    const menuWidth = 220;
+    const menuHeight = 280;
+    let x = e.clientX;
+    let y = e.clientY;
+    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 12;
+    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 12;
+    menu.style.left = `${Math.max(12, x)}px`;
+    menu.style.top = `${Math.max(12, y)}px`;
+
+    document.body.appendChild(menu);
+
+    const closeMenu = () => {
+      menu.remove();
+      document.removeEventListener('click', onDocClick);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', closeMenu);
+    };
+
+    const onDocClick = (evt) => {
+      if (!menu.contains(evt.target)) closeMenu();
+    };
+    const onKeyDown = (evt) => {
+      if (evt.key === 'Escape') closeMenu();
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', onDocClick);
+      document.addEventListener('keydown', onKeyDown);
+      window.addEventListener('resize', closeMenu);
+    }, 10);
+
+    menu.querySelectorAll('.context-menu-item').forEach(btn => {
+      btn.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        const action = btn.getAttribute('data-action');
+        closeMenu();
+
+        if (action === 'duplicate') {
+          state.duplicateElement(sec.id);
+          this.showToast(`Duplicated ${widgetDef.name}`, 'success');
+        } else if (action === 'save-component') {
+          this.saveSectionAsComponent(sec);
+        } else if (action === 'move-up') {
+          state.moveElement(sec.id, 'up');
+        } else if (action === 'move-down') {
+          state.moveElement(sec.id, 'down');
+        } else if (action === 'add-above') {
+          const insertIdx = rawIdx !== -1 ? rawIdx : 0;
+          this.showAddSectionModal(insertIdx, sec.id);
+        } else if (action === 'copy-json') {
+          try {
+            navigator.clipboard.writeText(JSON.stringify(sec, null, 2));
+            this.showToast('📋 Section JSON copied to clipboard!', 'success');
+          } catch {
+            this.showToast('Failed to copy to clipboard', 'error');
+          }
+        } else if (action === 'delete') {
+          if (confirm(`Delete section "${widgetDef.name}"?`)) {
+            state.deleteElement(sec.id);
+            this.showToast(`Deleted ${widgetDef.name}`, 'info');
+          }
+        }
+      });
+    });
+  }
+
+  // ── Save Section as Reusable Block / Component ─────────────────────────────
+  saveSectionAsComponent(sec) {
+    if (!sec) return;
+    const widgetDef = WIDGET_REGISTRY[sec.widgetType] || {};
+    const defaultName = `${widgetDef.name || 'Custom Section'} Block`;
+    const name = prompt('Save Section as Reusable Component Block:\nEnter block name:', defaultName);
+    if (!name || !name.trim()) return;
+
+    try {
+      const compId = 'block_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+      const isBaseAddon = !!widgetDef.isAddon;
+
+      const componentPackage = {
+        id: compId,
+        name: name.trim(),
+        category: 'components',
+        icon: widgetDef.icon || '📦',
+        version: '1.0.0',
+        author: 'User',
+        description: `Custom reusable block created from ${widgetDef.name || sec.widgetType}`,
+        baseWidgetType: isBaseAddon ? (widgetDef.baseWidgetType || sec.widgetType) : sec.widgetType,
+        template: widgetDef.template || (isBaseAddon ? (addonManager.addons.find(a => a.id === sec.widgetType)?.template || '') : '<div class="custom-block"></div>'),
+        customJs: widgetDef.customJs || (isBaseAddon ? (addonManager.addons.find(a => a.id === sec.widgetType)?.customJs || '') : ''),
+        defaultProps: JSON.parse(JSON.stringify(sec.props || {})),
+        schema: widgetDef.schema ? JSON.parse(JSON.stringify(widgetDef.schema)) : { content: [], style: [] },
+        enabled: true,
+        installedAt: new Date().toISOString()
+      };
+
+      addonManager.installAddon(componentPackage);
+      window._aetherApp?.renderWidgetTray?.();
+      this.showToast(`✨ Saved "${name.trim()}" as Reusable Component! Added to Left Sidebar.`, 'success');
+    } catch (err) {
+      console.error('Failed to save section as component:', err);
+      this.showToast(`Error saving component: ${err.message}`, 'error');
+    }
   }
 }

@@ -883,23 +883,35 @@ class AddonManager {
   registerWidget(addon) {
     if (!addon || !addon.id) return;
 
+    const baseDef = addon.baseWidgetType ? WIDGET_REGISTRY[addon.baseWidgetType] : null;
+    const baseSchema = (addon.schema && (addon.schema.content?.length || addon.schema.style?.length))
+      ? addon.schema
+      : (baseDef?.schema || { content: [], style: [] });
+
     const widgetDef = {
       name: addon.name || 'Custom Add-On',
-      category: addon.category || 'addons',
-      icon: addon.icon || '🧩',
-      description: addon.description || 'Custom installed add-on widget',
+      category: addon.category || (addon.baseWidgetType ? 'components' : 'addons'),
+      icon: addon.icon || baseDef?.icon || '🧩',
+      description: addon.description || 'Custom installed widget',
       isAddon: true,
       addonId: addon.id,
+      baseWidgetType: addon.baseWidgetType || null,
       version: addon.version || '1.0.0',
       author: addon.author || 'Custom',
-      defaultProps: JSON.parse(JSON.stringify(addon.defaultProps || {})),
-      schema: JSON.parse(JSON.stringify(addon.schema || { content: [], style: [] })),
+      defaultProps: JSON.parse(JSON.stringify(addon.defaultProps || baseDef?.defaultProps || {})),
+      schema: JSON.parse(JSON.stringify(baseSchema)),
       customJs: addon.customJs || '',
       render: function(props, options = {}) {
+        if (addon.baseWidgetType && WIDGET_REGISTRY[addon.baseWidgetType] && typeof WIDGET_REGISTRY[addon.baseWidgetType].render === 'function') {
+          return WIDGET_REGISTRY[addon.baseWidgetType].render(props, options);
+        }
         return compileAddonTemplate(addon.template, props);
       },
       // Called by the canvas after the widget HTML is injected into the DOM
       mount: function(el, props) {
+        if (addon.baseWidgetType && WIDGET_REGISTRY[addon.baseWidgetType] && typeof WIDGET_REGISTRY[addon.baseWidgetType].mount === 'function') {
+          try { WIDGET_REGISTRY[addon.baseWidgetType].mount(el, props); } catch(e){}
+        }
         if (!addon.customJs || !addon.customJs.trim()) return;
         try {
           // Wrap user code in an IIFE so their local vars are scoped
@@ -986,8 +998,11 @@ class AddonManager {
     if (!addonData.name || !addonData.name.trim()) {
       throw new Error('Invalid add-on package: "name" is required.');
     }
-    if (!addonData.template || !addonData.template.trim()) {
+    if ((!addonData.template || !addonData.template.trim()) && !addonData.baseWidgetType) {
       throw new Error('Invalid add-on package: "template" HTML is required.');
+    }
+    if (!addonData.template) {
+      addonData.template = '<div class="custom-block"></div>';
     }
 
     let id = addonData.id;
@@ -995,7 +1010,7 @@ class AddonManager {
       id = 'addon_' + addonData.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
     }
     addonData.id = id;
-    addonData.category = addonData.category || 'addons';
+    addonData.category = addonData.category || (addonData.baseWidgetType ? 'components' : 'addons');
     addonData.enabled = true;
     addonData.installedAt = new Date().toISOString();
 
