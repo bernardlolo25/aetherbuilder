@@ -29,7 +29,16 @@ export class AIAssistant {
   loadConfig() {
     try {
       const raw = localStorage.getItem('aether_ai_config');
-      if (raw) return { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) };
+      if (raw) {
+        const saved = JSON.parse(raw);
+        // Auto-migrate deprecated model names
+        const deprecatedModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+        if (deprecatedModels.includes(saved.model)) {
+          saved.model = 'gemini-2.0-flash';
+          localStorage.setItem('aether_ai_config', JSON.stringify({ ...DEFAULT_AI_CONFIG, ...saved }));
+        }
+        return { ...DEFAULT_AI_CONFIG, ...saved };
+      }
     } catch {}
     return { ...DEFAULT_AI_CONFIG };
   }
