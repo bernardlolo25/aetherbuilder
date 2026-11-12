@@ -25,6 +25,7 @@ export class BuilderCanvas {
   init() {
     if (!this.isPublicMode) {
       this.initInlineRichTextToolbar();
+      this.initAdminLinkInterception();
       state.subscribe((_, action) => {
         // Render canvas on changes
         if (action !== 'viewport') {
@@ -755,6 +756,180 @@ export class BuilderCanvas {
     toolbar.querySelector('#btn-cancel-link')?.addEventListener('click', () => {
       toolbar.querySelector('#inline-link-popover').style.display = 'none';
     });
+  }
+
+  // Admin Link Interception — prevent navigation, switch pages for editing, block external
+  initAdminLinkInterception() {
+    this.viewport.addEventListener('click', (e) => {
+      // Ignore clicks inside admin controls (handlebar, add-section, toolbars, overflow portals)
+      if (e.target.closest('.section-handlebar, .add-section-zone, .canvas-tools, .inline-rich-toolbar, .wb-overflow-portal')) {
+        return;
+      }
+
+      // Find closest interactive link or element with URL/href
+      const link = e.target.closest('a, [data-href], [data-url], [data-link]');
+      if (!link) return;
+
+      // If currently editing text inline inside this link or element, don't hijack
+      if (link.isContentEditable || link.closest('[contenteditable="true"]')) {
+        e.preventDefault();
+        return;
+      }
+
+      // Extract href or target URL
+      const rawHref = link.getAttribute('href') || link.dataset.href || link.dataset.url || link.dataset.link || '';
+      const href = (rawHref || '').trim();
+
+      // Always prevent default browser navigation in admin builder mode
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Empty, pure hash (#), or script/protocol schemes
+      if (!href || href === '#' || href.startsWith('javascript:')) {
+        return;
+      }
+
+      if (href.startsWith('mailto:') || href.startsWith('tel:')) {
+        this.showToast('Contact link (' + href + ') disabled in editor mode', 'info');
+        return;
+      }
+
+      // Section anchor on current page (e.g. #about, #features, #pricing)
+      if (href.startsWith('#')) {
+        const targetId = href.slice(1);
+        const targetEl = this.viewport.querySelector('[id="' + targetId + '"], #' + targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      // Check if external link
+      let isExternal = false;
+      let parsedUrl = null;
+      try {
+        parsedUrl = new URL(href, window.location.href);
+        if (parsedUrl.origin !== window.location.origin) {
+          isExternal = true;
+        }
+      } catch (err) {
+        if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//') || href.startsWith('www.')) {
+          isExternal = true;
+        }
+      }
+
+      if (isExternal) {
+        const host = parsedUrl ? parsedUrl.hostname : href;
+        this.showToast('External link (' + host + ') — navigation disabled in editor mode', 'info');
+        return;
+      }
+
+      // Internal link — resolve matching page in state.pages
+      const targetPage = this.resolvePageFromHref(href, parsedUrl);
+
+      if (targetPage) {
+        if (targetPage.id === state.currentPageId) {
+          // If anchor exists in internal URL, scroll to it
+          if (parsedUrl && parsedUrl.hash && parsedUrl.hash.length > 1) {
+            const anchorId = parsedUrl.hash.slice(1);
+            const anchorEl = this.viewport.querySelector('[id="' + anchorId + '"], #' + anchorId);
+            if (anchorEl) {
+              anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+          this.showToast('Currently editing: ' + targetPage.title, 'info');
+        } else {
+          state.switchPage(targetPage.id);
+          if (this.viewport) this.viewport.scrollTop = 0;
+          window.scrollTo(0, 0);
+          this.showToast('Switched to page: ' + targetPage.title + ' (Editing)', 'info');
+        }
+      } else {
+        this.showToast('Link "' + href + '" has no matching page in project', 'info');
+      }
+    }, true); // capture = true to intercept before any default browser navigation or widget handlers
+  }
+
+  // Resolve matching page object from href or parsed URL
+  resolvePageFromHref(href, parsedUrl) {
+    if (!state.pages || state.pages.length === 0) return null;
+
+    let searchParams = null;
+    let pathname = '';
+    if (parsedUrl) {
+      searchParams = parsedUrl.searchParams;
+      pathname = parsedUrl.pathname || '';
+    } else {
+      try {
+        const temp = new URL(href, window.location.href);
+        searchParams = temp.searchParams;
+        pathname = temp.pathname || '';
+      } catch (e) {}
+    }
+
+    // 1. Check ?page=slug parameter
+    if (searchParams) {
+      const pageParam = searchParams.get('page');
+      if (pageParam) {
+        const match = state.pages.find(p =>
+          p.slug === pageParam ||
+          p.id === pageParam ||
+          (pageParam === 'home' && p.slug === 'index') ||
+          (pageParam === 'index' && p.slug === 'home')
+        );
+        if (match) return match;
+      }
+    }
+
+    // 2. Check path filename (e.g. /about.html, about.php, /contact, /index.html)
+    if (pathname) {
+      const parts = pathname.split('/').filter(Boolean);
+      const lastPart = parts.length > 0 ? parts[parts.length - 1] : '';
+      const cleanSlug = lastPart.replace(/\.(html?|php)$/i, '').trim();
+
+      if (cleanSlug) {
+        if (cleanSlug === 'index' || cleanSlug === 'home') {
+          const homeMatch = state.pages.find(p => p.slug === 'index' || p.slug === 'home');
+          if (homeMatch) return homeMatch;
+        }
+
+        const match = state.pages.find(p =>
+          p.slug === cleanSlug ||
+          p.id === cleanSlug ||
+          p.slug.toLowerCase() === cleanSlug.toLowerCase() ||
+          p.slug === cleanSlug.replace(/_/g, '-') ||
+          p.slug === cleanSlug.replace(/-/g, '_')
+        );
+        if (match) return match;
+      }
+    }
+
+    // 3. Check raw href directly (e.g. "about", "?page=contact", "contact.html")
+    const cleanRaw = href
+      .replace(/^\/+/, '')
+      .replace(/\.(html?|php)$/i, '')
+      .replace(/^\?page=/, '')
+      .split('#')[0]
+      .split('?')[0]
+      .trim();
+
+    if (cleanRaw) {
+      if (cleanRaw === 'index' || cleanRaw === 'home') {
+        const homeMatch = state.pages.find(p => p.slug === 'index' || p.slug === 'home');
+        if (homeMatch) return homeMatch;
+      }
+
+      const rawMatch = state.pages.find(p =>
+        p.slug === cleanRaw ||
+        p.id === cleanRaw ||
+        p.slug.toLowerCase() === cleanRaw.toLowerCase() ||
+        p.slug === cleanRaw.replace(/_/g, '-') ||
+        p.slug === cleanRaw.replace(/-/g, '_')
+      );
+      if (rawMatch) return rawMatch;
+    }
+
+    return null;
   }
 
   // Scroll-Reveal Entrance Animations (IntersectionObserver-powered)

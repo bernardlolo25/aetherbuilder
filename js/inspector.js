@@ -17,7 +17,7 @@ export class InspectorPanel {
   init() {
     state.subscribe((_, action) => {
       // Re-render inspector if selection changed, or if element deleted/added
-      if (['selection', 'delete', 'loadTemplate', 'clear', 'undo', 'redo'].includes(action)) {
+      if (['selection', 'delete', 'loadTemplate', 'clear', 'undo', 'redo', 'pageSwitched'].includes(action)) {
         this.render();
       }
     });
