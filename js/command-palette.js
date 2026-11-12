@@ -7,7 +7,6 @@
 import { state } from './state.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { addonManager } from './addons.js';
-import { aiAssistant } from './ai-assistant.js';
 
 export class CommandPalette {
   constructor() {
@@ -130,6 +129,29 @@ export class CommandPalette {
   getAllItems() {
     const list = [];
     const app = this.app || window._aetherApp;
+
+    // ── AI ASSISTANT ──────────────────────────────────────────────────────────
+    list.push({
+      category: 'AI',
+      icon: 'AI',
+      title: 'AI Section Magic',
+      description: 'Use AI to generate or edit content for the selected section',
+      badge: 'AI',
+      run: () => {
+        const activeEl = state.getActiveElement?.();
+        if (activeEl) window.aiAssistant?.showPromptModal(activeEl);
+        else window.aiAssistant?.showSettingsModal();
+      }
+    });
+
+    list.push({
+      category: 'AI',
+      icon: 'AI',
+      title: 'AI Settings & API Key',
+      description: 'Configure your Gemini or OpenAI API key for AI magic',
+      badge: 'AI',
+      run: () => window.aiAssistant?.showSettingsModal()
+    });
 
     // ── 1. GLOBAL QUICK ACTIONS ──────────────────────────────────────────────
     list.push({

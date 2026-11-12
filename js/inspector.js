@@ -6,7 +6,6 @@
 import { state } from './state.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { fetchGoogleSheetLecturers, fetchGoogleSheetSchedule, showAppsScriptModal } from './sheets.js';
-import { aiAssistant } from './ai-assistant.js';
 
 export class InspectorPanel {
   constructor(containerEl) {
@@ -52,7 +51,7 @@ export class InspectorPanel {
             <button class="tool-icon-btn" id="insp-move-up" title="Move Up">↑</button>
             <button class="tool-icon-btn" id="insp-move-down" title="Move Down">↓</button>
             <button class="tool-icon-btn" id="insp-duplicate" title="Duplicate">❐</button>
-            <button class="tool-icon-btn btn-insp-ai" id="insp-ai-magic" title="✨ AI Section Magic" style="color: #a5b4fc;">✨</button>
+            <button class="tool-icon-btn btn-insp-ai" id="insp-ai-magic" title="AI Magic" style="color: #a5b4fc;">&#10024;</button>
             <button class="tool-icon-btn" id="insp-delete" title="Delete" style="color: var(--danger);">🗑</button>
           </div>
         </div>
@@ -77,7 +76,10 @@ export class InspectorPanel {
     this.container.querySelector('#insp-move-up').addEventListener('click', () => state.moveElement(activeEl.id, 'up'));
     this.container.querySelector('#insp-move-down').addEventListener('click', () => state.moveElement(activeEl.id, 'down'));
     this.container.querySelector('#insp-duplicate').addEventListener('click', () => state.duplicateElement(activeEl.id));
-    this.container.querySelector('#insp-delete').addEventListener('click', () => {
+    this.container.querySelector('#insp-ai-magic')?.addEventListener('click', () => {
+      window.aiAssistant?.showPromptModal(activeEl);
+    });
+        this.container.querySelector('#insp-delete').addEventListener('click', () => {
       if (confirm('Delete this element?')) {
         state.deleteElement(activeEl.id);
       }

@@ -14,7 +14,6 @@ import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
 import { commandPalette } from './command-palette.js?v=2.9.19';
 import { toolbarOverflow } from './toolbar-overflow.js?v=2.9.22';
-import { aiAssistant } from './ai-assistant.js';
 
 // ── Admin session token helper ──────────────────────────────────
 export function getAdminToken() {
@@ -1463,7 +1462,8 @@ class AetherApp {
     this.inspector = new InspectorPanel(inspectorContainer);
     window.aetherApp = this;
     window._aetherApp = this;
-    window.aiAssistant = aiAssistant;
+    // Lazy-load AI assistant (non-blocking — won't crash app if module fails)
+    import('./ai-assistant.js').then(m => { window.aiAssistant = m.aiAssistant; }).catch(e => console.warn('[AI] Module not loaded:', e.message));
     commandPalette.init(this);
     toolbarOverflow.init();
 
@@ -4577,6 +4577,7 @@ git push -u origin main</textarea>
     document.getElementById('btn-topbar-search')?.addEventListener('click', () => commandPalette.open());
 
     document.getElementById('btn-topbar-qr')?.addEventListener('click', () => this.showQrModal());
+    document.getElementById('btn-topbar-ai')?.addEventListener('click', () => window.aiAssistant?.showSettingsModal());
     document.getElementById('btn-topbar-ai')?.addEventListener('click', () => aiAssistant.showSettingsModal());
     document.getElementById('btn-sidebar-qr')?.addEventListener('click', () => this.showQrModal());
     
