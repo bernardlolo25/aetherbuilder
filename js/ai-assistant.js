@@ -17,7 +17,7 @@ import { WIDGET_REGISTRY } from './widgets.js';
 export const DEFAULT_AI_CONFIG = {
   provider: 'gemini', // 'gemini' | 'openai_compatible'
   apiKey: '',
-  model: 'gemini-2.0-flash',
+  model: 'gemini-3.8-flash',
   customEndpoint: ''
 };
 
@@ -32,9 +32,9 @@ export class AIAssistant {
       if (raw) {
         const saved = JSON.parse(raw);
         // Auto-migrate deprecated model names
-        const deprecatedModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+        const deprecatedModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-exp', 'gemini-2.0-flash-lite'];
         if (deprecatedModels.includes(saved.model)) {
-          saved.model = 'gemini-2.0-flash';
+          saved.model = 'gemini-3.8-flash';
           localStorage.setItem('aether_ai_config', JSON.stringify({ ...DEFAULT_AI_CONFIG, ...saved }));
         }
         return { ...DEFAULT_AI_CONFIG, ...saved };
@@ -66,8 +66,8 @@ export class AIAssistant {
     let rawText = '';
 
     if (provider === 'gemini') {
-      // Google Gemini API (gemini-2.0-flash / gemini-2.0-flash)
-      const targetModel = model || 'gemini-2.0-flash';
+      // Google Gemini API (gemini-3.8-flash / gemini-3.8-flash)
+      const targetModel = model || 'gemini-3.8-flash';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
 
       const payload = {
@@ -465,7 +465,7 @@ ${JSON.stringify(allowedKeys, null, 2)}
           <!-- Model Name -->
           <div style="margin-bottom: 12px;">
             <label style="font-size: 0.74rem; font-weight: 700; color: #818cf8; text-transform: uppercase;">Model</label>
-            <input type="text" id="ai-set-model" value="${cfg.model || 'gemini-2.0-flash'}" placeholder="gemini-2.0-flash or gpt-4o-mini" style="width: 100%; margin-top: 4px; box-sizing: border-box; padding: 8px 10px; font-size: 0.82rem; border-radius: 8px; background: rgba(30,41,59,0.8); border: 1px solid rgba(255,255,255,0.12); color: #fff;" />
+            <input type="text" id="ai-set-model" value="${cfg.model || 'gemini-3.8-flash'}" placeholder="gemini-3.8-flash or gpt-4o-mini" style="width: 100%; margin-top: 4px; box-sizing: border-box; padding: 8px 10px; font-size: 0.82rem; border-radius: 8px; background: rgba(30,41,59,0.8); border: 1px solid rgba(255,255,255,0.12); color: #fff;" />
           </div>
 
           <!-- Custom Endpoint (Optional for Ollama) -->
@@ -497,7 +497,7 @@ ${JSON.stringify(allowedKeys, null, 2)}
       const isCustom = providerSelect.value === 'openai_compatible';
       endpointWrap.style.display = isCustom ? 'block' : 'none';
       if (!isCustom && modelInput.value.includes('gpt')) {
-        modelInput.value = 'gemini-2.0-flash';
+        modelInput.value = 'gemini-3.8-flash';
       }
     });
 
@@ -509,7 +509,7 @@ ${JSON.stringify(allowedKeys, null, 2)}
       this.saveConfig({
         provider: providerSelect.value,
         apiKey: apiKeyInput.value.trim(),
-        model: modelInput.value.trim() || 'gemini-2.0-flash',
+        model: modelInput.value.trim() || 'gemini-3.8-flash',
         customEndpoint: endpointInput.value.trim()
       });
 
