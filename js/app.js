@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.29';
+export const APP_VERSION = '2.9.30';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -1358,7 +1358,7 @@ class AetherApp {
                   </div>
                 </div>
 
-                <!-- Floating Back to Top Button Setting -->
+                                <!-- Floating Back to Top Button Setting -->
                 <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                   <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
                     <span style="display:flex;align-items:center;gap:6px;"><span>⬆️</span> Floating Back-to-Top Button</span>
@@ -1369,6 +1369,57 @@ class AetherApp {
                   </div>
                   <div style="font-size: 0.72rem; color: var(--text-dim);">
                     Displays a smooth floating circular button at the bottom-right corner when visitors scroll down, allowing 1-tap return to the top.
+                  </div>
+                </div>
+
+                <!-- MySQL Database Configuration (Optional) -->
+                <div class="prop-group" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span>💾</span> MySQL Database Storage</span>
+                    <label style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;cursor:pointer;">
+                      <input type="checkbox" id="site-mysql-enable" style="cursor:pointer;" />
+                      <span>Enable</span>
+                    </label>
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 8px;">
+                    Optionally mirror all registration &amp; form submissions directly into your MySQL / MariaDB database.
+                  </div>
+                  <div id="site-mysql-fields" style="display: none; flex-direction: column; gap: 8px; background: rgba(15,23,42,0.6); padding: 10px; border-radius: 8px; border: 1px solid rgba(51,65,85,0.6);">
+                    <div style="display:flex;gap:8px;">
+                      <div style="flex:2;">
+                        <label class="prop-label" style="font-size:0.72rem;">DB Host</label>
+                        <input type="text" id="site-mysql-host" placeholder="localhost" style="font-size:0.78rem;" />
+                      </div>
+                      <div style="flex:1;">
+                        <label class="prop-label" style="font-size:0.72rem;">Port</label>
+                        <input type="text" id="site-mysql-port" placeholder="3306" style="font-size:0.78rem;" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.72rem;">Database Name</label>
+                      <input type="text" id="site-mysql-db" placeholder="e.g. website_db" style="font-size:0.78rem;" />
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.72rem;">DB Username</label>
+                      <input type="text" id="site-mysql-user" placeholder="e.g. root or cpanel_user" style="font-size:0.78rem;" />
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.72rem;">DB Password</label>
+                      <input type="password" id="site-mysql-pass" placeholder="••••••••" style="font-size:0.78rem;" />
+                    </div>
+                    <div>
+                      <label class="prop-label" style="font-size:0.72rem;">Default Table Name</label>
+                      <input type="text" id="site-mysql-table" placeholder="registrations" style="font-size:0.78rem;" />
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                      <button type="button" id="btn-test-mysql-conn" class="btn btn-sm btn-secondary" style="flex:1;justify-content:center;padding:5px 8px;font-size:0.75rem;">
+                        <span>🔌 Test Connection</span>
+                      </button>
+                      <button type="button" id="btn-save-mysql-cfg" class="btn btn-sm btn-primary" style="flex:1;justify-content:center;padding:5px 8px;font-size:0.75rem;">
+                        <span>💾 Save Config</span>
+                      </button>
+                    </div>
+                    <div id="site-mysql-status" style="display:none;font-size:0.72rem;padding:6px 8px;border-radius:4px;line-height:1.35;"></div>
                   </div>
                 </div>
               </div>
@@ -4182,9 +4233,160 @@ git push -u origin main</textarea>
     }
 
     // Chatbot Flowchart Editor Modal
+        // Chatbot Flowchart Editor Modal
     document.getElementById('btn-edit-chatbot-flow')?.addEventListener('click', () => {
       this.showChatbotFlowModal();
     });
+
+    // ── MySQL Database Storage Settings Wiring ────────────────────────────────
+    const mysqlEnableEl = document.getElementById('site-mysql-enable');
+    const mysqlFieldsEl = document.getElementById('site-mysql-fields');
+    const mysqlHostEl   = document.getElementById('site-mysql-host');
+    const mysqlPortEl   = document.getElementById('site-mysql-port');
+    const mysqlDbEl     = document.getElementById('site-mysql-db');
+    const mysqlUserEl   = document.getElementById('site-mysql-user');
+    const mysqlPassEl   = document.getElementById('site-mysql-pass');
+    const mysqlTableEl  = document.getElementById('site-mysql-table');
+    const btnTestMysql  = document.getElementById('btn-test-mysql-conn');
+    const btnSaveMysql  = document.getElementById('btn-save-mysql-cfg');
+    const mysqlStatusEl = document.getElementById('site-mysql-status');
+
+    if (mysqlEnableEl) {
+      mysqlEnableEl.addEventListener('change', (e) => {
+        if (mysqlFieldsEl) mysqlFieldsEl.style.display = e.target.checked ? 'flex' : 'none';
+      });
+    }
+
+    const loadDbConfig = async () => {
+      try {
+        const token = (typeof getAdminToken === 'function' ? getAdminToken() : '') || localStorage.getItem('aether_admin_token') || '';
+        const res = await fetch('api.php?action=get_db_config', {
+          headers: { 'X-Admin-Token': token }
+        });
+        const data = await res.json();
+        if (data.success && data.config) {
+          const c = data.config;
+          if (mysqlEnableEl) {
+            mysqlEnableEl.checked = !!c.enabled;
+            if (mysqlFieldsEl) mysqlFieldsEl.style.display = c.enabled ? 'flex' : 'none';
+          }
+          if (mysqlHostEl && !mysqlHostEl.value) mysqlHostEl.value = c.host || 'localhost';
+          if (mysqlPortEl && !mysqlPortEl.value) mysqlPortEl.value = c.port || '3306';
+          if (mysqlDbEl && !mysqlDbEl.value) mysqlDbEl.value = c.database || '';
+          if (mysqlUserEl && !mysqlUserEl.value) mysqlUserEl.value = c.username || '';
+          if (mysqlTableEl && !mysqlTableEl.value) mysqlTableEl.value = c.table || 'registrations';
+          if (mysqlPassEl && c.hasPassword) {
+            mysqlPassEl.placeholder = '•••••••• (Saved)';
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load DB config:', err);
+      }
+    };
+    loadDbConfig();
+
+    if (btnSaveMysql) {
+      btnSaveMysql.addEventListener('click', async () => {
+        btnSaveMysql.disabled = true;
+        btnSaveMysql.textContent = 'Saving...';
+        try {
+          const token = (typeof getAdminToken === 'function' ? getAdminToken() : '') || localStorage.getItem('aether_admin_token') || '';
+          const payload = {
+            enabled: !!mysqlEnableEl?.checked,
+            host: mysqlHostEl?.value || 'localhost',
+            port: mysqlPortEl?.value || '3306',
+            database: mysqlDbEl?.value || '',
+            username: mysqlUserEl?.value || '',
+            password: mysqlPassEl?.value || '',
+            table: mysqlTableEl?.value || 'registrations'
+          };
+          const res = await fetch('api.php?action=save_db_config', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Token': token
+            },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            this.canvas?.showToast('💾 MySQL configuration saved!', 'success');
+            if (mysqlStatusEl) {
+              mysqlStatusEl.style.display = 'block';
+              mysqlStatusEl.style.background = 'rgba(16,185,129,0.2)';
+              mysqlStatusEl.style.color = '#6ee7b7';
+              mysqlStatusEl.textContent = '✅ ' + (data.message || 'Configuration saved successfully.');
+            }
+            if (mysqlPassEl && payload.password) {
+              mysqlPassEl.value = '';
+              mysqlPassEl.placeholder = '•••••••• (Saved)';
+            }
+          } else {
+            throw new Error(data.error || 'Failed to save');
+          }
+        } catch (err) {
+          if (mysqlStatusEl) {
+            mysqlStatusEl.style.display = 'block';
+            mysqlStatusEl.style.background = 'rgba(239,68,68,0.2)';
+            mysqlStatusEl.style.color = '#fca5a5';
+            mysqlStatusEl.textContent = '❌ ' + err.message;
+          }
+        } finally {
+          btnSaveMysql.disabled = false;
+          btnSaveMysql.innerHTML = '<span>💾 Save Config</span>';
+        }
+      });
+    }
+
+    if (btnTestMysql) {
+      btnTestMysql.addEventListener('click', async () => {
+        btnTestMysql.disabled = true;
+        btnTestMysql.textContent = 'Connecting...';
+        if (mysqlStatusEl) {
+          mysqlStatusEl.style.display = 'block';
+          mysqlStatusEl.style.background = 'rgba(99,102,241,0.2)';
+          mysqlStatusEl.style.color = '#a5b4fc';
+          mysqlStatusEl.textContent = '⏳ Testing connection to MySQL...';
+        }
+        try {
+          const token = (typeof getAdminToken === 'function' ? getAdminToken() : '') || localStorage.getItem('aether_admin_token') || '';
+          const payload = {
+            host: mysqlHostEl?.value || 'localhost',
+            port: mysqlPortEl?.value || '3306',
+            database: mysqlDbEl?.value || '',
+            username: mysqlUserEl?.value || '',
+            password: mysqlPassEl?.value || ''
+          };
+          const res = await fetch('api.php?action=test_db_config', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Token': token
+            },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            if (mysqlStatusEl) {
+              mysqlStatusEl.style.background = 'rgba(16,185,129,0.2)';
+              mysqlStatusEl.style.color = '#6ee7b7';
+              mysqlStatusEl.textContent = '✅ ' + (data.message || 'Connected successfully!');
+            }
+          } else {
+            throw new Error(data.error || 'Connection failed');
+          }
+        } catch (err) {
+          if (mysqlStatusEl) {
+            mysqlStatusEl.style.background = 'rgba(239,68,68,0.2)';
+            mysqlStatusEl.style.color = '#fca5a5';
+            mysqlStatusEl.textContent = '❌ ' + err.message;
+          }
+        } finally {
+          btnTestMysql.disabled = false;
+          btnTestMysql.innerHTML = '<span>🔌 Test Connection</span>';
+        }
+      });
+    }
 
     // Live state subscriber for siteSettings sync & undo/redo
     state.subscribe((_, action) => {

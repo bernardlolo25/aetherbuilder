@@ -1,5 +1,5 @@
 # Protect sensitive files (form submissions, logs, config, rate limits)
-<FilesMatch "^(submissions\.json|config\.json|ratelimit\.json|.*\.log)">
+<FilesMatch "^(submissions\.json|config\.json|db_config\.json|ratelimit\.json|.*\.log)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

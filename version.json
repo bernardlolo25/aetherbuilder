@@ -1,7 +1,7 @@
 {
-  "version": "2.9.29",
+  "version": "2.9.30",
   "release_date": "2026-11-14",
-  "changelog": "v2.9.29: White-labeled adaptive toolbar shelf (removed Google Workspace branding) and added direct Install Add-on action button in Add Element to Canvas modal",
+  "changelog": "v2.9.30: Optional MySQL database storage for registration forms with Admin UI configuration panel",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20"

@@ -3261,6 +3261,8 @@ export const WIDGET_REGISTRY = {
       gsheetExcludeSummary: true,
       gsheetExcludeMeta: true,
       gsheetExcludeHidden: true,
+      enableMysql: true,
+      mysqlTable: 'registrations',
       fields: [
         { id: 'fullName',   label: 'Full Name (Attorney / Delegate)', type: 'text',     placeholder: 'Atty. Juan Dela Cruz',        required: true,  width: 'full' },
         { id: 'email',      label: 'Email Address',                   type: 'email',    placeholder: 'lawyer@example.com',          required: true,  width: 'half' },
@@ -3303,7 +3305,9 @@ export const WIDGET_REGISTRY = {
           placeholder: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec' },
         { key: 'gsheetExcludeSummary', label: '📊 Exclude Summary / Message Column', type: 'toggle', default: true },
         { key: 'gsheetExcludeMeta', label: '📊 Exclude Metadata (Type, Page)', type: 'toggle', default: true },
-        { key: 'gsheetExcludeHidden', label: '📊 Exclude Hidden Fields', type: 'toggle', default: true }
+        { key: 'gsheetExcludeHidden', label: '📊 Exclude Hidden Fields', type: 'toggle', default: true },
+        { key: 'enableMysql', label: '💾 Save to MySQL Database', type: 'toggle', default: true },
+        { key: 'mysqlTable', label: 'MySQL Table Name (Optional)', type: 'text', placeholder: 'registrations' }
       ]
     },
     render: (props) => {
@@ -3428,6 +3432,8 @@ export const WIDGET_REGISTRY = {
           </div>
           <form class="wb-reg-form" onsubmit="return false;" data-success-msg="${p.successMessage || 'Registration submitted!'}">
             <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off" />
+            <input type="hidden" name="_mysql_save" value="${p.enableMysql !== false ? '1' : '0'}" />
+            <input type="hidden" name="_mysql_table" value="${(p.mysqlTable || 'registrations').replace(/"/g, '&quot;')}" />
             <div class="wb-reg-grid">
               ${fieldsHtml}
             </div>

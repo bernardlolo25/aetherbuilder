@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AETHERBUILDER — PHP API BACKEND
  * ============================================================
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.29');
+define('AETHER_VERSION', '2.9.30');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -1532,6 +1532,67 @@ if ($action === 'submit_form' && $method === 'POST') {
     ]);
     unset($cleanEntry['_hp'], $cleanEntry['website_hp']);
 
+    // Optional: Save to MySQL Database
+    $mysqlEnable = $entry['_mysql_save'] ?? $entry['_mysql_enable'] ?? null;
+    $customTable = $entry['_mysql_table'] ?? null;
+    unset($cleanEntry['_mysql_save'], $cleanEntry['_mysql_enable'], $cleanEntry['_mysql_table']);
+
+    $dbConfigFile = DATA_DIR . '/db_config.json';
+    if (file_exists($dbConfigFile) && ($mysqlEnable === null || $mysqlEnable === '1' || $mysqlEnable === true || $mysqlEnable === 1)) {
+        $dbCfg = read_json_file($dbConfigFile, []);
+        if (!empty($dbCfg['enabled']) && !empty($dbCfg['host']) && !empty($dbCfg['database']) && extension_loaded('pdo_mysql')) {
+            try {
+                $dbHost = $dbCfg['host'];
+                $dbPort = !empty($dbCfg['port']) ? intval($dbCfg['port']) : 3306;
+                $dbName = $dbCfg['database'];
+                $dbUser = $dbCfg['username'] ?? '';
+                $dbPass = $dbCfg['password'] ?? '';
+                $rawTbl = !empty($customTable) ? $customTable : ($dbCfg['table'] ?? 'registrations');
+                $tbl    = preg_replace('/[^a-zA-Z0-9_]/', '', $rawTbl) ?: 'registrations';
+
+                $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4";
+                $pdo = new PDO($dsn, $dbUser, $dbPass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 3
+                ]);
+
+                $createSql = "CREATE TABLE IF NOT EXISTS `$tbl` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `sub_id` VARCHAR(64) NOT NULL UNIQUE,
+                    `name` VARCHAR(255) DEFAULT '',
+                    `email` VARCHAR(255) DEFAULT '',
+                    `phone` VARCHAR(100) DEFAULT '',
+                    `page` VARCHAR(100) DEFAULT '',
+                    `type` VARCHAR(100) DEFAULT 'registration',
+                    `message` TEXT DEFAULT NULL,
+                    `form_data` LONGTEXT DEFAULT NULL,
+                    `submitted_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_sub_id (`sub_id`),
+                    INDEX idx_email (`email`),
+                    INDEX idx_submitted_at (`submitted_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+                $pdo->exec($createSql);
+
+                $insertSql = "INSERT INTO `$tbl` (`sub_id`, `name`, `email`, `phone`, `page`, `type`, `message`, `form_data`, `submitted_at`)
+                              VALUES (:sub_id, :name, :email, :phone, :page, :type, :message, :form_data, :submitted_at)";
+                $stmt = $pdo->prepare($insertSql);
+                $stmt->execute([
+                    ':sub_id'       => $subId,
+                    ':name'         => substr($nameVal ?: 'Anonymous', 0, 255),
+                    ':email'        => substr($emailVal, 0, 255),
+                    ':phone'        => substr($phoneVal, 0, 100),
+                    ':page'         => substr($cleanEntry['page'] ?? 'home', 0, 100),
+                    ':type'         => substr($cleanEntry['type'] ?? 'registration', 0, 100),
+                    ':message'      => $cleanEntry['message'] ?? '',
+                    ':form_data'    => json_encode($cleanEntry, JSON_UNESCAPED_UNICODE),
+                    ':submitted_at' => date('Y-m-d H:i:s'),
+                ]);
+            } catch (Throwable $dbErr) {
+                error_log("[AetherBuilder MySQL] " . $dbErr->getMessage());
+            }
+        }
+    }
+
     array_unshift($existing, $cleanEntry);
     if (count($existing) > MAX_SUBS) {
         $existing = array_slice($existing, 0, MAX_SUBS);
@@ -1632,6 +1693,95 @@ if ($action === 'export_submissions_csv' && $method === 'GET') {
         echo implode(',', array_map($escape, $row)) . "\r\n";
     }
     exit;
+}
+
+// ── GET: get_db_config ────────────────────────────────────────────────────────
+if ($action === 'get_db_config' && $method === 'GET') {
+    require_admin_token();
+    $cfg = read_json_file(DATA_DIR . '/db_config.json', [
+        'enabled'  => false,
+        'host'     => 'localhost',
+        'port'     => '3306',
+        'database' => '',
+        'username' => '',
+        'password' => '',
+        'table'    => 'registrations'
+    ]);
+    if (!is_array($cfg)) $cfg = [];
+    send_json(200, [
+        'success'   => true,
+        'config'    => [
+            'enabled'     => !empty($cfg['enabled']),
+            'host'        => $cfg['host'] ?? 'localhost',
+            'port'        => $cfg['port'] ?? '3306',
+            'database'    => $cfg['database'] ?? '',
+            'username'    => $cfg['username'] ?? '',
+            'table'       => $cfg['table'] ?? 'registrations',
+            'hasPassword' => !empty($cfg['password'])
+        ]
+    ]);
+}
+
+// ── POST: save_db_config ───────────────────────────────────────────────────────
+if ($action === 'save_db_config' && $method === 'POST') {
+    require_admin_token();
+    $body = @json_decode(get_request_body(), true);
+    if (!is_array($body)) $body = [];
+    
+    $existing = read_json_file(DATA_DIR . '/db_config.json', []);
+    if (!is_array($existing)) $existing = [];
+
+    $pass = isset($body['password']) && $body['password'] !== '' 
+        ? (string)$body['password'] 
+        : ($existing['password'] ?? '');
+
+    $cfg = [
+        'enabled'  => !empty($body['enabled']),
+        'host'     => trim($body['host'] ?? 'localhost'),
+        'port'     => trim($body['port'] ?? '3306'),
+        'database' => trim($body['database'] ?? ''),
+        'username' => trim($body['username'] ?? ''),
+        'password' => $pass,
+        'table'    => preg_replace('/[^a-zA-Z0-9_]/', '', $body['table'] ?? 'registrations') ?: 'registrations'
+    ];
+    write_json_file(DATA_DIR . '/db_config.json', $cfg);
+    send_json(200, ['success' => true, 'message' => 'MySQL database settings saved.']);
+}
+
+// ── POST: test_db_config ───────────────────────────────────────────────────────
+if ($action === 'test_db_config' && $method === 'POST') {
+    require_admin_token();
+    if (!extension_loaded('pdo_mysql')) {
+        send_json(400, ['success' => false, 'error' => 'PHP PDO MySQL extension (pdo_mysql) is not enabled on this server.']);
+    }
+    $body = @json_decode(get_request_body(), true);
+    if (!is_array($body)) $body = [];
+
+    $host = trim($body['host'] ?? 'localhost');
+    $port = intval($body['port'] ?? 3306) ?: 3306;
+    $db   = trim($body['database'] ?? '');
+    $user = trim($body['username'] ?? '');
+    
+    $pass = (string)($body['password'] ?? '');
+    if ($pass === '') {
+        $saved = read_json_file(DATA_DIR . '/db_config.json', []);
+        $pass = $saved['password'] ?? '';
+    }
+
+    if (!$host || !$db) {
+        send_json(400, ['success' => false, 'error' => 'Host and Database Name are required.']);
+    }
+
+    try {
+        $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
+        $pdo = new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 4
+        ]);
+        send_json(200, ['success' => true, 'message' => "Successfully connected to MySQL database '{$db}'!"]);
+    } catch (Throwable $e) {
+        send_json(400, ['success' => false, 'error' => 'Connection failed: ' . $e->getMessage()]);
+    }
 }
 
 // ── GET: get_addons ───────────────────────────────────────────────────────────
