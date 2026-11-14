@@ -1175,7 +1175,7 @@ export class AddonMaker {
               </div>
               <div style="grid-column: span 2;">
                 <label class="prop-label">Description</label>
-                <textarea id="maker-desc" rows="2" placeholder="Brief summary of what this widget does...">${currentData.description || ''}</textarea>
+                <textarea id="maker-desc" rows="2" placeholder="Brief summary of what this widget does..."></textarea>
               </div>
             </div>
           </div>
@@ -1208,7 +1208,7 @@ export class AddonMaker {
               <span style="font-size:0.75rem;font-weight:700;color:#c7d2fe;margin-right:8px;">Click to Insert Prop:</span>
               <span id="maker-token-pills" style="display:inline-flex;flex-wrap:wrap;gap:6px;"></span>
             </div>
-            <textarea id="maker-template" rows="12" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;">${currentData.template || ''}</textarea>
+            <textarea id="maker-template" rows="12" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;"></textarea>
           </div>
 
           <!-- TAB 4: SCOPED CSS -->
@@ -1219,7 +1219,7 @@ export class AddonMaker {
                 <div style="font-size:0.78rem;color:#cbd5e1;margin-top:2px;">Write clean CSS for your widget. It will be loaded on the canvas and in the live site.</div>
               </div>
             </div>
-            <textarea id="maker-css" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;">${currentData.customCss || ''}</textarea>
+            <textarea id="maker-css" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;"></textarea>
           </div>
 
           <!-- TAB 5: CLIENT JS -->
@@ -1241,7 +1241,7 @@ export class AddonMaker {
   //   fetch(...)
 }</code>
             </div>
-            <textarea id="maker-js" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;" placeholder="// Write your onMount(el, props) function here...&#10;function onMount(el, props) {&#10;  // e.g. attach a click counter&#10;  var btn = el.querySelector('.my-btn');&#10;  if (btn) btn.addEventListener('click', function() {&#10;    alert('Clicked!');&#10;  });&#10;}">${currentData.customJs || ''}</textarea>
+            <textarea id="maker-js" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;" placeholder="// Write your onMount(el, props) function here...&#10;function onMount(el, props) {&#10;  // e.g. attach a click counter&#10;  var btn = el.querySelector('.my-btn');&#10;  if (btn) btn.addEventListener('click', function() {&#10;    alert('Clicked!');&#10;  });&#10;}"></textarea>
           </div>
 
           <!-- TAB 6: LIVE PREVIEW -->
@@ -1277,6 +1277,13 @@ export class AddonMaker {
         </div>
       </div>
     `;
+
+    // ── Safely populate textareas AFTER innerHTML (avoids backtick injection) ──
+    const _safeSet = (id, val) => { const el = modal.querySelector('#' + id); if (el) el.value = val || ''; };
+    _safeSet('maker-desc',     currentData.description || '');
+    _safeSet('maker-template', currentData.template    || '');
+    _safeSet('maker-css',      currentData.customCss   || '');
+    _safeSet('maker-js',       currentData.customJs    || '');
 
     document.body.appendChild(modal);
 
