@@ -3263,6 +3263,9 @@ export const WIDGET_REGISTRY = {
       gsheetExcludeHidden: true,
       enableMysql: true,
       mysqlTable: 'registrations',
+      bgImage: '',
+      bgImageSize: 'cover',
+      bgImagePosition: 'center center',
       fields: [
         { id: 'fullName',   label: 'Full Name (Attorney / Delegate)', type: 'text',     placeholder: 'Atty. Juan Dela Cruz',        required: true,  width: 'full' },
         { id: 'email',      label: 'Email Address',                   type: 'email',    placeholder: 'lawyer@example.com',          required: true,  width: 'half' },
@@ -3307,12 +3310,27 @@ export const WIDGET_REGISTRY = {
         { key: 'gsheetExcludeMeta', label: '📊 Exclude Metadata (Type, Page)', type: 'toggle', default: true },
         { key: 'gsheetExcludeHidden', label: '📊 Exclude Hidden Fields', type: 'toggle', default: true },
         { key: 'enableMysql', label: '💾 Save to MySQL Database', type: 'toggle', default: true },
-        { key: 'mysqlTable', label: 'MySQL Table Name (Optional)', type: 'text', placeholder: 'registrations' }
+        { key: 'mysqlTable', label: 'MySQL Table Name (Optional)', type: 'text', placeholder: 'registrations' },
+        { key: 'bgImage', label: '🖼️ Background Image', type: 'image-picker' },
+        { key: 'bgImageSize', label: 'Background Size', type: 'select', options: [
+          { label: 'Cover (fill area)', value: 'cover' },
+          { label: 'Contain (fit inside)', value: 'contain' },
+          { label: 'Tiled / Repeat', value: 'repeat' },
+          { label: 'Auto (original size)', value: 'auto' }
+        ], default: 'cover' },
+        { key: 'bgImagePosition', label: 'Background Position', type: 'select', options: [
+          { label: 'Center Center', value: 'center center' },
+          { label: 'Center Top', value: 'center top' },
+          { label: 'Center Bottom', value: 'center bottom' },
+          { label: 'Left Center', value: 'left center' },
+          { label: 'Right Center', value: 'right center' }
+        ], default: 'center center' }
       ]
     },
     render: (props) => {
       const p = props || {};
       const cardClass = p.cardStyle === 'solid' ? 'wb-reg-solid' : (p.cardStyle === 'minimal' ? 'wb-reg-minimal' : 'wb-reg-glass');
+      const bgClass   = p.bgImage ? 'wb-reg-has-bg' : '';
       const badgeHtml = p.badgeText ? `<span class="wb-reg-badge">${p.badgeText}</span>` : '';
       const btnClass  = p.btnStyle === 'glow' ? 'wb-btn-glow' : 'wb-btn-primary';
       const fields    = Array.isArray(p.fields) ? p.fields : [];
@@ -3420,7 +3438,8 @@ export const WIDGET_REGISTRY = {
       }).join('');
 
       return `
-        <div class="wb-registration-widget ${cardClass}"
+        <div class="wb-registration-widget ${cardClass} ${bgClass}"
+             style="${p.bgImage ? 'background-image:url(\'' + p.bgImage + '\');background-size:' + (p.bgImageSize === 'repeat' ? 'auto' : (p.bgImageSize || 'cover')) + ';background-position:' + (p.bgImagePosition || 'center center') + ';background-repeat:' + (p.bgImageSize === 'repeat' ? 'repeat' : 'no-repeat') + ';' : ''}"
              data-gsheet-url="${p.googleSheetUrl || ''}"
              data-gsheet-exclude-summary="${p.gsheetExcludeSummary !== false ? 'true' : 'false'}"
              data-gsheet-exclude-meta="${p.gsheetExcludeMeta !== false ? 'true' : 'false'}"

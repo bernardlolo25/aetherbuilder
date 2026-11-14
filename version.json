@@ -1,7 +1,7 @@
 {
-  "version": "2.9.30",
+  "version": "2.9.31",
   "release_date": "2026-11-14",
-  "changelog": "v2.9.30: Optional MySQL database storage for registration forms with Admin UI configuration panel",
+  "changelog": "v2.9.31: Registration form background image with media library picker and CSS transparency support",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20"

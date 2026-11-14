@@ -4087,6 +4087,24 @@
   border: 2px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
 }
 
+/* Background image mode: card overlays become translucent so image shows through */
+.wb-registration-widget.wb-reg-has-bg {
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+.wb-registration-widget.wb-reg-has-bg.wb-reg-glass {
+  background-color: rgba(10, 16, 32, 0.55);
+}
+.wb-registration-widget.wb-reg-has-bg.wb-reg-solid {
+  background-color: rgba(19, 27, 46, 0.70);
+}
+.wb-registration-widget.wb-reg-has-bg.wb-reg-minimal {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
 .wb-reg-header {
   text-align: center;
   margin-bottom: 28px;
