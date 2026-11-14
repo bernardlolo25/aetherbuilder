@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.28';
+export const APP_VERSION = '2.9.29';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -762,8 +762,8 @@ class AetherApp {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
 
-            <!-- Google Workspace-style 3-dots Overflow Trigger -->
-            <button class="tool-icon-btn topbar-overflow-trigger" id="btn-topbar-overflow" title="More tools & actions (Google Workspace overflow)" aria-label="More actions" style="display: none;">
+            <!-- Adaptive 3-dots Overflow Trigger -->
+            <button class="tool-icon-btn topbar-overflow-trigger" id="btn-topbar-overflow" title="More tools & actions" aria-label="More actions" style="display: none;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="1.5"></circle>
                 <circle cx="12" cy="5" r="1.5"></circle>

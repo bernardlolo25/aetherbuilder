@@ -1,7 +1,7 @@
 {
-  "version": "2.9.28",
-  "release_date": "2026-11-12",
-  "changelog": "v2.9.28: Fixed Float/Fixed at Bottom of Screen footer in admin canvas — stays pinned to screen bottom during scroll while maintaining perfect responsive device chassis containment",
+  "version": "2.9.29",
+  "release_date": "2026-11-14",
+  "changelog": "v2.9.29: White-labeled adaptive toolbar shelf (removed Google Workspace branding) and added direct Install Add-on action button in Add Element to Canvas modal",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20"

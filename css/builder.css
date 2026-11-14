@@ -3996,7 +3996,7 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   transition: background 0.3s ease;
 }
 
-/* ── Google Workspace-Style Adaptive Toolbar Overflow Shelf ──────────────── */
+/* ── Adaptive Toolbar Overflow Shelf ─────────────────────────── */
 .topbar-item-overflowed {
   display: none !important;
 }

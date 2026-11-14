@@ -1,10 +1,10 @@
 /**
- * AETHERBUILDER - GOOGLE WORKSPACE-STYLE ADAPTIVE TOOLBAR OVERFLOW MENU
+ * AETHERBUILDER - ADAPTIVE TOOLBAR OVERFLOW SHELF
  * ============================================================================
  * Dynamic real-time collision detection:
  * Whenever the admin panel zooms in (Ctrl+/Cmd+) or browser width shrinks,
  * toolbar buttons that would otherwise collide or wrap are dynamically consolidated
- * into the Google Workspace-style 3-dots (⋮) floating shelf.
+ * into the adaptive 3-dots (⋮) floating shelf.
  *
  * Guaranteed ZERO overlapping of buttons on any screen resolution or zoom level.
  */
@@ -110,7 +110,7 @@ export class ToolbarOverflow {
     // 1. Create or bind the 3-dots trigger button
     this.ensureTriggerButton();
 
-    // 2. Create the floating Google Workspace-style secondary shelf
+    // 2. Create the floating secondary shelf
     this.ensureShelf();
 
     // 3. Set up responsive listeners
@@ -127,7 +127,7 @@ export class ToolbarOverflow {
       btn.type = 'button';
       btn.id = 'btn-topbar-overflow';
       btn.className = 'tool-icon-btn topbar-overflow-trigger';
-      btn.title = 'More tools & actions (Google Workspace overflow)';
+      btn.title = 'More tools & actions';
       btn.setAttribute('aria-label', 'More actions');
       btn.setAttribute('aria-expanded', 'false');
       btn.innerHTML = `
@@ -168,7 +168,7 @@ export class ToolbarOverflow {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
               <span>More Actions</span>
             </span>
-            <span class="overflow-shelf-hint">Google Workspace Overflow</span>
+            <span class="overflow-shelf-hint">More Tools & Actions</span>
           </div>
           <div class="overflow-shelf-content" id="overflow-shelf-content">
             <!-- Dynamic Groups Rendered Here -->

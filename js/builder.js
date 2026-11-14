@@ -1797,6 +1797,9 @@ export class BuilderCanvas {
               ${compCount > 0 ? `<button type="button" class="add-section-pill" data-filter="components" style="border:1px solid rgba(16,185,129,0.7);background:rgba(16,185,129,0.2);color:#6ee7b7;font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">📦 Components (${compCount})</button>` : ''}
               <button type="button" class="add-section-pill" data-filter="addons" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">🧩 Add-ons (${addonCount})</button>
               <button type="button" class="add-section-pill" data-filter="core" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">⚡ Core Widgets (${coreCount})</button>
+              <button type="button" class="btn btn-sm" id="btn-add-section-install-addon" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;border:none;padding:5px 13px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.35);transition:transform 0.15s,box-shadow 0.15s;" title="Open Add-on Store to install more widgets, themes, and extensions">
+                <span>➕ Install Add-on</span>
+              </button>
             </div>
           </div>
 
@@ -1806,8 +1809,11 @@ export class BuilderCanvas {
             <div id="add-section-empty" class="add-section-empty" style="display:none;grid-column:1/-1;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:42px 16px;background:rgba(15,23,42,0.4);border:1px dashed rgba(51,65,85,0.7);border-radius:10px;">
               <div style="font-size:2.2rem;margin-bottom:8px;">🔍</div>
               <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px;">No elements match "<span id="add-section-empty-term"></span>"</div>
-              <div style="font-size:0.8rem;color:rgba(148,163,184,0.7);margin-bottom:14px;">Try searching with another keyword like <em>contact</em>, <em>hero</em>, <em>chat</em>, or <em>slider</em>.</div>
-              <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.8);color:#fff;cursor:pointer;font-size:0.82rem;">Reset Search</button>
+              <div style="font-size:0.8rem;color:rgba(148,163,184,0.7);margin-bottom:14px;">Try searching with another keyword or install a new widget add-on.</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
+                <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.8);color:#fff;cursor:pointer;font-size:0.82rem;">Reset Search</button>
+                <button type="button" class="btn btn-sm" id="add-section-empty-store-btn" style="padding:6px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;cursor:pointer;font-size:0.82rem;font-weight:600;box-shadow:0 2px 6px rgba(99,102,241,0.35);">🧩 Browse Add-on Store</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1962,6 +1968,34 @@ export class BuilderCanvas {
     document.addEventListener('keydown', onKeydown);
 
     modal.querySelector('#close-add-modal').addEventListener('click', closeModal);
+
+    const openAddonStoreFlow = () => {
+      closeModal();
+      const btnStore = document.getElementById('btn-topbar-store') || document.getElementById('btn-open-addon-store');
+      if (btnStore) {
+        btnStore.click();
+      } else if (window.addonStore && typeof window.addonStore.openStoreModal === 'function') {
+        window.addonStore.openStoreModal((installed) => {
+          if (window.aetherApp) {
+            window.aetherApp.renderAddonsPanel();
+            window.aetherApp.renderWidgetTray();
+            window.aetherApp.canvas.render();
+            window.aetherApp.canvas.showToast(`Installed "${installed.name}" from Store!`, 'success');
+          }
+        });
+      } else if (window.aetherApp && typeof window.aetherApp.switchSidebarTab === 'function') {
+        window.aetherApp.switchSidebarTab('addons');
+      }
+    };
+
+    const modalInstallBtn = modal.querySelector('#btn-add-section-install-addon');
+    if (modalInstallBtn) {
+      modalInstallBtn.addEventListener('click', openAddonStoreFlow);
+    }
+    const emptyStoreBtn = modal.querySelector('#add-section-empty-store-btn');
+    if (emptyStoreBtn) {
+      emptyStoreBtn.addEventListener('click', openAddonStoreFlow);
+    }
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
