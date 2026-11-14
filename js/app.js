@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.33';
+export const APP_VERSION = '2.9.34';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -1442,7 +1442,7 @@ class AetherApp {
                   <button type="button" id="btn-upload-addon-pkg" class="btn btn-sm" style="flex:1;justify-content:center;padding:8px 6px;font-size:0.75rem;background:rgba(255,255,255,0.08);border:1px solid var(--border-subtle);color:#ffffff !important;font-weight:600;border-radius:6px;cursor:pointer;">
                     <span style="color:#ffffff !important;">📁 .json</span>
                   </button>
-                  <input type="file" id="addon-file-picker" accept=".json" style="display:none;" />
+                  <input type="file" id="addon-file-picker" accept=".json" multiple style="display:none;" />
                 </div>
 
                 <!-- Quick Toggle for Built-in Chatbot Assistant -->
@@ -1457,7 +1457,20 @@ class AetherApp {
                 </div>
                 </div>
 
-                <div id="installed-addons-list" style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
+                <!-- Sticky Search Box for Installed Add-ons -->
+                <div id="installed-addons-search-bar" style="position:sticky;top:-1px;z-index:10;background:var(--bg-card,#131b2e);padding:10px 0 6px 0;border-bottom:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);">
+                  <div style="position:relative;display:flex;align-items:center;">
+                    <span style="position:absolute;left:10px;color:var(--text-dim,#94a3b8);font-size:0.8rem;pointer-events:none;">🔍</span>
+                    <input type="text" id="addon-search-input" placeholder="Search installed add-ons (name, id, tag)..."
+                      style="width:100%;padding:7px 28px 7px 30px;font-size:0.78rem;border-radius:8px;border:1px solid var(--border-subtle,rgba(255,255,255,0.12));background:rgba(15,23,42,0.6);color:#fff;outline:none;box-sizing:border-box;transition:border-color 0.2s;" />
+                    <button type="button" id="btn-clear-addon-search" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.8rem;padding:2px 4px;" title="Clear search">✕</button>
+                  </div>
+                  <div id="addon-search-stats" style="font-size:0.7rem;color:var(--text-dim);margin-top:4px;padding-left:2px;display:flex;justify-content:space-between;align-items:center;">
+                    <span id="addon-search-count"></span>
+                  </div>
+                </div>
+
+                <div id="installed-addons-list" style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">
                   <!-- Rendered dynamically -->
                 </div>
               </div>
@@ -2521,24 +2534,70 @@ class AetherApp {
     }
     if (btnUpload && filePicker) {
       btnUpload.addEventListener('click', () => filePicker.click());
-      filePicker.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
+      filePicker.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        let installedCount = 0;
+        let lastInstalledName = '';
+        const errors = [];
+
+        for (const file of files) {
           try {
-            const data = JSON.parse(ev.target.result);
-            const installed = addonManager.installAddon(data);
-            this.renderAddonsPanel();
-            this.renderWidgetTray();
-            this.canvas.render();
-            this.canvas.showToast(`Successfully installed ${installed.name}!`, 'success');
-          } catch(err) {
-            alert('Failed to install add-on package: ' + err.message);
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                if (item && (item.name || item.id)) {
+                  const inst = addonManager.installAddon(item);
+                  installedCount++;
+                  lastInstalledName = inst?.name || item.name || item.id;
+                }
+              });
+            } else if (data && (data.name || data.id)) {
+              const inst = addonManager.installAddon(data);
+              installedCount++;
+              lastInstalledName = inst?.name || data.name;
+            }
+          } catch (err) {
+            errors.push(`${file.name}: ${err.message}`);
           }
-          filePicker.value = '';
-        };
-        reader.readAsText(file);
+        }
+
+        this.renderAddonsPanel();
+        this.renderWidgetTray();
+        this.canvas.render();
+
+        if (installedCount > 0) {
+          const msg = installedCount === 1
+            ? `Successfully installed ${lastInstalledName}!`
+            : `Successfully installed ${installedCount} add-on packages!`;
+          this.canvas.showToast(msg, 'success');
+        }
+        if (errors.length > 0) {
+          alert(`Could not install some files:\n\n${errors.join('\n')}`);
+        }
+        filePicker.value = '';
+      });
+    }
+
+    // Sticky Search Box Event Listeners
+    const searchInput = document.getElementById('addon-search-input');
+    const clearBtn    = document.getElementById('btn-clear-addon-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.addonSearchQuery = e.target.value;
+        if (clearBtn) clearBtn.style.display = e.target.value ? 'block' : 'none';
+        this.renderAddonsPanel();
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        this.addonSearchQuery = '';
+        clearBtn.style.display = 'none';
+        this.renderAddonsPanel();
+        searchInput?.focus();
       });
     }
   }
@@ -2548,18 +2607,70 @@ class AetherApp {
     if (!listContainer) return;
 
     const addons = addonManager.addons || [];
+    const query = (this.addonSearchQuery || '').trim().toLowerCase();
+    const statsCountEl = document.getElementById('addon-search-count');
+    const searchInput = document.getElementById('addon-search-input');
+    const clearBtn = document.getElementById('btn-clear-addon-search');
+
+    if (searchInput && this.addonSearchQuery !== undefined && searchInput.value !== this.addonSearchQuery) {
+      searchInput.value = this.addonSearchQuery;
+    }
+    if (clearBtn) {
+      clearBtn.style.display = query ? 'block' : 'none';
+    }
+
     if (addons.length === 0) {
+      if (statsCountEl) statsCountEl.textContent = '0 add-ons installed';
       listContainer.innerHTML = `
         <div style="text-align:center;padding:32px 14px;color:var(--text-dim);font-size:0.85rem;background:rgba(255,255,255,0.02);border:1px dashed var(--border-subtle);border-radius:10px;">
           <div style="font-size:2rem;margin-bottom:8px;">🧩</div>
           <div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">No Custom Add-ons Installed</div>
-          <div>Click "✨ Create Add-On" to build a new widget or install a .json package.</div>
+          <div>Click "✨ Maker" to build a new widget or install a .json package.</div>
         </div>
       `;
       return;
     }
 
-    listContainer.innerHTML = addons.map((addon) => {
+    const filteredAddons = query
+      ? addons.filter(a => {
+          const name = (a.name || '').toLowerCase();
+          const id = (a.id || '').toLowerCase();
+          const cat = (a.category || '').toLowerCase();
+          const desc = (a.description || '').toLowerCase();
+          const author = (a.author || '').toLowerCase();
+          return name.includes(query) || id.includes(query) || cat.includes(query) || desc.includes(query) || author.includes(query);
+        })
+      : addons;
+
+    if (statsCountEl) {
+      statsCountEl.textContent = query
+        ? `Found ${filteredAddons.length} of ${addons.length} add-on${addons.length !== 1 ? 's' : ''}`
+        : `${addons.length} add-on${addons.length !== 1 ? 's' : ''} installed`;
+    }
+
+    if (filteredAddons.length === 0) {
+      const safeTerm = query.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      listContainer.innerHTML = `
+        <div style="text-align:center;padding:28px 14px;color:var(--text-dim);font-size:0.82rem;background:rgba(255,255,255,0.02);border:1px dashed var(--border-subtle);border-radius:10px;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🔍</div>
+          <div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">No add-ons match "${safeTerm}"</div>
+          <div style="font-size:0.74rem;color:var(--text-dim);margin-bottom:10px;">Try searching by widget name, ID, or category</div>
+          <button type="button" id="btn-reset-addon-search" class="btn btn-sm" style="padding:4px 12px;font-size:0.72rem;background:rgba(255,255,255,0.08);color:#cbd5e1;border:1px solid var(--border-subtle);border-radius:6px;cursor:pointer;">
+            Clear Search
+          </button>
+        </div>
+      `;
+      listContainer.querySelector('#btn-reset-addon-search')?.addEventListener('click', () => {
+        this.addonSearchQuery = '';
+        if (searchInput) searchInput.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        this.renderAddonsPanel();
+        searchInput?.focus();
+      });
+      return;
+    }
+
+    listContainer.innerHTML = filteredAddons.map((addon) => {
       const isEnabled = addon.enabled !== false;
       return `
         <div class="addon-installed-card" data-addon-id="${addon.id}" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid ${isEnabled ? 'rgba(99,102,241,0.3)' : 'var(--border-subtle)'};border-radius:10px;display:flex;flex-direction:column;gap:10px;">
@@ -2844,7 +2955,19 @@ class AetherApp {
             GitHub Raw JSON or Google Sheets CSV endpoint for distributing updates or selling add-ons. Completely masked from regular users.
           </p>
           <input type="url" id="dev-feed-url-input" value="${feedConfig.remoteFeedUrl || ''}" placeholder="https://raw.githubusercontent.com/.../addons.json"
-            style="width: 100%; font-size: 0.76rem; font-family: var(--font-mono); padding: 7px 9px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: #38bdf8; margin-bottom: 10px;" />
+            style="width: 100%; font-size: 0.76rem; font-family: var(--font-mono); padding: 7px 9px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: #38bdf8; margin-bottom: 6px;" />
+
+          <!-- Quick Feed Presets -->
+          <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+            <button type="button" id="btn-preset-gsheet-feed" class="btn btn-sm"
+              style="padding: 3px 8px; font-size: 0.68rem; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; border-radius: 4px; cursor: pointer;">
+              📊 Google Sheets Feed
+            </button>
+            <button type="button" id="btn-preset-github-feed" class="btn btn-sm"
+              style="padding: 3px 8px; font-size: 0.68rem; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); color: #c7d2fe; border-radius: 4px; cursor: pointer;">
+              🐙 GitHub Feed
+            </button>
+          </div>
 
           <div style="display: flex; gap: 8px;">
             <button type="button" id="btn-dev-sync-feed" class="btn btn-sm"
@@ -2956,6 +3079,20 @@ class AetherApp {
       const url = urlInput.value.trim();
       await saveFeedData({ remoteFeedUrl: url });
       this.canvas.showToast('Remote Feed URL saved', 'success');
+    });
+
+    // Quick Feed Presets
+    panel.querySelector('#btn-preset-gsheet-feed')?.addEventListener('click', async () => {
+      const gsheetUrl = 'https://script.google.com/macros/s/AKfycbwhcE67tXkWdZA8Hhttu9D6SU2ifk8KXUEBBRkaUhCgQfTejvI45KAaGiyZnHvN334Asw/exec?type=addons';
+      if (urlInput) urlInput.value = gsheetUrl;
+      await saveFeedData({ remoteFeedUrl: gsheetUrl });
+      this.canvas.showToast('Set feed to Google Sheets Web App', 'info');
+    });
+    panel.querySelector('#btn-preset-github-feed')?.addEventListener('click', async () => {
+      const ghUrl = 'https://raw.githubusercontent.com/bernardlolo25/aetherbuilder/main/data/addons.json';
+      if (urlInput) urlInput.value = ghUrl;
+      await saveFeedData({ remoteFeedUrl: ghUrl });
+      this.canvas.showToast('Set feed to GitHub Raw JSON', 'info');
     });
 
     syncBtn?.addEventListener('click', async () => {

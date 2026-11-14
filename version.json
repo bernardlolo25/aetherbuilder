@@ -1,7 +1,7 @@
 {
-  "version": "2.9.33",
+  "version": "2.9.34",
   "release_date": "2026-11-14",
-  "changelog": "v2.9.33: 1-click Publish Add-Ons to Store Feed in Developer Tab and Add-on Studio with automatic GitHub sync",
+  "changelog": "v2.9.34: Multi-file local addon installer, sticky search box in Add-ons tab, and Google Sheets cloud feed presets in Developer Tab",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20"
