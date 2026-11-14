@@ -175,6 +175,17 @@ export class BuilderCanvas {
         secWrapper.style.setProperty('margin', '0px', 'important');
       }
 
+      // Fixed Bottom Footer handling in Builder Canvas (stays pinned to bottom during scroll)
+      const isFixedBottomSec = (sec.widgetType === 'footer' && (props.fixedBottom === true || props.fixedBottom === 'true'));
+      if (isFixedBottomSec && !this.isPublicMode) {
+        secWrapper.classList.add('is-fixed-bottom-section');
+        secWrapper.style.setProperty('position', 'sticky', 'important');
+        secWrapper.style.setProperty('bottom', '0px', 'important');
+        secWrapper.style.setProperty('z-index', '70', 'important');
+        secWrapper.style.setProperty('padding', '0px', 'important');
+        secWrapper.style.setProperty('margin', '0px', 'important');
+      }
+
       if (sec.widgetType === 'navbar') {
         secWrapper.style.setProperty('padding', '0px', 'important');
         secWrapper.style.setProperty('margin', '0px', 'important');
