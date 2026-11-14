@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.32';
+export const APP_VERSION = '2.9.33';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -2877,6 +2877,35 @@ class AetherApp {
           </div>
         </div>
 
+        <!-- Publish Local Add-ons to Remote Store Feed -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <label style="font-size: 0.76rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+              <span>🚀</span> Publish Add-ons to Store Feed
+            </label>
+            <span style="font-size: 0.65rem; background: rgba(16,185,129,0.2); color: #6ee7b7; padding: 1px 6px; border-radius: 10px; font-weight: 700;">
+              Local Catalog Ready
+            </span>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4;">
+            Publishes all your active local add-ons (including custom-coded and newly edited widgets) directly to your GitHub feed repository (<code style="color:#38bdf8;">data/addons.json</code>). All connected stores instantly update!
+          </p>
+
+          <div style="margin-bottom: 8px;">
+            <input type="password" id="dev-publish-pat-input" value="${devAuth.getStoredPat() || feedConfig.githubPat || ''}"
+              placeholder="GitHub PAT (Personal Access Token with 'repo' scope)..."
+              style="width: 100%; font-size: 0.76rem; font-family: var(--font-mono); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-deep); color: #ffffff;" />
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btn-dev-publish-addons-feed" class="btn btn-sm"
+              style="flex: 1; justify-content: center; padding: 7px; font-size: 0.75rem; background: linear-gradient(135deg,#10b981,#059669); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 10px rgba(16,185,129,0.35);">
+              🚀 Push Local Add-ons to GitHub Store Feed
+            </button>
+          </div>
+          <div id="dev-publish-addons-status" style="display: none; font-size: 0.72rem; margin-top: 8px; padding: 6px 8px; border-radius: 6px;"></div>
+        </div>
+
         <!-- Marketplace Seller Pricing Quick View -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="font-weight: 700; font-size: 0.76rem; color: #ffffff; margin-bottom: 4px;">
@@ -2957,6 +2986,65 @@ class AetherApp {
       } finally {
         syncBtn.disabled = false;
         syncBtn.innerHTML = `🔄 Sync Remote Feed Now`;
+      }
+    });
+
+    // ── Publish Local Add-ons to GitHub Store Feed ──
+    const publishPatInput = panel.querySelector('#dev-publish-pat-input');
+    const publishBtn      = panel.querySelector('#btn-dev-publish-addons-feed');
+    const publishStatus   = panel.querySelector('#dev-publish-addons-status');
+
+    publishBtn?.addEventListener('click', async () => {
+      const pat = (publishPatInput ? publishPatInput.value.trim() : '') || devAuth.getStoredPat();
+      if (!pat) {
+        alert('Please enter a GitHub Personal Access Token (PAT) with "repo" scope to publish.');
+        publishPatInput?.focus();
+        return;
+      }
+
+      publishBtn.disabled = true;
+      publishBtn.innerHTML = `<span>⏳</span> Publishing add-ons to GitHub...`;
+      publishStatus.style.display = 'block';
+      publishStatus.style.background = 'rgba(99,102,241,0.15)';
+      publishStatus.style.color = '#c7d2fe';
+      publishStatus.textContent = 'Reading local add-ons catalog from server...';
+
+      try {
+        const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
+        const res = await fetch(`${apiBase}?action=get_addons&_t=${Date.now()}`);
+        if (!res.ok) throw new Error('Could not fetch local addons.json from server.');
+        const addonsData = await res.json();
+        if (!Array.isArray(addonsData) || addonsData.length === 0) {
+          throw new Error('No add-on packages found in local data/addons.json to publish.');
+        }
+
+        const jsonStr = JSON.stringify(addonsData, null, 2);
+        publishStatus.textContent = `Pushing ${addonsData.length} add-ons to GitHub repository (data/addons.json)...`;
+
+        await devAuth.pushFileToGitHub(
+          'data/addons.json',
+          jsonStr,
+          `Marketplace feed: publish ${addonsData.length} add-ons to store [v${APP_VERSION}]`,
+          pat
+        );
+
+        localStorage.setItem('aether_dev_github_pat', pat);
+        await saveFeedData({ githubPat: pat });
+
+        await addonStore.syncRemoteFeed(feedConfig.remoteFeedUrl || 'data/addons.json');
+
+        publishStatus.style.background = 'rgba(16,185,129,0.15)';
+        publishStatus.style.color = '#6ee7b7';
+        publishStatus.innerHTML = `<strong>✅ Successfully published ${addonsData.length} add-ons to GitHub!</strong><br>The Add-On Store feed is now live.`;
+        this.canvas.showToast(`🎉 Published ${addonsData.length} add-ons to Store Feed!`, 'success');
+        this.renderDeveloperPanel();
+      } catch (err) {
+        publishStatus.style.background = 'rgba(239,68,68,0.15)';
+        publishStatus.style.color = '#fca5a5';
+        publishStatus.textContent = `❌ Publish failed: ${err.message}`;
+      } finally {
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = `🚀 Push Local Add-ons to GitHub Store Feed`;
       }
     });
 
@@ -3447,6 +3535,7 @@ git push -u origin main</textarea>
       const filesToPush = [
         { path: 'data/dev_auth.json', name: 'Developer Security Hash' },
         { path: 'data/templates.json', name: 'Free Template Store Catalog' },
+        { path: 'data/addons.json', name: 'Add-Ons Store Feed' },
         { path: 'data/store_feed.json', name: 'Marketplace Feed & Gateways' },
         { path: 'version.json', name: 'Version Release Manifest' }
       ];
@@ -3467,6 +3556,9 @@ git push -u origin main</textarea>
               continue;
             }
             fileContent = JSON.stringify(templateStore.templates, null, 2);
+          } else if (item.path === 'data/addons.json') {
+            const addRes = await fetch(`${apiBase}?action=get_addons&_t=${Date.now()}`);
+            fileContent = await addRes.text();
           } else if (item.path === 'data/store_feed.json') {
             const feedRes = await fetch(`${apiBase}?action=get_store_feed_config&_t=${Date.now()}`);
             fileContent = await feedRes.text();

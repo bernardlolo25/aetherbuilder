@@ -1270,8 +1270,11 @@ export class AddonMaker {
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <button type="button" class="btn btn-sm" id="btn-maker-cancel" style="background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid var(--border-subtle);padding:7px 14px;border-radius:6px;cursor:pointer;">Cancel</button>
-            <button type="button" class="btn btn-sm btn-success" id="btn-maker-save" style="font-weight:700;font-size:0.84rem;padding:9px 20px;color:#ffffff !important;background:linear-gradient(135deg,#10b981,#059669);border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 16px rgba(16,185,129,0.45);border-radius:8px;cursor:pointer;">
-              <span style="color:#ffffff !important;">🚀 Save &amp; Install Add-On</span>
+            <button type="button" class="btn btn-sm btn-success" id="btn-maker-save" style="font-weight:700;font-size:0.84rem;padding:9px 16px;color:#ffffff !important;background:linear-gradient(135deg,#10b981,#059669);border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 16px rgba(16,185,129,0.45);border-radius:8px;cursor:pointer;">
+              <span style="color:#ffffff !important;">🚀 Save &amp; Install</span>
+            </button>
+            <button type="button" class="btn btn-sm" id="btn-maker-publish-store" style="font-weight:700;font-size:0.84rem;padding:9px 16px;color:#ffffff !important;background:linear-gradient(135deg,#6366f1,#4f46e5);border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 16px rgba(99,102,241,0.35);border-radius:8px;cursor:pointer;" title="Save locally and publish directly to the Add-on Store feed">
+              <span style="color:#ffffff !important;">🌐 Save &amp; Publish to Store</span>
             </button>
           </div>
         </div>
@@ -1760,6 +1763,54 @@ export class AddonMaker {
     modal.querySelector('#btn-maker-save').addEventListener('click', () => {
       const pkg = saveAddonPackage();
       if (pkg) {
+        modal.remove();
+        if (typeof onSaved === 'function') onSaved(pkg);
+      }
+    });
+
+    modal.querySelector('#btn-maker-publish-store')?.addEventListener('click', async () => {
+      const pkg = saveAddonPackage();
+      if (!pkg) return;
+      const pubBtn = modal.querySelector('#btn-maker-publish-store');
+      pubBtn.disabled = true;
+      pubBtn.innerHTML = '<span>⏳</span> Publishing to Store...';
+      try {
+        const storedPat = (typeof window.devAuth !== 'undefined' ? window.devAuth.getStoredPat() : null) || localStorage.getItem('aether_dev_github_pat') || '';
+        let userPat = storedPat;
+        if (!userPat) {
+          userPat = prompt('Enter your GitHub Personal Access Token (PAT) with "repo" scope to publish to Store:');
+          if (userPat && userPat.trim()) {
+            userPat = userPat.trim();
+            localStorage.setItem('aether_dev_github_pat', userPat);
+          }
+        }
+        if (userPat && typeof window.devAuth !== 'undefined') {
+          const apiBase = (typeof window._aetherApiBase !== 'undefined') ? window._aetherApiBase : 'api.php';
+          const r = await fetch(`${apiBase}?action=get_addons&_t=${Date.now()}`);
+          const curAddons = await r.json();
+          if (Array.isArray(curAddons)) {
+            await window.devAuth.pushFileToGitHub(
+              'data/addons.json',
+              JSON.stringify(curAddons, null, 2),
+              `Marketplace feed: publish ${pkg.name} [v${pkg.version}] via Add-on Studio`,
+              userPat
+            );
+          }
+          if (typeof window.addonStore !== 'undefined') {
+            await window.addonStore.syncRemoteFeed();
+          }
+          if (window.aetherApp?.canvas?.showToast) {
+            window.aetherApp.canvas.showToast(`🎉 "${pkg.name}" published to Add-On Store!`, 'success');
+          }
+        } else {
+          if (window.aetherApp?.canvas?.showToast) {
+            window.aetherApp.canvas.showToast('Saved locally. Enter GitHub PAT in Developer Tab to publish to remote feed.', 'info');
+          }
+        }
+        modal.remove();
+        if (typeof onSaved === 'function') onSaved(pkg);
+      } catch (err) {
+        alert('Could not publish to GitHub: ' + err.message + '\n\nAdd-on was saved locally.');
         modal.remove();
         if (typeof onSaved === 'function') onSaved(pkg);
       }

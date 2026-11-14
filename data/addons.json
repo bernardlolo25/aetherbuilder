@@ -2758,14 +2758,14 @@
     "name": "Contact & Hire Me",
     "category": "addons",
     "icon": "📬",
-    "version": "1.0.3",
+    "version": "1.0.7",
     "author": "Aether Studio",
-    "description": "Professional contact section with a working email form (via EmailJS) and a contact details card featuring Viber, WhatsApp, and phone call icons.",
+    "description": "Professional contact section with a working email form (via EmailJS) and customizable field labels and tooltips.",
     "enabled": true,
     "defaultProps": {
-      "sectionTitle": "Let's Work Together",
-      "sectionSubtitle": "Have a project in mind? Send me a message and I'll get back to you within 24 hours.",
-      "recipientName": "Alex Morgan",
+      "sectionTitle": "Contact Me",
+      "sectionSubtitle": "",
+      "recipientName": "",
       "emailServiceId": "",
       "emailTemplateId": "",
       "emailPublicKey": "",
@@ -2773,13 +2773,21 @@
       "viberNumber": "",
       "whatsappNumber": "",
       "contactCardTitle": "Other Ways to Reach Me",
-      "contactCardSubtitle": "Prefer a quick chat? Use any of these.",
+      "contactCardSubtitle": "",
       "showPhone": true,
       "showViber": true,
       "showWhatsapp": true,
       "accentColor": "#6366f1",
       "formPosition": "left",
-      "cardStyle": "elevated"
+      "cardStyle": "elevated",
+      "nameLabel": "Your Name",
+      "nameTooltip": "",
+      "emailLabel": "Your Email",
+      "emailTooltip": "",
+      "subjectLabel": "Subject",
+      "subjectTooltip": "",
+      "messageLabel": "Message",
+      "messageTooltip": ""
     },
     "schema": {
       "content": [
@@ -2836,6 +2844,46 @@
         {
           "key": "whatsappNumber",
           "label": "💚 WhatsApp Number (digits only, e.g. 639123456789)",
+          "type": "text"
+        },
+        {
+          "key": "nameLabel",
+          "label": "🏷️ Name Field Label",
+          "type": "text"
+        },
+        {
+          "key": "nameTooltip",
+          "label": "💬 Name Tooltip (Optional)",
+          "type": "text"
+        },
+        {
+          "key": "emailLabel",
+          "label": "🏷️ Email Field Label",
+          "type": "text"
+        },
+        {
+          "key": "emailTooltip",
+          "label": "💬 Email Tooltip (Optional)",
+          "type": "text"
+        },
+        {
+          "key": "subjectLabel",
+          "label": "🏷️ Subject Field Label",
+          "type": "text"
+        },
+        {
+          "key": "subjectTooltip",
+          "label": "💬 Subject Tooltip (Optional)",
+          "type": "text"
+        },
+        {
+          "key": "messageLabel",
+          "label": "🏷️ Message Field Label",
+          "type": "text"
+        },
+        {
+          "key": "messageTooltip",
+          "label": "💬 Message Tooltip (Optional)",
           "type": "text"
         }
       ],
@@ -2898,10 +2946,9 @@
         }
       ]
     },
-    "template": "<div class=\"wb-addon-contact-hire\" data-ch-formpos=\"{{formPosition}}\" data-ch-cardstyle=\"{{cardStyle}}\" data-ch-showphone=\"{{showPhone}}\" data-ch-showviber=\"{{showViber}}\" data-ch-showwhatsapp=\"{{showWhatsapp}}\" style=\"--ch-accent: {{accentColor}};\"><div class=\"wb-ch-header\">{{#if sectionTitle}}<h2 class=\"wb-ch-title\">{{sectionTitle}}</h2>{{/if}}{{#if sectionSubtitle}}<p class=\"wb-ch-subtitle\">{{sectionSubtitle}}</p>{{/if}}</div><div class=\"wb-ch-layout\"><div class=\"wb-ch-form-col\"><div class=\"wb-ch-form-card\" data-ch-mount=\"form\"></div></div><div class=\"wb-ch-contact-col\"><div class=\"wb-ch-contact-card\" data-ch-mount=\"contact\"></div></div></div></div>",
-    "customCss": ".wb-addon-contact-hire{--ch-accent:#6366f1;--ch-accent-soft:color-mix(in srgb,var(--ch-accent) 14%,transparent);--ch-accent-line:color-mix(in srgb,var(--ch-accent) 40%,transparent);--ch-accent-glow:color-mix(in srgb,var(--ch-accent) 35%,transparent);font-family:inherit;width:100%;box-sizing:border-box;padding:56px 24px;max-width:1100px;margin:0 auto;color:var(--text-main,#f8fafc)}\n.wb-addon-contact-hire *,.wb-addon-contact-hire *::before,.wb-addon-contact-hire *::after{box-sizing:border-box}\n.wb-ch-header{text-align:center;margin-bottom:40px}\n.wb-ch-title{font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:800;margin:0 0 10px;letter-spacing:-.02em;background:linear-gradient(135deg,var(--text-main,#f8fafc) 40%,var(--ch-accent) 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.wb-ch-subtitle{font-size:1rem;color:var(--text-muted,#94a3b8);margin:0;line-height:1.6;max-width:56ch;margin-left:auto;margin-right:auto}\n.wb-ch-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:start}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr 1.3fr}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col{order:2}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:1}\n@media(max-width:820px){.wb-ch-layout,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr}.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:0}}\n.wb-ch-form-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e);transition:box-shadow .3s ease}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-form-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-form-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-form-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}\n@media(max-width:520px){.wb-ch-form-row{grid-template-columns:1fr}}\n.wb-ch-field{margin-bottom:16px}\n.wb-ch-label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;color:var(--text-main,#e2e8f0);letter-spacing:.02em}\n.wb-ch-input,.wb-ch-textarea{width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(15,23,42,.6);color:var(--text-main,#f8fafc);font:inherit;font-size:.9rem;transition:border-color .2s ease,box-shadow .2s ease}\n.wb-ch-input:focus,.wb-ch-textarea:focus{outline:none;border-color:var(--ch-accent);box-shadow:0 0 0 3px var(--ch-accent-soft)}\n.wb-ch-textarea{resize:vertical;min-height:120px;line-height:1.55}\n.wb-ch-submit{width:100%;padding:13px 20px;border-radius:10px;border:none;background:var(--ch-accent);color:#fff;font:inherit;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s ease;box-shadow:0 8px 24px -8px var(--ch-accent-glow);display:flex;align-items:center;justify-content:center;gap:8px}\n.wb-ch-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px -8px var(--ch-accent-glow);filter:brightness(1.08)}\n.wb-ch-submit:disabled{opacity:.6;cursor:not-allowed}\n.wb-ch-status{padding:12px 16px;border-radius:9px;font-size:.86rem;font-weight:600;margin-bottom:16px;display:none}\n.wb-ch-status--success{display:block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#86efac}\n.wb-ch-status--error{display:block;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}\n.wb-ch-status--info{display:block;background:var(--ch-accent-soft);border:1px solid var(--ch-accent-line);color:var(--ch-accent)}\n.wb-ch-contact-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-contact-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-contact-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-contact-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-contact-title{font-size:1.1rem;font-weight:800;margin:0 0 6px;color:var(--text-main,#f8fafc)}\n.wb-ch-contact-sub{font-size:.86rem;color:var(--text-muted,#94a3b8);margin:0 0 22px;line-height:1.5}\n.wb-ch-contact-links{display:flex;flex-direction:column;gap:12px}\n.wb-ch-contact-link{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;text-decoration:none;color:var(--text-main,#f8fafc);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .2s ease}\n.wb-ch-contact-link:hover{background:var(--ch-accent-soft);border-color:var(--ch-accent-line);transform:translateX(4px)}\n.wb-ch-contact-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem}\n.wb-ch-icon-phone{background:rgba(59,130,246,.18);color:#60a5fa}\n.wb-ch-icon-viber{background:rgba(115,86,220,.18);color:#a78bfa}\n.wb-ch-icon-whatsapp{background:rgba(37,211,102,.18);color:#4ade80}\n.wb-ch-contact-text{flex:1;min-width:0}\n.wb-ch-contact-name{font-size:.88rem;font-weight:700;margin-bottom:2px}\n.wb-ch-contact-value{font-size:.78rem;color:var(--text-muted,#94a3b8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.wb-ch-contact-arrow{color:var(--text-dim,#64748b);font-size:1rem}\n.wb-ch-empty{padding:24px;text-align:center;color:var(--text-dim,#94a3b8);font-size:.86rem;border:1px dashed rgba(255,255,255,.12);border-radius:10px}\n.wb-ch-config-warning{padding:14px 16px;border-radius:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fcd34d;font-size:.82rem;line-height:1.55;margin-bottom:16px}\n@media(prefers-reduced-motion:reduce){.wb-addon-contact-hire *{transition:none!important;animation:none!important}}",
-    "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-contact-hire') || el;\n  if (!root) return;\n\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]; }); };\n  var $ = function (sel, ctx) { return (ctx || root).querySelector(sel); };\n\n  var accent = props.accentColor || '#6366f1';\n  root.style.setProperty('--ch-accent', accent);\n\n  var svc = (props.emailServiceId || '').trim();\n  var tpl = (props.emailTemplateId || '').trim();\n  var pub = (props.emailPublicKey || '').trim();\n  var configured = !!(svc && tpl && pub);\n\n  // ── EmailJS loader ──────────────────────────────────────────────────────────\n  function loadEmailJs(callback) {\n    if (window.emailjs) {\n      try { window.emailjs.init({ publicKey: pub }); } catch (e) {}\n      if (callback) callback();\n      return;\n    }\n    var existing = document.querySelector('script[src*=\"emailjs\"]');\n    if (existing) {\n      existing.addEventListener('load', function () {\n        try { window.emailjs.init({ publicKey: pub }); } catch (e) {}\n        if (callback) callback();\n      });\n      return;\n    }\n    var s = document.createElement('script');\n    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';\n    s.async = true;\n    s.onload = function () {\n      try { if (window.emailjs) window.emailjs.init({ publicKey: pub }); } catch (e) {}\n      if (callback) callback();\n    };\n    document.head.appendChild(s);\n  }\n\n  if (configured) { loadEmailJs(); }\n\n  // ── Form ────────────────────────────────────────────────────────────────────\n  var formMount = $('[data-ch-mount=\"form\"]');\n  if (formMount) {\n    var warn = configured ? '' : '<div class=\"wb-ch-config-warning\">⚙️ <strong>Email sending is not configured yet.</strong><br>Go to the <strong>Advanced</strong> tab in the Inspector and enter your EmailJS Service ID, Template ID, and Public Key to activate this form.</div>';\n\n    formMount.innerHTML =\n      warn +\n      '<div class=\"wb-ch-status\" data-ch-status></div>' +\n      '<form class=\"wb-ch-form\" novalidate>' +\n        '<div class=\"wb-ch-form-row\">' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-name\">Your Name *</label><input class=\"wb-ch-input\" id=\"ch-name\" name=\"from_name\" type=\"text\" placeholder=\"Jane Doe\" required></div>' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-email\">Your Email *</label><input class=\"wb-ch-input\" id=\"ch-email\" name=\"from_email\" type=\"email\" placeholder=\"jane@company.com\" required></div>' +\n        '</div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-subject\">Subject *</label><input class=\"wb-ch-input\" id=\"ch-subject\" name=\"subject\" type=\"text\" placeholder=\"Project Inquiry / Hire Request\" required></div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-message\">Message *</label><textarea class=\"wb-ch-textarea\" id=\"ch-message\" name=\"message\" placeholder=\"Tell me about your project, timeline, and budget…\" required></textarea></div>' +\n        '<button type=\"submit\" class=\"wb-ch-submit\" data-ch-submit><span aria-hidden=\"true\">✉️</span> Send Message</button>' +\n      '</form>';\n\n    var form = formMount.querySelector('form');\n    var statusEl = formMount.querySelector('[data-ch-status]');\n    var submitBtn = formMount.querySelector('[data-ch-submit]');\n\n    function setStatus(type, text) {\n      statusEl.className = 'wb-ch-status wb-ch-status--' + type;\n      statusEl.textContent = text;\n    }\n\n    form.addEventListener('submit', function (e) {\n      e.preventDefault();\n      if (!configured) {\n        setStatus('error', 'Email sending is not configured. Please contact the site owner directly.');\n        return;\n      }\n\n      var data = {\n        from_name: form.from_name.value.trim(),\n        from_email: form.from_email.value.trim(),\n        reply_to: form.from_email.value.trim(),\n        subject: form.subject.value.trim(),\n        message: form.message.value.trim(),\n        to_name: props.recipientName || 'there'\n      };\n\n      if (!data.from_name || !data.from_email || !data.subject || !data.message) {\n        setStatus('error', 'Please fill in all required fields before sending.');\n        return;\n      }\n\n      submitBtn.disabled = true;\n      setStatus('info', 'Sending your message…');\n\n      function executeSend() {\n        if (!window.emailjs) {\n          submitBtn.disabled = false;\n          setStatus('error', 'Could not load EmailJS. Please check your internet connection.');\n          return;\n        }\n        // 4-arg API: send(serviceId, templateId, params, publicKey)\n        window.emailjs.send(svc, tpl, data, pub)\n          .then(function () {\n            setStatus('success', '🎉 Thanks, ' + data.from_name + '! Your message was sent. I\\'ll get back to you shortly.');\n            form.reset();\n          })\n          .catch(function (err) {\n            console.error('EmailJS error:', err);\n            var msg = (err && (err.text || err.message)) ? ' (' + (err.text || err.message) + ')' : '';\n            setStatus('error', 'Failed to send' + msg + '. Please verify your EmailJS credentials in the Advanced tab.');\n          })\n          .finally(function () { submitBtn.disabled = false; });\n      }\n\n      if (!window.emailjs) {\n        loadEmailJs(executeSend);\n      } else {\n        executeSend();\n      }\n    });\n  }\n\n  // ── Contact card ────────────────────────────────────────────────────────────\n  var contactMount = $('[data-ch-mount=\"contact\"]');\n  if (contactMount) {\n    var title = props.contactCardTitle || 'Other Ways to Reach Me';\n    var sub = props.contactCardSubtitle || '';\n    var showPhone    = props.showPhone    !== false && props.showPhone    !== 'false';\n    var showViber    = props.showViber    !== false && props.showViber    !== 'false';\n    var showWhatsapp = props.showWhatsapp !== false && props.showWhatsapp !== 'false';\n\n    var phone    = (props.phoneNumber    || '').trim();\n    var viber    = (props.viberNumber    || '').replace(/[^0-9]/g, '');\n    var whatsapp = (props.whatsappNumber || '').replace(/[^0-9]/g, '');\n\n    var links = [];\n\n    if (showPhone && phone) {\n      links.push(\n        '<a class=\"wb-ch-contact-link\" href=\"tel:' + esc(phone) + '\">' +\n          '<span class=\"wb-ch-contact-icon wb-ch-icon-phone\" aria-hidden=\"true\">📞</span>' +\n          '<span class=\"wb-ch-contact-text\">' +\n            '<span class=\"wb-ch-contact-name\">Call Me</span>' +\n            '<span class=\"wb-ch-contact-value\">' + esc(phone) + '</span>' +\n          '</span>' +\n          '<span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span>' +\n        '</a>'\n      );\n    }\n    if (showViber && viber) {\n      // viber://chat?number=DIGITS — correct mobile deep link\n      links.push(\n        '<a class=\"wb-ch-contact-link\" href=\"viber://chat?number=' + esc(viber) + '\" target=\"_blank\" rel=\"noopener noreferrer\">' +\n          '<span class=\"wb-ch-contact-icon wb-ch-icon-viber\" aria-hidden=\"true\">💜</span>' +\n          '<span class=\"wb-ch-contact-text\">' +\n            '<span class=\"wb-ch-contact-name\">Viber</span>' +\n            '<span class=\"wb-ch-contact-value\">Chat on Viber</span>' +\n          '</span>' +\n          '<span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span>' +\n        '</a>'\n      );\n    }\n    if (showWhatsapp && whatsapp) {\n      links.push(\n        '<a class=\"wb-ch-contact-link\" href=\"https://wa.me/' + esc(whatsapp) + '\" target=\"_blank\" rel=\"noopener noreferrer\">' +\n          '<span class=\"wb-ch-contact-icon wb-ch-icon-whatsapp\" aria-hidden=\"true\">💚</span>' +\n          '<span class=\"wb-ch-contact-text\">' +\n            '<span class=\"wb-ch-contact-name\">WhatsApp</span>' +\n            '<span class=\"wb-ch-contact-value\">Message on WhatsApp</span>' +\n          '</span>' +\n          '<span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span>' +\n        '</a>'\n      );\n    }\n\n    contactMount.innerHTML =\n      '<h3 class=\"wb-ch-contact-title\">' + esc(title) + '</h3>' +\n      (sub ? '<p class=\"wb-ch-contact-sub\">' + esc(sub) + '</p>' : '') +\n      (links.length\n        ? '<div class=\"wb-ch-contact-links\">' + links.join('') + '</div>'\n        : '<div class=\"wb-ch-empty\">Add your phone, Viber, or WhatsApp number in the Inspector to show contact options.</div>');\n  }\n\n  el.__wbDestroy = function () {};\n}",
-    "installedAt": "2026-11-01T12:03:17.097Z"
+    "template": "<div class=\"wb-addon-contact-hire\" data-ch-formpos=\"{{formPosition}}\" data-ch-cardstyle=\"{{cardStyle}}\" style=\"--ch-accent: {{accentColor}};\"><div class=\"wb-ch-header\"><h2 class=\"wb-ch-title\">{{sectionTitle}}</h2><p class=\"wb-ch-subtitle\">{{sectionSubtitle}}</p></div><div class=\"wb-ch-layout\"><div class=\"wb-ch-form-col\"><div class=\"wb-ch-form-card\" data-ch-mount=\"form\"></div></div><div class=\"wb-ch-contact-col\"><div class=\"wb-ch-contact-card\" data-ch-mount=\"contact\"></div></div></div></div>",
+    "customCss": ".wb-addon-contact-hire{--ch-accent:#6366f1;--ch-accent-soft:color-mix(in srgb,var(--ch-accent) 14%,transparent);--ch-accent-line:color-mix(in srgb,var(--ch-accent) 40%,transparent);--ch-accent-glow:color-mix(in srgb,var(--ch-accent) 35%,transparent);font-family:inherit;width:100%;box-sizing:border-box;padding:56px 24px;max-width:1100px;margin:0 auto;color:var(--text-main,#f8fafc)}\n.wb-addon-contact-hire *,.wb-addon-contact-hire *::before,.wb-addon-contact-hire *::after{box-sizing:border-box}\n.wb-ch-header{text-align:center;margin-bottom:40px}\n.wb-ch-title{font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:800;margin:0 0 10px;letter-spacing:-.02em;background:linear-gradient(135deg,var(--text-main,#f8fafc) 40%,var(--ch-accent) 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.wb-ch-subtitle{font-size:1rem;color:var(--text-muted,#94a3b8);margin:0;line-height:1.6;max-width:56ch;margin-left:auto;margin-right:auto}\n.wb-ch-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:start}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr 1.3fr}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col{order:2}\n.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:1}\n\n/* FORM CARD */\n.wb-ch-form-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e);transition:box-shadow .3s ease}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-form-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-form-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-form-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}\n.wb-ch-field{margin-bottom:16px; position: relative;}\n.wb-ch-label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;color:var(--text-main,#e2e8f0);letter-spacing:.02em; display: flex; align-items: center; gap: 6px;}\n\n/* TOOLTIP STYLES */\n.wb-ch-tooltip-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.1);color:var(--text-muted);font-size:10px;font-weight:bold;cursor:help;transition:all .2s; position: relative;}\n.wb-ch-tooltip-icon:hover{background:var(--ch-accent);color:#fff}\n.wb-ch-tooltip-icon::after{content:attr(data-tooltip);position:absolute;bottom:140%;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:.75rem;font-weight:500;padding:6px 10px;border-radius:6px;white-space:nowrap;opacity:0;visibility:hidden;transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);z-index:10;pointer-events:none;line-height:1.4}\n.wb-ch-tooltip-icon::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e293b;opacity:0;visibility:hidden;transition:all .2s;z-index:10;pointer-events:none}\n.wb-ch-tooltip-icon:hover::after,.wb-ch-tooltip-icon:hover::before{opacity:1;visibility:visible}\n\n.wb-ch-input,.wb-ch-textarea{width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(15,23,42,.6);color:var(--text-main,#f8fafc);font:inherit;font-size:.9rem;transition:border-color .2s ease,box-shadow .2s ease;-webkit-appearance:none;appearance:none}\n.wb-ch-input:focus,.wb-ch-textarea:focus{outline:none;border-color:var(--ch-accent);box-shadow:0 0 0 3px var(--ch-accent-soft)}\n.wb-ch-textarea{resize:vertical;min-height:120px;line-height:1.55}\n.wb-ch-submit{width:100%;padding:13px 20px;border-radius:10px;border:none;background:var(--ch-accent);color:#fff;font:inherit;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s ease;box-shadow:0 8px 24px -8px var(--ch-accent-glow);display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}\n.wb-ch-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px -8px var(--ch-accent-glow);filter:brightness(1.08)}\n.wb-ch-submit:active:not(:disabled){transform:translateY(0);filter:brightness(.96)}\n.wb-ch-submit:disabled{opacity:.6;cursor:not-allowed}\n.wb-ch-status{padding:12px 16px;border-radius:9px;font-size:.86rem;font-weight:600;margin-bottom:16px;display:none;line-height:1.5}\n.wb-ch-status--success{display:block;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#86efac}\n.wb-ch-status--error{display:block;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}\n.wb-ch-status--info{display:block;background:var(--ch-accent-soft);border:1px solid var(--ch-accent-line);color:var(--ch-accent)}\n\n/* CONTACT CARD */\n.wb-ch-contact-card{border-radius:18px;padding:28px;background:var(--bg-card,#131b2e)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"elevated\"] .wb-ch-contact-card{box-shadow:0 8px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"flat\"] .wb-ch-contact-card{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-contact-hire[data-ch-cardstyle=\"outlined\"] .wb-ch-contact-card{background:transparent;border:1.5px solid var(--ch-accent-line)}\n.wb-ch-contact-title{font-size:1.1rem;font-weight:800;margin:0 0 6px;color:var(--text-main,#f8fafc)}\n.wb-ch-contact-sub{font-size:.86rem;color:var(--text-muted,#94a3b8);margin:0 0 22px;line-height:1.5}\n.wb-ch-contact-links{display:flex;flex-direction:column;gap:12px}\n.wb-ch-contact-link{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;text-decoration:none;color:var(--text-main,#f8fafc);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:64px}\n.wb-ch-contact-link:hover{background:var(--ch-accent-soft);border-color:var(--ch-accent-line);transform:translateX(4px)}\n.wb-ch-contact-link:active{transform:translateX(2px);background:var(--ch-accent-soft)}\n.wb-ch-contact-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem}\n.wb-ch-icon-phone{background:rgba(59,130,246,.18);color:#60a5fa}\n.wb-ch-icon-viber{background:rgba(115,86,220,.18);color:#a78bfa}\n.wb-ch-icon-whatsapp{background:rgba(37,211,102,.18);color:#4ade80}\n.wb-ch-contact-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;text-align:left}\n.wb-ch-contact-name{display:block;font-size:.95rem;font-weight:700;line-height:1.25;color:var(--text-main,#f8fafc)}\n.wb-ch-contact-value{display:block;font-size:.82rem;color:var(--text-muted,#94a3b8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}\n.wb-ch-contact-arrow{color:var(--text-dim,#64748b);font-size:1.1rem;flex-shrink:0;display:flex;align-items:center}\n.wb-ch-empty{padding:24px;text-align:center;color:var(--text-dim,#94a3b8);font-size:.86rem;border:1px dashed rgba(255,255,255,.12);border-radius:10px}\n.wb-ch-config-warning{padding:14px 16px;border-radius:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fcd34d;font-size:.82rem;line-height:1.55;margin-bottom:16px}\n\n/* MOBILE */\n@media(max-width:820px){\n  .wb-addon-contact-hire{padding:32px 16px}\n  .wb-ch-header{margin-bottom:28px}\n  .wb-ch-title{font-size:1.55rem;line-height:1.25}\n  .wb-ch-subtitle{font-size:.9rem;line-height:1.55;max-width:100%}\n  .wb-ch-layout,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-layout{grid-template-columns:1fr;gap:20px}\n  .wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-form-col,.wb-addon-contact-hire[data-ch-formpos=\"right\"] .wb-ch-contact-col{order:0}\n  .wb-ch-form-card,.wb-ch-contact-card{padding:20px 16px;border-radius:14px}\n  .wb-ch-form-row{grid-template-columns:1fr;gap:0}\n  .wb-ch-field{margin-bottom:14px}\n  .wb-ch-label{font-size:.82rem;margin-bottom:8px}\n  .wb-ch-input,.wb-ch-textarea{font-size:16px;padding:14px 14px;min-height:48px;border-radius:10px}\n  .wb-ch-textarea{min-height:110px;padding-top:12px}\n  .wb-ch-submit{padding:15px 20px;font-size:1rem;min-height:52px;border-radius:12px;font-weight:800}\n  .wb-ch-status{padding:13px 14px;font-size:.85rem;border-radius:10px;margin-bottom:14px}\n  .wb-ch-contact-title{font-size:1rem;margin-bottom:4px}\n  .wb-ch-contact-sub{font-size:.82rem;margin-bottom:16px}\n  .wb-ch-contact-links{gap:10px}\n  .wb-ch-contact-link{padding:14px;gap:14px;min-height:64px;border-radius:12px}\n  .wb-ch-contact-link:hover{transform:none}\n  .wb-ch-contact-icon{width:48px;height:48px;border-radius:12px;font-size:1.4rem}\n  .wb-ch-contact-name{font-size:.92rem}\n  .wb-ch-contact-value{font-size:.8rem}\n  .wb-ch-contact-arrow{font-size:1.2rem}\n  .wb-ch-config-warning{font-size:.8rem;padding:12px 14px}\n}\n\n@media(max-width:380px){\n  .wb-addon-contact-hire{padding:24px 12px}\n  .wb-ch-title{font-size:1.35rem}\n  .wb-ch-form-card,.wb-ch-contact-card{padding:16px 14px}\n  .wb-ch-input,.wb-ch-textarea{font-size:16px;padding:12px}\n  .wb-ch-contact-link{padding:12px}\n  .wb-ch-contact-icon{width:44px;height:44px}\n  .wb-ch-contact-name{font-size:.86rem}\n  .wb-ch-contact-value{font-size:.76rem}\n}\n\n@supports(-webkit-touch-callout:none){\n  @media(max-width:820px){\n    .wb-ch-input,.wb-ch-textarea{font-size:16px !important}\n  }\n}\n\n@media(prefers-reduced-motion:reduce){.wb-addon-contact-hire *{transition:none!important;animation:none!important}}",
+    "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-contact-hire');\n  if (!root) return;\n\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]; }); };\n  var accent = props.accentColor || '#6366f1';\n  root.style.setProperty('--ch-accent', accent);\n\n  var svc = (props.emailServiceId || '').trim();\n  var tpl = (props.emailTemplateId || '').trim();\n  var pub = (props.emailPublicKey || '').trim();\n  var configured = !!(svc && tpl && pub);\n\n  if (configured && !window.emailjs) {\n    var s = document.createElement('script');\n    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';\n    s.async = true;\n    s.onload = function () { if (window.emailjs) window.emailjs.init({ publicKey: pub }); };\n    document.head.appendChild(s);\n  } else if (configured && window.emailjs) {\n    window.emailjs.init({ publicKey: pub });\n  }\n\n  var formMount = root.querySelector('[data-ch-mount=\"form\"]');\n  if (formMount) {\n    var warn = configured ? '' : '<div class=\"wb-ch-config-warning\">⚙️ Email sending is not configured yet. Add your EmailJS Service ID, Template ID, and Public Key in the Advanced tab to activate this form.</div>';\n\n    // Build optional tooltip icon helper\n    var makeTooltip = function(text) {\n      if (!text) return '';\n      return '<span class=\"wb-ch-tooltip-icon\" data-tooltip=\"' + esc(text) + '\">?</span>';\n    };\n\n    formMount.innerHTML =\n      warn +\n      '<div class=\"wb-ch-status\" data-ch-status></div>' +\n      '<form class=\"wb-ch-form\" novalidate>' +\n        '<div class=\"wb-ch-form-row\">' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-name\">' + esc(props.nameLabel || 'Your Name') + makeTooltip(props.nameTooltip) + '</label><input class=\"wb-ch-input\" id=\"ch-name\" name=\"from_name\" type=\"text\" autocomplete=\"name\" required></div>' +\n          '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-email\">' + esc(props.emailLabel || 'Your Email') + makeTooltip(props.emailTooltip) + '</label><input class=\"wb-ch-input\" id=\"ch-email\" name=\"from_email\" type=\"email\" inputmode=\"email\" autocomplete=\"email\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" required></div>' +\n        '</div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-subject\">' + esc(props.subjectLabel || 'Subject') + makeTooltip(props.subjectTooltip) + '</label><input class=\"wb-ch-input\" id=\"ch-subject\" name=\"subject\" type=\"text\" autocomplete=\"off\" required></div>' +\n        '<div class=\"wb-ch-field\"><label class=\"wb-ch-label\" for=\"ch-message\">' + esc(props.messageLabel || 'Message') + makeTooltip(props.messageTooltip) + '</label><textarea class=\"wb-ch-textarea\" id=\"ch-message\" name=\"message\" required></textarea></div>' +\n        '<button type=\"submit\" class=\"wb-ch-submit\" data-ch-submit><span aria-hidden=\"true\">✉️</span> Send Message</button>' +\n      '</form>';\n\n    var form = formMount.querySelector('form');\n    var statusEl = formMount.querySelector('[data-ch-status]');\n    var submitBtn = formMount.querySelector('[data-ch-submit]');\n\n    function setStatus(type, text) {\n      statusEl.className = 'wb-ch-status wb-ch-status--' + type;\n      statusEl.textContent = text;\n    }\n\n    form.addEventListener('submit', function (e) {\n      e.preventDefault();\n      if (!configured) { setStatus('error', 'Email sending is not configured. Please contact the site owner.'); return; }\n      if (!window.emailjs) { setStatus('error', 'Email library failed to load. Please refresh and try again.'); return; }\n\n      var data = {\n        from_name: form.from_name.value.trim(),\n        from_email: form.from_email.value.trim(),\n        subject: form.subject.value.trim(),\n        message: form.message.value.trim(),\n        to_name: props.recipientName || 'there'\n      };\n\n      if (!data.from_name || !data.from_email || !data.subject || !data.message) {\n        setStatus('error', 'Please fill in all fields before sending.');\n        return;\n      }\n\n      submitBtn.disabled = true;\n      setStatus('info', 'Sending your message…');\n\n      window.emailjs.send(svc, tpl, data)\n        .then(function () {\n          setStatus('success', 'Thanks, ' + data.from_name + '! Your message was sent. I\\'ll reply shortly.');\n          form.reset();\n        })\n        .catch(function (err) {\n          console.error('EmailJS error:', err);\n          setStatus('error', 'Something went wrong. Please try again or reach me via the contact options.');\n        })\n        .finally(function () { submitBtn.disabled = false; });\n    });\n  }\n\n  var contactMount = root.querySelector('[data-ch-mount=\"contact\"]');\n  if (contactMount) {\n    var title = props.contactCardTitle || 'Other Ways to Reach Me';\n    var sub = props.contactCardSubtitle || '';\n    var showPhone = props.showPhone !== false && props.showPhone !== 'false';\n    var showViber = props.showViber !== false && props.showViber !== 'false';\n    var showWhatsapp = props.showWhatsapp !== false && props.showWhatsapp !== 'false';\n\n    var phone = (props.phoneNumber || '').trim();\n    var viber = (props.viberNumber || '').replace(/[^0-9]/g, '');\n    var whatsapp = (props.whatsappNumber || '').replace(/[^0-9]/g, '');\n\n    var links = [];\n\n    if (showPhone && phone) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"tel:' + esc(phone) + '\"><span class=\"wb-ch-contact-icon wb-ch-icon-phone\" aria-hidden=\"true\">📞</span><div class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">Call Me</span><span class=\"wb-ch-contact-value\">' + esc(phone) + '</span></div><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n    if (showViber && viber) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"https://viber.me/' + esc(viber) + '\" target=\"_blank\" rel=\"noopener noreferrer\"><span class=\"wb-ch-contact-icon wb-ch-icon-viber\" aria-hidden=\"true\">💜</span><div class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">Viber</span><span class=\"wb-ch-contact-value\">Chat on Viber</span></div><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n    if (showWhatsapp && whatsapp) {\n      links.push('<a class=\"wb-ch-contact-link\" href=\"https://wa.me/' + esc(whatsapp) + '\" target=\"_blank\" rel=\"noopener noreferrer\"><span class=\"wb-ch-contact-icon wb-ch-icon-whatsapp\" aria-hidden=\"true\">💚</span><div class=\"wb-ch-contact-text\"><span class=\"wb-ch-contact-name\">WhatsApp</span><span class=\"wb-ch-contact-value\">Message on WhatsApp</span></div><span class=\"wb-ch-contact-arrow\" aria-hidden=\"true\">›</span></a>');\n    }\n\n    contactMount.innerHTML =\n      '<h3 class=\"wb-ch-contact-title\">' + esc(title) + '</h3>' +\n      (sub ? '<p class=\"wb-ch-contact-sub\">' + esc(sub) + '</p>' : '') +\n      (links.length ? '<div class=\"wb-ch-contact-links\">' + links.join('') + '</div>' : '<div class=\"wb-ch-empty\">Add your phone, Viber, or WhatsApp number in the Inspector to show contact options.</div>');\n  }\n\n  el.__wbDestroy = function () { /* nothing to tear down */ };\n}"
   },
   {
     "id": "addon_custom_livechat",
@@ -3251,5 +3298,194 @@
     "customCss": "\n.wb-faq-addon-wrapper {\n  padding: 40px 20px;\n  max-width: 900px;\n  margin: 0 auto;\n}\n.wb-faq-header {\n  text-align: center;\n  margin-bottom: 30px;\n}\n.wb-faq-title {\n  font-size: 2rem;\n  font-weight: 800;\n  color: #ffffff;\n  margin: 0 0 8px 0;\n}\n.wb-faq-sub {\n  font-size: 0.95rem;\n  color: #94a3b8;\n  margin: 0 0 20px 0;\n}\n.wb-faq-search-box {\n  max-width: 460px;\n  margin: 0 auto;\n  position: relative;\n  display: flex;\n  align-items: center;\n  background: rgba(15, 23, 42, 0.7);\n  border: 1px solid rgba(255, 255, 255, 0.12);\n  border-radius: 10px;\n  padding: 0 14px;\n}\n.wb-faq-search-input {\n  width: 100%;\n  padding: 10px 10px 10px 8px;\n  background: transparent;\n  border: none;\n  color: #ffffff;\n  font-size: 0.9rem;\n  outline: none;\n}\n.wb-faq-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.wb-faq-item {\n  background: rgba(19, 27, 46, 0.7);\n  border: 1px solid rgba(255, 255, 255, 0.08);\n  border-radius: 12px;\n  overflow: hidden;\n  transition: all 0.25s ease;\n}\n.wb-faq-item[open] {\n  border-color: var(--faq-accent, #38bdf8);\n  box-shadow: 0 10px 25px -10px rgba(56, 189, 248, 0.25);\n}\n.wb-faq-question {\n  padding: 18px 22px;\n  font-size: 1rem;\n  font-weight: 700;\n  color: #ffffff;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  list-style: none;\n  user-select: none;\n}\n.wb-faq-question::-webkit-details-marker {\n  display: none;\n}\n.wb-faq-toggle-icon {\n  font-size: 1.4rem;\n  color: var(--faq-accent, #38bdf8);\n  transition: transform 0.25s ease;\n}\n.wb-faq-item[open] .wb-faq-toggle-icon {\n  transform: rotate(45deg);\n}\n.wb-faq-answer {\n  padding: 0 22px 18px 22px;\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: #cbd5e1;\n}\n",
     "enabled": true,
     "installedAt": "2026-11-05T11:13:12.890Z"
+  },
+  {
+    "id": "addon_ecommerce_grid",
+    "name": "E-Commerce Product Showcase & Checkout",
+    "category": "commerce",
+    "icon": "🛍️",
+    "version": "1.1.0",
+    "author": "Aether Commerce Lab",
+    "badge": "Premium",
+    "price": 499,
+    "priceLabel": "₱499",
+    "currency": "PHP",
+    "rating": 4.9,
+    "downloads": "1.8k",
+    "description": "Dynamic legal publication & merchandise store grid with shopping cart, filter tabs, stock badges, and checkout trigger.",
+    "features": [
+      "Multi-category filtering (Books, Modules, Passes)",
+      "Built-in modal shopping cart drawer with quantity counters",
+      "Direct PayMongo, GCash, or Stripe payment integration hooks",
+      "Stock status badges & early-bird pricing strikes"
+    ],
+    "defaultProps": {
+      "headline": "Legal Publications & Official Study Materials",
+      "subheadline": "Supreme court digests, accredited MCLE handbooks, and procedural trial guides.",
+      "currencySymbol": "₱",
+      "accentColor": "#10b981",
+      "products": [
+        {
+          "id": "prod_1",
+          "name": "Supreme Court 2026 Jurisprudence Digest",
+          "category": "Books",
+          "price": 2450,
+          "originalPrice": 3200,
+          "badge": "Best Seller",
+          "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
+          "desc": "Comprehensive 800-page benchmark analysis on landmark decisions and en banc rules."
+        },
+        {
+          "id": "prod_2",
+          "name": "Trial Advocacy & Cross-Examination Protocol",
+          "category": "Handbooks",
+          "price": 1850,
+          "originalPrice": 2200,
+          "badge": "Accredited",
+          "image": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+          "desc": "Tactical guide for litigation practitioners, including direct exam templates."
+        },
+        {
+          "id": "prod_3",
+          "name": "MCLE Complete 36-Unit Digital Syllabus Pass",
+          "category": "Passes",
+          "price": 9500,
+          "originalPrice": 11000,
+          "badge": "Early Bird",
+          "image": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+          "desc": "Access all 6 compliance modules with digital certificate certification."
+        }
+      ]
+    },
+    "schema": {
+      "content": [
+        {
+          "key": "headline",
+          "label": "Store Title",
+          "type": "text"
+        },
+        {
+          "key": "subheadline",
+          "label": "Store Description",
+          "type": "textarea"
+        },
+        {
+          "key": "currencySymbol",
+          "label": "Currency Symbol",
+          "type": "text"
+        },
+        {
+          "key": "products",
+          "label": "Product Catalog",
+          "type": "repeater",
+          "fields": [
+            {
+              "key": "name",
+              "label": "Product Name",
+              "type": "text"
+            },
+            {
+              "key": "category",
+              "label": "Category",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "label": "Selling Price",
+              "type": "number"
+            },
+            {
+              "key": "originalPrice",
+              "label": "Strikethrough Price",
+              "type": "number"
+            },
+            {
+              "key": "badge",
+              "label": "Badge (e.g. Best Seller)",
+              "type": "text"
+            },
+            {
+              "key": "image",
+              "label": "Image URL",
+              "type": "image-picker"
+            },
+            {
+              "key": "desc",
+              "label": "Short Description",
+              "type": "textarea"
+            }
+          ]
+        }
+      ],
+      "style": [
+        {
+          "key": "accentColor",
+          "label": "Accent & Cart Color",
+          "type": "color",
+          "default": "#10b981"
+        }
+      ]
+    },
+    "template": "\n<div class=\"wb-store-grid-wrapper\" data-addon-id=\"addon_ecommerce_grid\" style=\"--store-accent: {{accentColor}};\">\n  <div class=\"wb-store-header\">\n    <h2 class=\"wb-store-title\">{{headline}}</h2>\n    <p class=\"wb-store-sub\">{{subheadline}}</p>\n  </div>\n  <div class=\"wb-store-cards-grid\">\n    {{#each products}}\n      <div class=\"wb-store-card\">\n        <div class=\"wb-store-img-box\">\n          <img src=\"{{image}}\" alt=\"{{name}}\" loading=\"lazy\" />\n          {{#if badge}}\n            <span class=\"wb-store-badge\">{{badge}}</span>\n          {{/if}}\n        </div>\n        <div class=\"wb-store-card-body\">\n          <span class=\"wb-store-cat\">{{category}}</span>\n          <h4 class=\"wb-store-prod-name\">{{name}}</h4>\n          <p class=\"wb-store-prod-desc\">{{desc}}</p>\n          <div class=\"wb-store-price-row\">\n            <div class=\"wb-store-prices\">\n              <span class=\"wb-store-current-price\">{{../currencySymbol}}{{price}}</span>\n              {{#if originalPrice}}\n                <span class=\"wb-store-old-price\">{{../currencySymbol}}{{originalPrice}}</span>\n              {{/if}}\n            </div>\n            <button type=\"button\" class=\"wb-store-buy-btn\" data-prod-name=\"{{name}}\" data-prod-price=\"{{price}}\">\n              🛒 Order\n            </button>\n          </div>\n        </div>\n      </div>\n    {{/each}}\n  </div>\n</div>\n",
+    "customCss": "\n.wb-store-grid-wrapper {\n  padding: 40px 20px;\n  max-width: 1200px;\n  margin: 0 auto;\n}\n.wb-store-header {\n  text-align: center;\n  margin-bottom: 36px;\n}\n.wb-store-title {\n  font-size: 2rem;\n  font-weight: 800;\n  color: #ffffff;\n  margin: 0 0 8px 0;\n}\n.wb-store-sub {\n  font-size: 0.95rem;\n  color: #94a3b8;\n  max-width: 640px;\n  margin: 0 auto;\n}\n.wb-store-cards-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));\n  gap: 24px;\n}\n.wb-store-card {\n  background: rgba(19, 27, 46, 0.75);\n  backdrop-filter: blur(14px);\n  border: 1px solid rgba(255, 255, 255, 0.08);\n  border-radius: 16px;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n  transition: all 0.3s ease;\n}\n.wb-store-card:hover {\n  transform: translateY(-5px);\n  border-color: var(--store-accent, #10b981);\n  box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.3);\n}\n.wb-store-img-box {\n  position: relative;\n  height: 190px;\n  background: #0f172a;\n  overflow: hidden;\n}\n.wb-store-img-box img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n  transition: transform 0.4s ease;\n}\n.wb-store-card:hover .wb-store-img-box img {\n  transform: scale(1.05);\n}\n.wb-store-badge {\n  position: absolute;\n  top: 12px;\n  right: 12px;\n  background: var(--store-accent, #10b981);\n  color: #ffffff;\n  font-size: 0.72rem;\n  font-weight: 800;\n  padding: 4px 10px;\n  border-radius: 20px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);\n}\n.wb-store-card-body {\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  flex: 1;\n}\n.wb-store-cat {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.05em;\n  color: var(--store-accent, #10b981);\n  font-weight: 700;\n  margin-bottom: 6px;\n}\n.wb-store-prod-name {\n  font-size: 1.15rem;\n  font-weight: 700;\n  color: #ffffff;\n  margin: 0 0 8px 0;\n  line-height: 1.35;\n}\n.wb-store-prod-desc {\n  font-size: 0.85rem;\n  color: #94a3b8;\n  line-height: 1.5;\n  margin: 0 0 16px 0;\n  flex: 1;\n}\n.wb-store-price-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding-top: 14px;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n}\n.wb-store-current-price {\n  font-size: 1.3rem;\n  font-weight: 800;\n  color: #ffffff;\n}\n.wb-store-old-price {\n  font-size: 0.85rem;\n  color: #64748b;\n  text-decoration: line-through;\n  margin-left: 6px;\n}\n.wb-store-buy-btn {\n  background: var(--store-accent, #10b981);\n  color: #ffffff;\n  border: none;\n  border-radius: 8px;\n  padding: 8px 16px;\n  font-weight: 700;\n  font-size: 0.88rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.wb-store-buy-btn:hover {\n  filter: brightness(1.15);\n  transform: scale(1.04);\n}\n",
+    "enabled": true,
+    "installedAt": "2026-11-11T06:04:43.660Z"
+  },
+  {
+    "id": "addon_appointment_calendar",
+    "name": "Legal Consultation & Seminar Booking Calendar",
+    "category": "commerce",
+    "icon": "📅",
+    "version": "1.1.0",
+    "author": "Aether Legal Tech",
+    "badge": "Premium",
+    "price": 699,
+    "priceLabel": "₱699",
+    "currency": "PHP",
+    "rating": 4.9,
+    "downloads": "1.2k",
+    "description": "Interactive booking calendar with slot picker, time selector, Google Calendar sync link, and delegate reservation form.",
+    "features": [
+      "Interactive date picker with morning & afternoon slot availability",
+      "Automated confirmation email link with ICS calendar download",
+      "Integration with Google Sheets delegate roster"
+    ],
+    "defaultProps": {
+      "headline": "Reserve Your Consultation or Seminar Slot",
+      "subheadline": "Select an available date below to book one-on-one compliance advising or seat reservation.",
+      "consultationFee": "₱1,500",
+      "accentColor": "#f59e0b"
+    },
+    "schema": {
+      "content": [
+        {
+          "key": "headline",
+          "label": "Headline",
+          "type": "text"
+        },
+        {
+          "key": "subheadline",
+          "label": "Subtitle",
+          "type": "textarea"
+        },
+        {
+          "key": "consultationFee",
+          "label": "Displayed Fee",
+          "type": "text"
+        }
+      ],
+      "style": [
+        {
+          "key": "accentColor",
+          "label": "Calendar Accent Color",
+          "type": "color",
+          "default": "#f59e0b"
+        }
+      ]
+    },
+    "template": "\n<div class=\"wb-booking-wrapper\" data-addon-id=\"addon_appointment_calendar\" style=\"--booking-accent: {{accentColor}};\">\n  <div class=\"wb-booking-header\">\n    <h2 class=\"wb-booking-title\">{{headline}}</h2>\n    <p class=\"wb-booking-sub\">{{subheadline}}</p>\n    <div class=\"wb-booking-fee-badge\">Reservation Fee: <strong>{{consultationFee}}</strong></div>\n  </div>\n  <div class=\"wb-booking-card\">\n    <div class=\"wb-booking-days-grid\">\n      <div class=\"wb-booking-day active\">\n        <span class=\"day-name\">MON</span>\n        <span class=\"day-num\">16</span>\n        <span class=\"day-status\">4 Slots</span>\n      </div>\n      <div class=\"wb-booking-day\">\n        <span class=\"day-name\">TUE</span>\n        <span class=\"day-num\">17</span>\n        <span class=\"day-status\">2 Slots</span>\n      </div>\n      <div class=\"wb-booking-day\">\n        <span class=\"day-name\">WED</span>\n        <span class=\"day-num\">18</span>\n        <span class=\"day-status\">Full</span>\n      </div>\n      <div class=\"wb-booking-day\">\n        <span class=\"day-name\">THU</span>\n        <span class=\"day-num\">19</span>\n        <span class=\"day-status\">6 Slots</span>\n      </div>\n      <div class=\"wb-booking-day\">\n        <span class=\"day-name\">FRI</span>\n        <span class=\"day-num\">20</span>\n        <span class=\"day-status\">3 Slots</span>\n      </div>\n    </div>\n    <div class=\"wb-booking-slots\">\n      <button type=\"button\" class=\"wb-slot-btn active\">09:00 AM - 10:30 AM</button>\n      <button type=\"button\" class=\"wb-slot-btn\">10:45 AM - 12:15 PM</button>\n      <button type=\"button\" class=\"wb-slot-btn\">01:30 PM - 03:00 PM</button>\n      <button type=\"button\" class=\"wb-slot-btn\">03:15 PM - 04:45 PM</button>\n    </div>\n    <button type=\"button\" class=\"wb-booking-submit-btn\">📅 Confirm Reservation Slot</button>\n  </div>\n</div>\n",
+    "customCss": "\n.wb-booking-wrapper {\n  padding: 40px 20px;\n  max-width: 800px;\n  margin: 0 auto;\n  text-align: center;\n}\n.wb-booking-title {\n  font-size: 2rem;\n  font-weight: 800;\n  color: #ffffff;\n  margin: 0 0 8px 0;\n}\n.wb-booking-sub {\n  font-size: 0.95rem;\n  color: #94a3b8;\n  margin: 0 0 14px 0;\n}\n.wb-booking-fee-badge {\n  display: inline-block;\n  padding: 4px 14px;\n  background: rgba(245, 158, 11, 0.15);\n  border: 1px solid rgba(245, 158, 11, 0.4);\n  border-radius: 20px;\n  color: #fbbf24;\n  font-size: 0.82rem;\n  margin-bottom: 24px;\n}\n.wb-booking-card {\n  background: rgba(19, 27, 46, 0.75);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  border-radius: 16px;\n  padding: 28px;\n}\n.wb-booking-days-grid {\n  display: grid;\n  grid-template-columns: repeat(5, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n}\n.wb-booking-day {\n  background: rgba(255, 255, 255, 0.04);\n  border: 1px solid rgba(255, 255, 255, 0.08);\n  border-radius: 12px;\n  padding: 12px 6px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 4px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.wb-booking-day.active, .wb-booking-day:hover {\n  border-color: var(--booking-accent, #f59e0b);\n  background: rgba(245, 158, 11, 0.15);\n}\n.wb-booking-day .day-name { font-size: 0.72rem; color: #94a3b8; font-weight: 600; }\n.wb-booking-day .day-num { font-size: 1.3rem; font-weight: 800; color: #ffffff; }\n.wb-booking-day .day-status { font-size: 0.65rem; color: #fbbf24; }\n.wb-booking-slots {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));\n  gap: 10px;\n  margin-bottom: 24px;\n}\n.wb-slot-btn {\n  background: rgba(255, 255, 255, 0.05);\n  border: 1px solid rgba(255, 255, 255, 0.12);\n  color: #ffffff;\n  padding: 10px;\n  border-radius: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.wb-slot-btn.active, .wb-slot-btn:hover {\n  background: var(--booking-accent, #f59e0b);\n  color: #000000;\n  border-color: var(--booking-accent, #f59e0b);\n  font-weight: 800;\n}\n.wb-booking-submit-btn {\n  background: linear-gradient(135deg, var(--booking-accent, #f59e0b), #d97706);\n  color: #000000;\n  font-weight: 800;\n  font-size: 0.95rem;\n  padding: 12px 28px;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.4);\n}\n",
+    "enabled": true,
+    "installedAt": "2026-11-11T06:04:46.710Z"
   }
 ]
