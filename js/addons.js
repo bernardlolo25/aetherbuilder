@@ -90,6 +90,15 @@ function evaluateCondition(condStr, context, parents = []) {
     s = s.slice(1, -1).trim();
   }
 
+  // Handle logical helpers: and, or
+  const logicMatch = s.match(/^(and|or)\s+([^\s]+)\s+([\s\S]+)$/);
+  if (logicMatch) {
+    const logicOp = logicMatch[1];
+    const leftVal = evaluateCondition(logicMatch[2].trim(), context, parents);
+    const rightVal = evaluateCondition(logicMatch[3].trim(), context, parents);
+    return logicOp === 'and' ? (Boolean(leftVal) && Boolean(rightVal)) : (Boolean(leftVal) || Boolean(rightVal));
+  }
+
   // Handle helpers: eq, ne, gt, lt
   const helperMatch = s.match(/^(eq|ne|gt|lt)\s+([^\s]+)\s+([\s\S]+)$/);
   if (helperMatch) {
@@ -798,6 +807,270 @@ function onMount(el, props) {
   });
 }
 `
+  }
+,
+  {
+    "id": "addon_interactive_tour",
+    "name": "Interactive Guided Tour & Mascot",
+    "category": "addons",
+    "icon": "🧭",
+    "version": "1.0.0",
+    "author": "Aether Studio",
+    "badge": "Official",
+    "price": 0,
+    "priceLabel": "FREE",
+    "rating": 5,
+    "downloads": "1.2k",
+    "description": "Step-by-step interactive website walkthrough tour with spotlight highlighting, auto-scroll, customizable launcher button, and optional animated avatar mascot.",
+    "features": [
+      "Spotlight cutout that smoothly zooms and highlights any section or element on your site",
+      "Smart auto-scroll brings any highlighted button, form, or section into view",
+      "Optional animated avatar mascot (GIF/PNG) acting as your virtual guide with custom name",
+      "Auto-start on first visit with localStorage memory, or on-demand via floating launcher button",
+      "Keyboard accessible (Esc to exit, Arrow keys to navigate)"
+    ],
+    "defaultProps": {
+      "tourTitle": "Welcome Walkthrough",
+      "tourBadge": "GUIDED TOUR",
+      "showLauncher": true,
+      "launcherText": "Need Help? Take a Tour",
+      "launcherIcon": "🧭",
+      "launcherPosition": "bottom-right",
+      "autoStart": false,
+      "tourStorageKey": "aether_tour_completed",
+      "showAvatar": true,
+      "avatarUrl": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWp3OHY4ejdzaG1xZzV4cW5uN3pxN2ZzNGlzazZpdzV4ZXFjZnNnayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/L3U7I9aFm3y7Z9X69R/giphy.gif",
+      "avatarName": "Nova (Guide)",
+      "avatarStyle": "peeking",
+      "backdropOpacity": 0.75,
+      "spotlightPadding": 10,
+      "accentColor": "#6366f1",
+      "cardTheme": "glass",
+      "steps": [
+        {
+          "targetSelector": "header, nav, .widget-type-navbar, .canvas-section-wrapper:first-child",
+          "title": "Welcome to Our Website! 👋",
+          "content": "We are thrilled to welcome you. Let us take you on a quick 30-second tour to discover key features and tools available here.",
+          "placement": "bottom",
+          "stepIcon": "✨"
+        },
+        {
+          "targetSelector": ".wb-registration-widget, form, .widget-type-registration_form, .wb-addon-contact-hire",
+          "title": "Quick Registration & Contact 📝",
+          "content": "Fill out the fields here in just 2 minutes to reserve your accreditation slot or reach our support team immediately.",
+          "placement": "top",
+          "stepIcon": "🚀"
+        },
+        {
+          "targetSelector": "footer, .widget-type-footer, .wb-footer-grid, .canvas-section-wrapper:last-child",
+          "title": "Stay Connected & Reach Out 📍",
+          "content": "Find official accreditation guidelines, office contact numbers, and verified social channels in the footer. Enjoy your visit!",
+          "placement": "top",
+          "stepIcon": "🌟"
+        }
+      ]
+    },
+    "schema": {
+      "content": [
+        {
+          "key": "tourTitle",
+          "label": "🧭 Tour Title",
+          "type": "text"
+        },
+        {
+          "key": "tourBadge",
+          "label": "🏷️ Header Badge Text",
+          "type": "text"
+        },
+        {
+          "key": "showLauncher",
+          "label": "🔘 Show Floating Tour Button",
+          "type": "toggle"
+        },
+        {
+          "key": "launcherText",
+          "label": "💬 Launcher Button Label",
+          "type": "text"
+        },
+        {
+          "key": "launcherIcon",
+          "label": "Icon Emoji (when no avatar)",
+          "type": "text"
+        },
+        {
+          "key": "launcherPosition",
+          "label": "📍 Floating Launcher Position",
+          "type": "select",
+          "options": [
+            {
+              "label": "Bottom Right",
+              "value": "bottom-right"
+            },
+            {
+              "label": "Bottom Left",
+              "value": "bottom-left"
+            },
+            {
+              "label": "Top Right",
+              "value": "top-right"
+            },
+            {
+              "label": "Top Left",
+              "value": "top-left"
+            }
+          ],
+          "default": "bottom-right"
+        },
+        {
+          "key": "showAvatar",
+          "label": "👤 Enable Guide Avatar / Mascot",
+          "type": "toggle"
+        },
+        {
+          "key": "avatarUrl",
+          "label": "🖼️ Avatar Image or GIF URL",
+          "type": "image-picker"
+        },
+        {
+          "key": "avatarName",
+          "label": "Mascot Name (e.g. Nova, Assistant)",
+          "type": "text"
+        },
+        {
+          "key": "avatarStyle",
+          "label": "Avatar Mascot Style",
+          "type": "select",
+          "options": [
+            {
+              "label": "Peeking Mascot (Top Border)",
+              "value": "peeking"
+            },
+            {
+              "label": "Circle Badge (Header)",
+              "value": "badge"
+            },
+            {
+              "label": "Companion (Side Bubble)",
+              "value": "companion"
+            }
+          ],
+          "default": "peeking"
+        },
+        {
+          "key": "steps",
+          "label": "👣 Tour Steps",
+          "type": "repeater",
+          "itemLabel": "Step",
+          "fields": [
+            {
+              "key": "targetSelector",
+              "label": "🎯 Target Element CSS Selector (e.g. .wb-registration-widget, #nav, footer)",
+              "type": "text"
+            },
+            {
+              "key": "title",
+              "label": "Step Title",
+              "type": "text"
+            },
+            {
+              "key": "content",
+              "label": "Step Explanation",
+              "type": "textarea"
+            },
+            {
+              "key": "stepIcon",
+              "label": "Step Icon Emoji",
+              "type": "text"
+            },
+            {
+              "key": "placement",
+              "label": "Tooltip Placement",
+              "type": "select",
+              "options": [
+                {
+                  "label": "Auto (Best Fit)",
+                  "value": "auto"
+                },
+                {
+                  "label": "Bottom (Below Element)",
+                  "value": "bottom"
+                },
+                {
+                  "label": "Top (Above Element)",
+                  "value": "top"
+                },
+                {
+                  "label": "Left (Side)",
+                  "value": "left"
+                },
+                {
+                  "label": "Right (Side)",
+                  "value": "right"
+                }
+              ],
+              "default": "auto"
+            }
+          ]
+        }
+      ],
+      "style": [
+        {
+          "key": "cardTheme",
+          "label": "🎨 Card Theme",
+          "type": "select",
+          "options": [
+            {
+              "label": "Glassmorphic Dark",
+              "value": "glass"
+            },
+            {
+              "label": "Solid Elevated Dark",
+              "value": "dark"
+            },
+            {
+              "label": "Clean Modern Light",
+              "value": "light"
+            }
+          ],
+          "default": "glass"
+        },
+        {
+          "key": "accentColor",
+          "label": "Accent Highlight Color",
+          "type": "color",
+          "default": "#6366f1"
+        },
+        {
+          "key": "backdropOpacity",
+          "label": "Spotlight Dim Opacity (0.2 to 0.95)",
+          "type": "number",
+          "default": 0.75
+        },
+        {
+          "key": "spotlightPadding",
+          "label": "Spotlight Padding (px)",
+          "type": "number",
+          "default": 10
+        }
+      ],
+      "advanced": [
+        {
+          "key": "autoStart",
+          "label": "⚡ Auto-Start Tour on First Visit",
+          "type": "toggle",
+          "default": false
+        },
+        {
+          "key": "tourStorageKey",
+          "label": "Storage Key (to remember completion)",
+          "type": "text",
+          "default": "aether_tour_completed"
+        }
+      ]
+    },
+    "template": "<div class=\"wb-tour-addon-widget\" data-tour-pos=\"{{launcherPosition}}\" style=\"--tour-accent: {{accentColor}};\">\n  {{#if showLauncher}}\n  <button type=\"button\" class=\"wb-tour-launcher-btn wb-tour-launcher-{{launcherPosition}}\" aria-label=\"{{launcherText}}\">\n    {{#if (and showAvatar avatarUrl)}}\n      <div class=\"wb-tour-launcher-avatar\">\n        <img src=\"{{avatarUrl}}\" alt=\"{{avatarName}}\" />\n      </div>\n    {{else}}\n      <span class=\"wb-tour-launcher-icon\">{{launcherIcon}}</span>\n    {{/if}}\n    <span class=\"wb-tour-launcher-text\">{{launcherText}}</span>\n    <span class=\"wb-tour-launcher-pulse\"></span>\n  </button>\n  {{/if}}\n</div>",
+    "customCss": "/* ── Interactive Guided Tour & Mascot Styles ── */\n.wb-tour-addon-widget {\n  display: block;\n  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);\n}\n\n/* Floating Launcher Button */\n.wb-tour-launcher-btn {\n  position: fixed;\n  z-index: 99990;\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 16px 8px 10px;\n  background: rgba(15, 23, 42, 0.88);\n  backdrop-filter: blur(12px);\n  -webkit-backdrop-filter: blur(12px);\n  border: 1px solid rgba(255, 255, 255, 0.18);\n  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.3);\n  border-radius: 9999px;\n  color: #f8fafc;\n  font-size: 0.82rem;\n  font-weight: 700;\n  cursor: pointer;\n  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, background 0.2s;\n  user-select: none;\n}\n.wb-tour-launcher-btn:hover {\n  transform: translateY(-2px) scale(1.02);\n  background: rgba(19, 27, 46, 0.98);\n  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 16px var(--tour-accent, #6366f1);\n  border-color: var(--tour-accent, #6366f1);\n}\n.wb-tour-launcher-btn:active {\n  transform: translateY(0) scale(0.98);\n}\n\n.wb-tour-launcher-bottom-right { bottom: 24px; right: 24px; }\n.wb-tour-launcher-bottom-left  { bottom: 24px; left: 24px; }\n.wb-tour-launcher-top-right   { top: 24px; right: 24px; }\n.wb-tour-launcher-top-left    { top: 24px; left: 24px; }\n\n.wb-tour-launcher-avatar {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  overflow: hidden;\n  background: rgba(255, 255, 255, 0.1);\n  border: 1.5px solid var(--tour-accent, #6366f1);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.wb-tour-launcher-avatar img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n.wb-tour-launcher-icon {\n  font-size: 1.15rem;\n  line-height: 1;\n}\n.wb-tour-launcher-text {\n  letter-spacing: -0.01em;\n  white-space: nowrap;\n}\n.wb-tour-launcher-pulse {\n  display: inline-block;\n  width: 7px;\n  height: 7px;\n  border-radius: 50%;\n  background: var(--tour-accent, #6366f1);\n  box-shadow: 0 0 8px var(--tour-accent, #6366f1);\n  animation: wbTourPulse 1.8s infinite;\n}\n@keyframes wbTourPulse {\n  0% { transform: scale(0.9); opacity: 0.8; }\n  50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 12px var(--tour-accent, #6366f1); }\n  100% { transform: scale(0.9); opacity: 0.8; }\n}\n\n/* ── Fullscreen Overlay & Spotlight ── */\n#wb-tour-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 999990;\n  pointer-events: auto;\n  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);\n  animation: wbTourFadeIn 0.25s ease-out;\n}\n@keyframes wbTourFadeIn {\n  from { opacity: 0; }\n  to { opacity: 1; }\n}\n\n.wb-tour-spotlight-hole {\n  position: fixed;\n  border-radius: 12px;\n  pointer-events: none;\n  transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),\n              left 0.35s cubic-bezier(0.16, 1, 0.3, 1),\n              width 0.35s cubic-bezier(0.16, 1, 0.3, 1),\n              height 0.35s cubic-bezier(0.16, 1, 0.3, 1);\n  box-shadow: 0 0 0 9999px rgba(10, 16, 32, var(--tour-opacity, 0.78)),\n              0 0 24px rgba(99, 102, 241, 0.55);\n  border: 2px solid var(--tour-accent, #6366f1);\n  outline: 2px dashed rgba(255, 255, 255, 0.35);\n  box-sizing: border-box;\n}\n\n/* ── Tour Popover Card ── */\n.wb-tour-card {\n  position: fixed;\n  z-index: 999995;\n  width: 360px;\n  max-width: calc(100vw - 32px);\n  border-radius: 18px;\n  box-sizing: border-box;\n  padding: 20px 22px;\n  transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),\n              left 0.35s cubic-bezier(0.16, 1, 0.3, 1),\n              opacity 0.2s, transform 0.2s;\n  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);\n}\n\n/* Themes */\n.wb-tour-theme-glass {\n  background: rgba(19, 27, 46, 0.92);\n  backdrop-filter: blur(18px);\n  -webkit-backdrop-filter: blur(18px);\n  border: 1px solid rgba(255, 255, 255, 0.14);\n  color: #f8fafc;\n}\n.wb-tour-theme-dark {\n  background: #0f172a;\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  color: #f8fafc;\n}\n.wb-tour-theme-light {\n  background: #ffffff;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);\n  color: #0f172a;\n}\n\n/* Mascot Avatar Styling */\n.wb-tour-avatar-peeking {\n  position: absolute;\n  top: -34px;\n  left: 20px;\n  width: 52px;\n  height: 52px;\n  border-radius: 50%;\n  background: #0f172a;\n  border: 2.5px solid var(--tour-accent, #6366f1);\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  overflow: hidden;\n  animation: wbTourBob 2.8s ease-in-out infinite;\n}\n.wb-tour-avatar-peeking img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@keyframes wbTourBob {\n  0%, 100% { transform: translateY(0); }\n  50% { transform: translateY(-6px); }\n}\n\n.wb-tour-avatar-companion {\n  position: absolute;\n  top: -28px;\n  right: 20px;\n  width: 50px;\n  height: 50px;\n  border-radius: 50%;\n  background: #0f172a;\n  border: 2px solid var(--tour-accent, #6366f1);\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  overflow: hidden;\n  animation: wbTourBob 2.8s ease-in-out infinite;\n}\n.wb-tour-avatar-companion img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n\n.wb-tour-avatar-badge {\n  width: 28px;\n  height: 28px;\n  border-radius: 50%;\n  overflow: hidden;\n  border: 1.5px solid var(--tour-accent, #6366f1);\n  display: inline-block;\n  vertical-align: middle;\n  margin-right: 6px;\n}\n.wb-tour-avatar-badge img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n\n/* Card Header */\n.wb-tour-card-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 12px;\n}\n.wb-tour-badge-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  padding: 3px 9px;\n  border-radius: 20px;\n  font-size: 0.68rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.05em;\n  background: rgba(99, 102, 241, 0.18);\n  color: #c7d2fe;\n  border: 1px solid rgba(99, 102, 241, 0.35);\n}\n.wb-tour-step-counter {\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: #94a3b8;\n}\n.wb-tour-close-btn {\n  background: none;\n  border: none;\n  color: #94a3b8;\n  cursor: pointer;\n  font-size: 1.1rem;\n  padding: 2px 6px;\n  border-radius: 6px;\n  line-height: 1;\n  transition: color 0.15s, background 0.15s;\n}\n.wb-tour-close-btn:hover {\n  color: #f87171;\n  background: rgba(239, 68, 68, 0.1);\n}\n\n/* Card Content */\n.wb-tour-card-title {\n  font-size: 1.05rem;\n  font-weight: 800;\n  margin: 0 0 8px 0;\n  line-height: 1.3;\n  letter-spacing: -0.02em;\n}\n.wb-tour-card-desc {\n  font-size: 0.84rem;\n  line-height: 1.55;\n  color: #cbd5e1;\n  margin: 0 0 16px 0;\n}\n.wb-tour-theme-light .wb-tour-card-desc {\n  color: #475569;\n}\n\n/* Progress Dots */\n.wb-tour-progress-bar {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.wb-tour-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.2);\n  transition: all 0.25s ease;\n}\n.wb-tour-theme-light .wb-tour-dot {\n  background: rgba(0, 0, 0, 0.15);\n}\n.wb-tour-dot.active {\n  width: 22px;\n  border-radius: 4px;\n  background: var(--tour-accent, #6366f1);\n  box-shadow: 0 0 8px var(--tour-accent, #6366f1);\n}\n\n/* Card Actions */\n.wb-tour-card-actions {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 8px;\n  padding-top: 10px;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n}\n.wb-tour-theme-light .wb-tour-card-actions {\n  border-top: 1px solid rgba(0, 0, 0, 0.08);\n}\n.wb-tour-skip-btn {\n  background: none;\n  border: none;\n  color: #94a3b8;\n  font-size: 0.76rem;\n  font-weight: 600;\n  cursor: pointer;\n  padding: 6px 10px;\n  border-radius: 6px;\n  transition: color 0.15s;\n}\n.wb-tour-skip-btn:hover {\n  color: #ffffff;\n}\n.wb-tour-nav-btns {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.wb-tour-btn {\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 0.78rem;\n  font-weight: 700;\n  cursor: pointer;\n  border: none;\n  transition: all 0.15s ease;\n}\n.wb-tour-btn-back {\n  background: rgba(255, 255, 255, 0.08);\n  color: #cbd5e1;\n  border: 1px solid rgba(255, 255, 255, 0.12);\n}\n.wb-tour-theme-light .wb-tour-btn-back {\n  background: #f1f5f9;\n  color: #475569;\n  border: 1px solid #e2e8f0;\n}\n.wb-tour-btn-back:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.15);\n  color: #ffffff;\n}\n.wb-tour-btn-back:disabled {\n  opacity: 0.35;\n  cursor: not-allowed;\n}\n.wb-tour-btn-next {\n  background: var(--tour-accent, #6366f1);\n  color: #ffffff;\n  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);\n}\n.wb-tour-btn-next:hover {\n  filter: brightness(1.1);\n  transform: translateY(-1px);\n}\n.wb-tour-btn-next:active {\n  transform: translateY(0);\n}",
+    "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-tour-addon-widget');\n  if (!root) return;\n\n  var esc = function (s) {\n    return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) {\n      return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c];\n    });\n  };\n\n  var steps = Array.isArray(props.steps) ? props.steps : [];\n  if (steps.length === 0) {\n    // Built-in default steps fallback\n    steps = [\n      { targetSelector: 'header, nav, .widget-type-navbar', title: 'Welcome! 👋', content: 'Explore our top navigation to discover sections and services.', placement: 'bottom' },\n      { targetSelector: '.wb-registration-widget, form, .widget-type-registration_form', title: 'Quick Registration 📝', content: 'Complete this form to reserve your slot instantly.', placement: 'top' },\n      { targetSelector: 'footer, .widget-type-footer', title: 'Contact & Support 📍', content: 'Find official contact details, addresses, and social links here.', placement: 'top' }\n    ];\n  }\n\n  var currentStep = 0;\n  var overlayEl = null;\n  var spotlightEl = null;\n  var cardEl = null;\n  var isTourActive = false;\n\n  var accentColor = props.accentColor || '#6366f1';\n  var cardTheme = props.cardTheme || 'glass';\n  var backdropOpacity = parseFloat(props.backdropOpacity) || 0.75;\n  var spotlightPad = parseInt(props.spotlightPadding) || 10;\n  var showAvatar = props.showAvatar !== false && props.showAvatar !== 'false';\n  var avatarUrl = (props.avatarUrl || '').trim();\n  var avatarName = esc(props.avatarName || 'Nova');\n  var avatarStyle = props.avatarStyle || 'peeking';\n  var tourBadge = esc(props.tourBadge || 'GUIDED TOUR');\n  var storageKey = props.tourStorageKey || 'aether_tour_completed';\n\n  root.style.setProperty('--tour-accent', accentColor);\n\n  function createOverlay() {\n    if (document.getElementById('wb-tour-overlay')) {\n      document.getElementById('wb-tour-overlay').remove();\n    }\n\n    overlayEl = document.createElement('div');\n    overlayEl.id = 'wb-tour-overlay';\n    overlayEl.style.setProperty('--tour-accent', accentColor);\n    overlayEl.style.setProperty('--tour-opacity', backdropOpacity);\n\n    spotlightEl = document.createElement('div');\n    spotlightEl.className = 'wb-tour-spotlight-hole';\n    overlayEl.appendChild(spotlightEl);\n\n    cardEl = document.createElement('div');\n    cardEl.className = 'wb-tour-card wb-tour-theme-' + cardTheme;\n    overlayEl.appendChild(cardEl);\n\n    document.body.appendChild(overlayEl);\n\n    // Keyboard handlers\n    window.addEventListener('keydown', onKeyDown);\n    window.addEventListener('resize', onViewportChange);\n    window.addEventListener('scroll', onViewportChange, true);\n  }\n\n  function removeOverlay() {\n    isTourActive = false;\n    window.removeEventListener('keydown', onKeyDown);\n    window.removeEventListener('resize', onViewportChange);\n    window.removeEventListener('scroll', onViewportChange, true);\n\n    if (overlayEl) {\n      overlayEl.remove();\n      overlayEl = null;\n      spotlightEl = null;\n      cardEl = null;\n    }\n  }\n\n  function onKeyDown(e) {\n    if (!isTourActive) return;\n    if (e.key === 'Escape') {\n      endTour(false);\n    } else if (e.key === 'ArrowRight' || e.key === 'Enter') {\n      nextStep();\n    } else if (e.key === 'ArrowLeft') {\n      prevStep();\n    }\n  }\n\n  var scrollTimer = null;\n  function onViewportChange() {\n    if (!isTourActive) return;\n    clearTimeout(scrollTimer);\n    scrollTimer = setTimeout(function () {\n      updatePositions(currentStep);\n    }, 40);\n  }\n\n  function findTargetElement(selector) {\n    if (!selector) return null;\n    var selectors = selector.split(',').map(function (s) { return s.trim(); }).filter(Boolean);\n    for (var i = 0; i < selectors.length; i++) {\n      var found = document.querySelector(selectors[i]);\n      if (found && found.offsetParent !== null) return found;\n    }\n    return null;\n  }\n\n  function updatePositions(stepIdx) {\n    if (!isTourActive || !cardEl || !spotlightEl) return;\n    var step = steps[stepIdx];\n    if (!step) return;\n\n    var target = findTargetElement(step.targetSelector);\n    var rect;\n\n    if (target) {\n      rect = target.getBoundingClientRect();\n      var top = Math.max(4, rect.top - spotlightPad);\n      var left = Math.max(4, rect.left - spotlightPad);\n      var width = rect.width + (spotlightPad * 2);\n      var height = rect.height + (spotlightPad * 2);\n\n      spotlightEl.style.top = top + 'px';\n      spotlightEl.style.left = left + 'px';\n      spotlightEl.style.width = width + 'px';\n      spotlightEl.style.height = height + 'px';\n      spotlightEl.style.display = 'block';\n    } else {\n      // Fallback: spotlight center box if element not on page\n      var w = 180, h = 90;\n      var cx = (window.innerWidth / 2) - (w / 2);\n      var cy = (window.innerHeight / 2) - (h / 2);\n      spotlightEl.style.top = cy + 'px';\n      spotlightEl.style.left = cx + 'px';\n      spotlightEl.style.width = w + 'px';\n      spotlightEl.style.height = h + 'px';\n      spotlightEl.style.display = 'none';\n      rect = { top: cy, bottom: cy + h, left: cx, right: cx + w, width: w, height: h };\n    }\n\n    // Card Position calculation\n    var placement = step.placement || 'auto';\n    var cardW = cardEl.offsetWidth || 360;\n    var cardH = cardEl.offsetHeight || 220;\n    var cTop, cLeft;\n\n    if (placement === 'auto') {\n      var spaceBelow = window.innerHeight - rect.bottom;\n      var spaceAbove = rect.top;\n      placement = (spaceBelow >= cardH + 24) ? 'bottom' : (spaceAbove >= cardH + 24 ? 'top' : 'bottom');\n    }\n\n    if (placement === 'bottom') {\n      cTop = rect.bottom + 16;\n      cLeft = rect.left + (rect.width / 2) - (cardW / 2);\n    } else if (placement === 'top') {\n      cTop = rect.top - cardH - 16;\n      cLeft = rect.left + (rect.width / 2) - (cardW / 2);\n    } else if (placement === 'right' && rect.right + cardW + 20 < window.innerWidth) {\n      cTop = rect.top + (rect.height / 2) - (cardH / 2);\n      cLeft = rect.right + 16;\n    } else if (placement === 'left' && rect.left - cardW - 20 > 0) {\n      cTop = rect.top + (rect.height / 2) - (cardH / 2);\n      cLeft = rect.left - cardW - 16;\n    } else {\n      // Fallback center\n      cTop = (window.innerHeight / 2) - (cardH / 2);\n      cLeft = (window.innerWidth / 2) - (cardW / 2);\n    }\n\n    // Viewport Boundary Clamping\n    cLeft = Math.max(16, Math.min(window.innerWidth - cardW - 16, cLeft));\n    cTop = Math.max(48, Math.min(window.innerHeight - cardH - 16, cTop));\n\n    cardEl.style.top = Math.round(cTop) + 'px';\n    cardEl.style.left = Math.round(cLeft) + 'px';\n  }\n\n  function renderCardContent(step, idx) {\n    var isLast = idx === steps.length - 1;\n    var isFirst = idx === 0;\n\n    // Avatar HTML\n    var peekingHtml = '';\n    var badgeAvatarHtml = '';\n    if (showAvatar && avatarUrl) {\n      if (avatarStyle === 'peeking') {\n        peekingHtml = '<div class=\"wb-tour-avatar-peeking\"><img src=\"' + esc(avatarUrl) + '\" alt=\"' + avatarName + '\" /></div>';\n      } else if (avatarStyle === 'badge') {\n        badgeAvatarHtml = '<span class=\"wb-tour-avatar-badge\"><img src=\"' + esc(avatarUrl) + '\" alt=\"' + avatarName + '\" /></span>';\n      } else if (avatarStyle === 'companion') {\n        peekingHtml = '<div class=\"wb-tour-avatar-companion\"><img src=\"' + esc(avatarUrl) + '\" alt=\"' + avatarName + '\" /></div>';\n      }\n    }\n\n    // Dots HTML\n    var dotsHtml = '<div class=\"wb-tour-progress-bar\">';\n    for (var i = 0; i < steps.length; i++) {\n      dotsHtml += '<span class=\"wb-tour-dot ' + (i === idx ? 'active' : '') + '\"></span>';\n    }\n    dotsHtml += '</div>';\n\n    var iconHtml = step.stepIcon ? '<span style=\"font-size:1.15rem;margin-right:6px;\">' + esc(step.stepIcon) + '</span>' : '';\n\n    cardEl.innerHTML =\n      peekingHtml +\n      '<div class=\"wb-tour-card-header\">' +\n        '<span class=\"wb-tour-badge-pill\">' + badgeAvatarHtml + tourBadge + '</span>' +\n        '<span class=\"wb-tour-step-counter\">Step ' + (idx + 1) + ' of ' + steps.length + '</span>' +\n        '<button type=\"button\" class=\"wb-tour-close-btn\" title=\"Exit Tour\">✕</button>' +\n      '</div>' +\n      '<h4 class=\"wb-tour-card-title\">' + iconHtml + esc(step.title || 'Step ' + (idx + 1)) + '</h4>' +\n      '<p class=\"wb-tour-card-desc\">' + esc(step.content || '') + '</p>' +\n      dotsHtml +\n      '<div class=\"wb-tour-card-actions\">' +\n        '<button type=\"button\" class=\"wb-tour-skip-btn\">Skip Tour</button>' +\n        '<div class=\"wb-tour-nav-btns\">' +\n          '<button type=\"button\" class=\"wb-tour-btn wb-tour-btn-back\" ' + (isFirst ? 'disabled' : '') + '>Back</button>' +\n          '<button type=\"button\" class=\"wb-tour-btn wb-tour-btn-next\">' + (isLast ? 'Finish 🎉' : 'Next →') + '</button>' +\n        '</div>' +\n      '</div>';\n\n    // Wire Card Buttons\n    cardEl.querySelector('.wb-tour-close-btn').onclick = function () { endTour(false); };\n    cardEl.querySelector('.wb-tour-skip-btn').onclick = function () { endTour(false); };\n    cardEl.querySelector('.wb-tour-btn-back').onclick = function () { prevStep(); };\n    cardEl.querySelector('.wb-tour-btn-next').onclick = function () {\n      if (isLast) {\n        endTour(true);\n      } else {\n        nextStep();\n      }\n    };\n  }\n\n  function goToStep(idx) {\n    if (idx < 0 || idx >= steps.length) return;\n    currentStep = idx;\n\n    var step = steps[idx];\n    var target = findTargetElement(step.targetSelector);\n\n    if (target) {\n      try {\n        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });\n      } catch (_) {}\n    }\n\n    renderCardContent(step, idx);\n\n    setTimeout(function () {\n      updatePositions(idx);\n    }, 150);\n  }\n\n  function nextStep() {\n    if (currentStep < steps.length - 1) {\n      goToStep(currentStep + 1);\n    } else {\n      endTour(true);\n    }\n  }\n\n  function prevStep() {\n    if (currentStep > 0) {\n      goToStep(currentStep - 1);\n    }\n  }\n\n  function startTour() {\n    if (steps.length === 0) return;\n    isTourActive = true;\n    createOverlay();\n    goToStep(0);\n  }\n\n  function endTour(completed) {\n    removeOverlay();\n    if (completed && storageKey) {\n      try {\n        localStorage.setItem(storageKey, 'true');\n      } catch (_) {}\n    }\n    if (completed && window.aetherApp && window.aetherApp.canvas && typeof window.aetherApp.canvas.showToast === 'function') {\n      window.aetherApp.canvas.showToast('🎉 Tour completed! Welcome aboard.', 'success');\n    }\n  }\n\n  // Wire Launcher Button\n  var launcherBtn = root.querySelector('.wb-tour-launcher-btn');\n  if (launcherBtn) {\n    launcherBtn.addEventListener('click', function (e) {\n      e.stopPropagation();\n      startTour();\n    });\n  }\n\n  // Auto-Start Check\n  if (props.autoStart === true || props.autoStart === 'true') {\n    var alreadyDone = false;\n    try {\n      alreadyDone = !!localStorage.getItem(storageKey);\n    } catch (_) {}\n\n    if (!alreadyDone) {\n      setTimeout(function () {\n        // Only auto-start if not already in another tour\n        if (!isTourActive) startTour();\n      }, 1000);\n    }\n  }\n\n  // Teardown\n  el.__wbDestroy = function () {\n    removeOverlay();\n  };\n}"
   }
 ];
 
