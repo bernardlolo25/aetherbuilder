@@ -316,10 +316,12 @@ class BuilderState {
     if (activeData) {
       if (activeData.siteSettings) this.siteSettings = { ...this.siteSettings, ...activeData.siteSettings };
       if (Array.isArray(activeData.pages) && activeData.pages.length > 0) {
+        activeData.pages.forEach(p => this.ensureSectionCustomIds(p.sections, p.slug));
         this.pages         = activeData.pages;
         this.currentPageId = activeData.currentPageId || this.pages[0].id;
         hasLoadedPages     = true;
       } else if (Array.isArray(activeData.sections) && activeData.sections.length > 0) {
+        this.ensureSectionCustomIds(activeData.sections, 'home');
         const pg = makeDefaultPage(makePageId(), 'index', 'Home', activeData.sections);
         if (activeData.pageSettings) pg.pageSettings = { ...pg.pageSettings, ...activeData.pageSettings };
         this.pages         = [pg];
@@ -923,12 +925,82 @@ class BuilderState {
   }
 
   // ── Section / Widget Operations ────────────────────────────────────────────
+  generateCustomElementId(widgetType, pageSlug = null) {
+    const page = pageSlug || this.currentPage?.slug || 'home';
+    const cleanPage = String(page).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'page';
+
+    let cleanWidget = String(widgetType || 'section')
+      .replace(/^addon_/, '')
+      .replace(/^widget_type_/, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-');
+    if (cleanWidget === 'navbar') cleanWidget = 'nav';
+    if (cleanWidget.endsWith('-widget')) cleanWidget = cleanWidget.replace(/-widget$/, '');
+
+    const prefix = `${cleanPage}-${cleanWidget}`;
+
+    const targetArray = this.rawSections || [];
+    let maxNum = 0;
+    targetArray.forEach(s => {
+      const cid = s.props?.customId;
+      if (cid && typeof cid === 'string' && cid.startsWith(prefix)) {
+        const parts = cid.split('-');
+        const lastPart = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastPart) && lastPart > maxNum) maxNum = lastPart;
+      }
+    });
+
+    return `${prefix}-${maxNum + 1}`;
+  }
+
+  ensureSectionCustomIds(sections, pageSlug = null) {
+    if (!Array.isArray(sections)) return sections;
+    const page = pageSlug || this.currentPage?.slug || 'home';
+    const cleanPage = String(page).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'page';
+    const counts = {};
+
+    sections.forEach(s => {
+      if (!s.props) s.props = {};
+      if (s.props.customId && typeof s.props.customId === 'string' && s.props.customId.trim()) {
+        const cid = s.props.customId.trim();
+        const parts = cid.split('-');
+        const num = parseInt(parts[parts.length - 1], 10);
+        const base = parts.slice(0, -1).join('-');
+        if (!isNaN(num) && base) {
+          counts[base] = Math.max(counts[base] || 0, num);
+        }
+      }
+    });
+
+    sections.forEach(s => {
+      if (!s.props.customId || !String(s.props.customId).trim()) {
+        let cleanWidget = String(s.widgetType || 'section')
+          .replace(/^addon_/, '')
+          .replace(/^widget_type_/, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-');
+        if (cleanWidget === 'navbar') cleanWidget = 'nav';
+        if (cleanWidget.endsWith('-widget')) cleanWidget = cleanWidget.replace(/-widget$/, '');
+        const prefix = `${cleanPage}-${cleanWidget}`;
+        const nextNum = (counts[prefix] || 0) + 1;
+        counts[prefix] = nextNum;
+        s.props.customId = `${prefix}-${nextNum}`;
+      }
+    });
+    return sections;
+  }
+
   addSection(widgetType, atIndex = null, beforeSectionId = null) {
     this.pushSnapshot();
     const widgetDef = WIDGET_REGISTRY[widgetType];
     if (!widgetDef) { console.error(`Unknown widget: ${widgetType}`); return null; }
     const newId = `sec_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const newSection = { id: newId, widgetType, props: JSON.parse(JSON.stringify(widgetDef.defaultProps)) };
+
+    // Auto-create page-aware Custom Element ID if not set
+    if (!newSection.props.customId) {
+      newSection.props.customId = this.generateCustomElementId(widgetType);
+    }
 
     // Auto-inherit site-wide navigation menu if adding any nav/header widget
     if (this.isNavWidget(newSection)) {
@@ -990,6 +1062,8 @@ class BuilderState {
     const src = targetArray[idx];
     const clone = { id: `sec_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
                     widgetType: src.widgetType, props: JSON.parse(JSON.stringify(src.props)) };
+    // Auto-generate fresh incremented customId for the duplicated element
+    clone.props.customId = this.generateCustomElementId(clone.widgetType);
     targetArray.splice(idx + 1, 0, clone);
     this.activeElementId = clone.id;
     this.notify('duplicate');
@@ -1022,7 +1096,9 @@ class BuilderState {
   loadSections(sections, recordSnapshot = true) {
     if (!Array.isArray(sections) || sections.length === 0) return;
     if (recordSnapshot) this.pushSnapshot();
-    this.sections        = JSON.parse(JSON.stringify(sections));
+    const cloned = JSON.parse(JSON.stringify(sections));
+    this.ensureSectionCustomIds(cloned);
+    this.sections        = cloned;
     this.activeElementId = null;
     this.notify('loadTemplate');
   }

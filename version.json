@@ -1,7 +1,7 @@
 {
-  "version": "2.9.36",
+  "version": "2.9.37",
   "release_date": "2026-11-17",
-  "changelog": "v2.9.36: Direct local JSON add-on installer in 'Add Element to Canvas' modal and Add-on Marketplace, plus standing presenter mascot host",
+  "changelog": "v2.9.37: Auto Page-Aware Custom Element IDs (#home-hero-1), Target Selector Datalist Dropdown in editor, and Tour Pro with Per-Step Voice-Over Audio and Mascot Overrides",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20"

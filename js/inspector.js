@@ -1721,8 +1721,114 @@ export class InspectorPanel {
             linkWrapper.appendChild(subInput);
             subGroup.appendChild(linkWrapper);
 
-          // ── IMAGE PICKER ──
-          } else if (subField.type === 'image-picker') {
+          // ── ELEMENT PICKER / TARGET SELECTOR ──
+          } else if (subField.type === 'element-picker' || subField.key === 'targetSelector') {
+            const pickerWrapper = document.createElement('div');
+            pickerWrapper.style.display = 'flex';
+            pickerWrapper.style.flexDirection = 'column';
+            pickerWrapper.style.gap = '6px';
+
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.gap = '6px';
+            row.style.alignItems = 'center';
+
+            const subInput = document.createElement('input');
+            subInput.type = 'text';
+            const datalistId = 'dl_elem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            subInput.setAttribute('list', datalistId);
+            subInput.value = item[subField.key] !== undefined ? item[subField.key] : '';
+            subInput.placeholder = 'Pick element from list or type selector...';
+            subInput.style.fontSize = '0.82rem';
+            subInput.style.padding = '6px 10px';
+            subInput.style.flex = '1';
+            subInput.style.background = 'rgba(15,23,42,0.6)';
+            subInput.style.border = '1px solid rgba(99,102,241,0.3)';
+            subInput.style.borderRadius = '6px';
+            subInput.style.color = '#fff';
+
+            // Datalist of available elements across current page
+            const datalist = document.createElement('datalist');
+            datalist.id = datalistId;
+
+            // Common semantic fallbacks
+            const standardOptions = [
+              { val: 'header, nav, .widget-type-navbar', label: 'Top Navigation Bar' },
+              { val: 'footer, .widget-type-footer', label: 'Page Footer' },
+              { val: '.wb-registration-widget, form', label: 'Any Registration / Contact Form' }
+            ];
+
+            // Build page sections list
+            const currentSections = state.sections || [];
+            const pageName = state.currentPage?.title || 'Current Page';
+
+            currentSections.forEach((sec) => {
+              const cid = sec.props?.customId || sec.id;
+              const wDef = WIDGET_REGISTRY[sec.widgetType];
+              const wName = wDef?.name || sec.widgetType;
+              const opt = document.createElement('option');
+              opt.value = '#' + cid;
+              opt.textContent = '[' + pageName + '] ➔ ' + wName + ' (#' + cid + ')';
+              datalist.appendChild(opt);
+            });
+
+            standardOptions.forEach(std => {
+              const opt = document.createElement('option');
+              opt.value = std.val;
+              opt.textContent = '[General] ➔ ' + std.label;
+              datalist.appendChild(opt);
+            });
+
+            subInput.addEventListener('input', (e) => {
+              item[subField.key] = e.target.value;
+              updateHeader();
+              state.saveDraft();
+              state.notify('propUpdate');
+            });
+
+            // Quick Dropdown Selector Helper
+            const quickSelect = document.createElement('select');
+            quickSelect.style.cssText = 'padding:6px 8px;font-size:0.75rem;border-radius:6px;background:rgba(30,41,59,0.8);border:1px solid rgba(99,102,241,0.4);color:#c7d2fe;cursor:pointer;max-width:140px;';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '🎯 Pick Element ▾';
+            quickSelect.appendChild(defaultOpt);
+
+            currentSections.forEach((sec) => {
+              const cid = sec.props?.customId || sec.id;
+              const wDef = WIDGET_REGISTRY[sec.widgetType];
+              const wName = wDef?.name || sec.widgetType;
+              const opt = document.createElement('option');
+              opt.value = '#' + cid;
+              opt.textContent = '[' + pageName + '] ' + wName + ' (#' + cid + ')';
+              quickSelect.appendChild(opt);
+            });
+
+            quickSelect.addEventListener('change', (e) => {
+              if (e.target.value) {
+                subInput.value = e.target.value;
+                item[subField.key] = e.target.value;
+                updateHeader();
+                state.saveDraft();
+                state.notify('propUpdate');
+                quickSelect.value = '';
+              }
+            });
+
+            row.appendChild(subInput);
+            row.appendChild(quickSelect);
+            pickerWrapper.appendChild(row);
+            pickerWrapper.appendChild(datalist);
+
+            const hint = document.createElement('div');
+            hint.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin-top:2px;';
+            hint.textContent = '💡 Select a section from the dropdown or type an ID e.g. #home-hero-1';
+            pickerWrapper.appendChild(hint);
+
+            subGroup.appendChild(pickerWrapper);
+
+          // ── IMAGE / AUDIO MEDIA PICKER ──
+          } else if (subField.type === 'image-picker' || subField.type === 'audio-picker' || subField.key?.toLowerCase().includes('audio')) {
             const miniWrapper = document.createElement('div');
             miniWrapper.style.display = 'flex';
             miniWrapper.style.gap = '6px';
@@ -1731,7 +1837,7 @@ export class InspectorPanel {
             const miniInput = document.createElement('input');
             miniInput.type = 'text';
             miniInput.value = item[subField.key] !== undefined ? item[subField.key] : '';
-            miniInput.placeholder = 'URL or pick...';
+            miniInput.placeholder = (subField.type === 'audio-picker' || subField.key?.toLowerCase().includes('audio')) ? 'Audio URL (MP3/WAV/OGG) or pick...' : 'URL or pick...';
             miniInput.style.fontSize = '0.8rem';
             miniInput.style.padding = '5px 8px';
             miniInput.style.flex = '1';
@@ -1743,8 +1849,8 @@ export class InspectorPanel {
 
             const miniBtn = document.createElement('button');
             miniBtn.type = 'button';
-            miniBtn.textContent = '🖼️';
-            miniBtn.title = 'Open Media Library';
+            miniBtn.textContent = (subField.type === 'audio-picker' || subField.key?.toLowerCase().includes('audio')) ? '🎙️' : '🖼️';
+            miniBtn.title = (subField.type === 'audio-picker' || subField.key?.toLowerCase().includes('audio')) ? 'Open Media Library (Audio Voice-Over)' : 'Open Media Library';
             miniBtn.style.cssText = 'padding:4px 8px;font-size:0.9rem;border-radius:6px;background:var(--bg-elevated);border:1px solid var(--border-subtle);cursor:pointer;color:var(--text-main);';
             miniBtn.addEventListener('click', () => {
               if (typeof window.openMediaLibrary === 'function') {
