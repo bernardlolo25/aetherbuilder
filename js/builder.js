@@ -1797,9 +1797,15 @@ export class BuilderCanvas {
               ${compCount > 0 ? `<button type="button" class="add-section-pill" data-filter="components" style="border:1px solid rgba(16,185,129,0.7);background:rgba(16,185,129,0.2);color:#6ee7b7;font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">📦 Components (${compCount})</button>` : ''}
               <button type="button" class="add-section-pill" data-filter="addons" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">🧩 Add-ons (${addonCount})</button>
               <button type="button" class="add-section-pill" data-filter="core" style="border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.6);color:rgba(148,163,184,0.9);font-size:0.78rem;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;">⚡ Core Widgets (${coreCount})</button>
-              <button type="button" class="btn btn-sm" id="btn-add-section-install-addon" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;border:none;padding:5px 13px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.35);transition:transform 0.15s,box-shadow 0.15s;" title="Open Add-on Store to install more widgets, themes, and extensions">
-                <span>➕ Install Add-on</span>
-              </button>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm" id="btn-add-section-upload-json" style="display:inline-flex;align-items:center;gap:6px;background:rgba(30,41,59,0.85);border:1px solid rgba(99,102,241,0.5);color:#c7d2fe;padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.15s;" title="Install or update an add-on from a local .json file">
+                  <span>📁 Install JSON</span>
+                </button>
+                <input type="file" id="input-add-section-upload-json" accept=".json" multiple style="display:none;" />
+                <button type="button" class="btn btn-sm" id="btn-add-section-install-addon" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;border:none;padding:5px 13px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.35);transition:transform 0.15s,box-shadow 0.15s;" title="Open Add-on Store to install more widgets, themes, and extensions">
+                  <span>➕ Install Add-on</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1812,6 +1818,7 @@ export class BuilderCanvas {
               <div style="font-size:0.8rem;color:rgba(148,163,184,0.7);margin-bottom:14px;">Try searching with another keyword or install a new widget add-on.</div>
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
                 <button type="button" class="btn btn-sm btn-secondary" id="add-section-reset-btn" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(51,65,85,0.7);background:rgba(30,41,59,0.8);color:#fff;cursor:pointer;font-size:0.82rem;">Reset Search</button>
+                <button type="button" class="btn btn-sm" id="add-section-empty-upload-btn" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(99,102,241,0.5);background:rgba(30,41,59,0.85);color:#c7d2fe;cursor:pointer;font-size:0.82rem;font-weight:600;">📁 Install Local JSON</button>
                 <button type="button" class="btn btn-sm" id="add-section-empty-store-btn" style="padding:6px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;cursor:pointer;font-size:0.82rem;font-weight:600;box-shadow:0 2px 6px rgba(99,102,241,0.35);">🧩 Browse Add-on Store</button>
               </div>
             </div>
@@ -1995,6 +2002,68 @@ export class BuilderCanvas {
     const emptyStoreBtn = modal.querySelector('#add-section-empty-store-btn');
     if (emptyStoreBtn) {
       emptyStoreBtn.addEventListener('click', openAddonStoreFlow);
+    }
+
+    // Install Local JSON Add-On Handler
+    const uploadBtn = modal.querySelector('#btn-add-section-upload-json');
+    const emptyUploadBtn = modal.querySelector('#add-section-empty-upload-btn');
+    const filePicker = modal.querySelector('#input-add-section-upload-json');
+
+    const triggerUpload = () => filePicker && filePicker.click();
+    if (uploadBtn) uploadBtn.addEventListener('click', triggerUpload);
+    if (emptyUploadBtn) emptyUploadBtn.addEventListener('click', triggerUpload);
+
+    if (filePicker) {
+      filePicker.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        let installedCount = 0;
+        let lastInstalledName = '';
+        const errors = [];
+
+        for (const file of files) {
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                if (item && (item.name || item.id)) {
+                  const inst = addonManager.installAddon(item);
+                  installedCount++;
+                  lastInstalledName = inst?.name || item.name || item.id;
+                }
+              });
+            } else if (data && (data.name || data.id)) {
+              const inst = addonManager.installAddon(data);
+              installedCount++;
+              lastInstalledName = inst?.name || data.name;
+            }
+          } catch (err) {
+            errors.push(`${file.name}: ${err.message}`);
+          }
+        }
+
+        if (window.aetherApp) {
+          window.aetherApp.renderAddonsPanel();
+          window.aetherApp.renderWidgetTray();
+          this.render();
+        }
+
+        if (installedCount > 0) {
+          const msg = installedCount === 1
+            ? `Successfully installed ${lastInstalledName}!`
+            : `Successfully installed ${installedCount} add-on packages!`;
+          this.showToast(msg, 'success');
+          // Instantly refresh Add Element modal so newly installed widgets appear immediately
+          closeModal();
+          this.showAddSectionModal(insertAtIndex, beforeSectionId);
+        }
+        if (errors.length > 0) {
+          alert(`Could not install some files:\n\n${errors.join('\n')}`);
+        }
+        filePicker.value = '';
+      });
     }
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();

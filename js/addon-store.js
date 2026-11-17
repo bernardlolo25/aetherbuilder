@@ -1464,6 +1464,10 @@ export class AddonStore {
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" id="btn-store-upload-json" style="background: rgba(30,41,59,0.85); border: 1px solid rgba(99,102,241,0.5); color: #c7d2fe; padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;" title="Install or update an add-on from a local .json file">
+              <span>📁 Install Local JSON</span>
+            </button>
+            <input type="file" id="input-store-upload-json" accept=".json" multiple style="display: none;" />
             <button type="button" id="btn-close-store-modal" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #ffffff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.2s;" title="Close Store">✕</button>
           </div>
         </div>
@@ -1516,6 +1520,68 @@ export class AddonStore {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
     });
+
+    // Install Local JSON Add-On in Store
+    const storeUploadBtn = modal.querySelector('#btn-store-upload-json');
+    const storeFileInput = modal.querySelector('#input-store-upload-json');
+    if (storeUploadBtn && storeFileInput) {
+      storeUploadBtn.addEventListener('click', () => storeFileInput.click());
+      storeFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        let installedCount = 0;
+        let lastInstalledName = '';
+        const errors = [];
+
+        for (const file of files) {
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                if (item && (item.name || item.id)) {
+                  const inst = addonManager.installAddon(item);
+                  installedCount++;
+                  lastInstalledName = inst?.name || item.name || item.id;
+                  if (typeof onInstallCallback === 'function') onInstallCallback(inst || item);
+                }
+              });
+            } else if (data && (data.name || data.id)) {
+              const inst = addonManager.installAddon(data);
+              installedCount++;
+              lastInstalledName = inst?.name || data.name;
+              if (typeof onInstallCallback === 'function') onInstallCallback(inst || data);
+            }
+          } catch (err) {
+            errors.push(`${file.name}: ${err.message}`);
+          }
+        }
+
+        if (window.aetherApp) {
+          window.aetherApp.renderAddonsPanel();
+          window.aetherApp.renderWidgetTray();
+          if (window.aetherApp.canvas) window.aetherApp.canvas.render();
+        }
+
+        if (installedCount > 0) {
+          const msg = installedCount === 1
+            ? `Successfully installed ${lastInstalledName}!`
+            : `Successfully installed ${installedCount} add-on packages!`;
+          if (window.aetherApp && window.aetherApp.canvas) {
+            window.aetherApp.canvas.showToast(msg, 'success');
+          } else {
+            alert(msg);
+          }
+          // Refresh store cards to show installed state
+          this.renderStoreCards(modal, onInstallCallback);
+        }
+        if (errors.length > 0) {
+          alert(`Could not install some files:\n\n${errors.join('\n')}`);
+        }
+        storeFileInput.value = '';
+      });
+    }
 
     // Category Filter Pills
     modal.querySelectorAll('.store-filter-pill').forEach(btn => {
