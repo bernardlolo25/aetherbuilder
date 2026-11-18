@@ -1,7 +1,8 @@
 {
-  "version": "2.9.42",
+  "version": "2.9.43",
   "release_date": "2026-11-18",
   "changelog": [
+    "v2.9.43: Timed Tour Steps with sleek visual progress bar, hover-pause & visitor opt-out toggle (⏸️/▶️), plus Smart Resume on Reopen (remembers unfinished step & launcher badge with ↺ Restart option)",
     "v2.9.42: Teacher & Board Mascot positioning (head levels with card top, feet below) with dynamic height/boundary detector + idle breathing & subtle sway animation when voiceover ends (with optional idle media swap)",
     "v2.9.41: Optional tour screen recorder — records browser tab + mascot, saves WebM/MP4 on tour end, controlled by admin toggle",
     "v2.9.40: Global Tour — tour now injects across all pages like the navbar; added SPA navigateToPage() for smooth cross-page step transitions",
