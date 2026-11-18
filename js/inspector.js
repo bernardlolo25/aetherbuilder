@@ -1521,7 +1521,7 @@ export class InspectorPanel {
         const updateHeader = () => {
           const titleSpan = itemCard.querySelector('.repeater-title-text');
           if (titleSpan) {
-            titleSpan.textContent = `#${idx + 1} ${item.label || item.name || item.title || item.topic || 'Item'}`;
+            titleSpan.textContent = `#${idx + 1} ${item.title || item.label || item.name || item.topic || 'Item'}`;
           }
         };
 
@@ -2078,7 +2078,14 @@ export class InspectorPanel {
     addBtn.className = 'repeater-add-btn';
     addBtn.innerHTML = `<span>+ Add ${field.addLabel || (field.label ? field.label.replace(/ & Dropdowns$/, '').replace(/s$/, '') : 'Item')}</span>`;
     addBtn.addEventListener('click', () => {
-      const newItem = {
+      const isStepRepeater = field.key === 'steps';
+      const newItem = isStepRepeater ? {
+        title: 'Step ' + (items.length + 1),
+        content: '',
+        targetSelector: '',
+        targetLabel: '',
+        placement: 'auto'
+      } : {
         label: 'New Link',
         url: '#',
         link: '#',

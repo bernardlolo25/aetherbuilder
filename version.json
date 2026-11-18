@@ -1,7 +1,8 @@
 {
-  "version": "2.9.43",
+  "version": "2.9.44",
   "release_date": "2026-11-18",
   "changelog": [
+    "v2.9.44: Fixed step title & explanation display with multi-field fallback (title/stepTitle/targetLabel & content/explanation/description), bulletproof auto-close on last step timeout, and Admin Studio (?view=admin) cross-page navigation detection",
     "v2.9.43: Timed Tour Steps with sleek visual progress bar, hover-pause & visitor opt-out toggle (⏸️/▶️), plus Smart Resume on Reopen (remembers unfinished step & launcher badge with ↺ Restart option)",
     "v2.9.42: Teacher & Board Mascot positioning (head levels with card top, feet below) with dynamic height/boundary detector + idle breathing & subtle sway animation when voiceover ends (with optional idle media swap)",
     "v2.9.41: Optional tour screen recorder — records browser tab + mascot, saves WebM/MP4 on tour end, controlled by admin toggle",
