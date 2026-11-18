@@ -1,8 +1,9 @@
 {
-  "version": "2.9.40",
+  "version": "2.9.41",
   "release_date": "2026-11-18",
-  "changelog": "v2.9.40: Guided Tour visible across all pages via \"Global Tour\" toggle; true SPA navigation without page reload; navigateToPage() API for instant multi-page switching",
+  "changelog": "v2.9.41: Optional tour screen recorder - records tab+mascot, saves WebM/MP4 on tour end, controlled by admin toggle",
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
-  "requires": "2.9.20"
+  "requires": "2.9.20",
+  "date": "2026-11-18"
 }
