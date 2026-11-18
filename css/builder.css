@@ -4246,3 +4246,67 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   border-color: rgba(99, 102, 241, 0.5) !important;
   box-shadow: 0 0 10px rgba(99, 102, 241, 0.35);
 }
+
+/* Universal Inspector Search Bar (Docked under Tabs) */
+.inspector-search-wrap {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(-16px + var(--insp-tabs-h, 55px));
+  z-index: 24;
+  background: var(--bg-panel);
+  margin: 0 -16px 12px -16px;
+  padding: 8px 16px 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.inspector-search-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inspector-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 0.82rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.inspector-search-input {
+  width: 100%;
+  padding: 7px 28px 7px 32px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.inspector-search-input:focus {
+  border-color: var(--primary, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.inspector-search-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.inspector-search-clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}

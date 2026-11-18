@@ -65,6 +65,15 @@ export class InspectorPanel {
           </div>
         </div>
 
+        <!-- Universal Search / Filter Bar (Directly below Tabs) -->
+        <div class="inspector-search-wrap">
+          <div class="inspector-search-inner">
+            <span class="inspector-search-icon">🔍</span>
+            <input type="text" id="inspector-universal-search" class="inspector-search-input" placeholder="Search settings & items..." autocomplete="off">
+            <button type="button" id="inspector-search-clear" class="inspector-search-clear" style="display:none;" title="Clear filter">✕</button>
+          </div>
+        </div>
+
         <!-- Inspector Form Body -->
         <div class="inspector-form" id="inspector-fields-container">
           <!-- Dynamic Controls Rendered Below -->
@@ -103,6 +112,72 @@ export class InspectorPanel {
     });
 
     this.renderFields(activeEl, widgetDef);
+
+    // Universal Inspector Search Filter
+    const universalSearch = this.container.querySelector('#inspector-universal-search');
+    const universalClear = this.container.querySelector('#inspector-search-clear');
+
+    const applyUniversalFilter = () => {
+      const q = (universalSearch?.value || '').toLowerCase().trim();
+      if (universalClear) universalClear.style.display = q ? 'block' : 'none';
+
+      const fieldsContainer = this.container.querySelector('#inspector-fields-container');
+      if (!fieldsContainer) return;
+
+      const formGroups = fieldsContainer.querySelectorAll('.form-group, .prop-group');
+      formGroups.forEach(grp => {
+        if (!q) {
+          grp.style.display = '';
+          grp.querySelectorAll('.repeater-item').forEach(card => card.style.display = 'flex');
+          return;
+        }
+
+        const label = grp.querySelector('label, .prop-label, span')?.textContent || '';
+        let inputsText = '';
+        grp.querySelectorAll('input, select, textarea').forEach(inp => {
+          inputsText += ' ' + (inp.value || '') + ' ' + (inp.placeholder || '');
+        });
+        const combined = (label + ' ' + grp.textContent + ' ' + inputsText).toLowerCase();
+
+        const repeaterItems = grp.querySelectorAll('.repeater-item');
+        if (repeaterItems.length > 0) {
+          let hasVisibleItem = false;
+          repeaterItems.forEach(card => {
+            const cardText = (card.textContent || '').toLowerCase();
+            let cardInputs = '';
+            card.querySelectorAll('input, select, textarea').forEach(inp => {
+              cardInputs += ' ' + (inp.value || '') + ' ' + (inp.placeholder || '');
+            });
+            const cardCombined = (cardText + ' ' + cardInputs).toLowerCase();
+            if (cardCombined.includes(q) || combined.includes(q)) {
+              card.style.display = 'flex';
+              card.classList.remove('is-collapsed');
+              const chev = card.querySelector('.repeater-chevron');
+              if (chev) chev.textContent = '▾';
+              hasVisibleItem = true;
+            } else {
+              card.style.display = 'none';
+            }
+          });
+          grp.style.display = hasVisibleItem ? '' : 'none';
+        } else {
+          grp.style.display = combined.includes(q) ? '' : 'none';
+        }
+      });
+    };
+
+    if (universalSearch) {
+      universalSearch.addEventListener('input', applyUniversalFilter);
+    }
+    if (universalClear) {
+      universalClear.addEventListener('click', () => {
+        if (universalSearch) {
+          universalSearch.value = '';
+          universalSearch.focus();
+        }
+        applyUniversalFilter();
+      });
+    }
 
     // Measure and set sticky tabs height for subsequent sticky elements (.repeater-search-bar)
     const updateStickyTabsOffset = () => {
@@ -1406,35 +1481,13 @@ export class InspectorPanel {
 
     const rawNoun = field.label ? field.label.replace(/^[^ws]+/, '').trim() : 'Items';
 
-    // Sticky Search & Filter Header
+    // Compact Repeater Action Toolbar (Count & Collapse All)
     const searchBar = document.createElement('div');
     searchBar.className = 'repeater-search-bar';
 
-    const searchWrap = document.createElement('div');
-    searchWrap.className = 'repeater-search-input-wrap';
-
-    const searchIcon = document.createElement('span');
-    searchIcon.className = 'repeater-search-icon';
-    searchIcon.textContent = '🔍';
-
-    const searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.className = 'repeater-search-input';
-    searchInput.placeholder = `Filter ${rawNoun.toLowerCase()}...`;
-
-    const clearBtn = document.createElement('button');
-    clearBtn.type = 'button';
-    clearBtn.className = 'repeater-search-clear';
-    clearBtn.textContent = '✕';
-    clearBtn.title = 'Clear filter';
-    clearBtn.style.display = 'none';
-
-    searchWrap.appendChild(searchIcon);
-    searchWrap.appendChild(searchInput);
-    searchWrap.appendChild(clearBtn);
-
     const metaRow = document.createElement('div');
     metaRow.className = 'repeater-search-meta';
+    metaRow.style.width = '100%';
 
     const countPill = document.createElement('span');
     countPill.className = 'repeater-search-count';
@@ -1448,7 +1501,6 @@ export class InspectorPanel {
     metaRow.appendChild(countPill);
     metaRow.appendChild(toggleCollapseBtn);
 
-    searchBar.appendChild(searchWrap);
     searchBar.appendChild(metaRow);
     container.appendChild(searchBar);
 
@@ -2054,12 +2106,7 @@ export class InspectorPanel {
       countPill.textContent = q ? `Showing ${visibleCount} of ${items.length}` : `${items.length} ${rawNoun.toLowerCase()}`;
     };
 
-    searchInput.addEventListener('input', doFilter);
-    clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      doFilter();
-      searchInput.focus();
-    });
+    // doFilter handled via top docked Universal Search Bar
 
     let allCollapsed = false;
     toggleCollapseBtn.addEventListener('click', () => {
