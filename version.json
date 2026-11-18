@@ -1,7 +1,14 @@
 {
   "version": "2.9.41",
   "release_date": "2026-11-18",
-  "changelog": "v2.9.41: Optional tour screen recorder - records tab+mascot, saves WebM/MP4 on tour end, controlled by admin toggle",
+  "changelog": [
+    "v2.9.41: Optional tour screen recorder — records browser tab + mascot, saves WebM/MP4 on tour end, controlled by admin toggle",
+    "v2.9.40: Global Tour — tour now injects across all pages like the navbar; added SPA navigateToPage() for smooth cross-page step transitions",
+    "v2.9.39: Cross-page Tour steps — Pick Element dropdown now surfaces nav menu items and other-page sections; added navigateToUrl step field",
+    "v2.9.38: Fixed double-hash ## bug in Element Picker; auto-sanitize custom element IDs",
+    "v2.9.37: Per-step mascot avatar override support; step avatar height and style controls",
+    "v2.9.36: Interactive Tour Pro — global avatar, voice-over, auto-advance on audio end"
+  ],
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20",

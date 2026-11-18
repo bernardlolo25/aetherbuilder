@@ -7288,8 +7288,11 @@ ${addonManager.getAllActiveJs()}
         if (isNewer) latestEl.className = 'check-value';
       }
 
-      if (changelogList && Array.isArray(manifest.changelog)) {
-        changelogList.innerHTML = manifest.changelog.map(item => `<li>${item}</li>`).join('');
+      if (changelogList && manifest.changelog) {
+        const changelogItems = Array.isArray(manifest.changelog)
+          ? manifest.changelog
+          : [manifest.changelog];
+        changelogList.innerHTML = changelogItems.map(item => `<li>${item}</li>`).join('');
         // Scroll changelog back to top so newest/most important items show first
         const changelogCard = changelogList.closest('.update-changelog-card');
         if (changelogCard) changelogCard.scrollTop = 0;
