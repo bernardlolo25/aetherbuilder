@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.39';
+export const APP_VERSION = '2.9.40';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -162,9 +162,32 @@ window.templateStore = templateStore;
 
 class AetherApp {
   constructor() {
+    window.aetherApp = this;
+    window._aetherApp = this;
     this.viewMode = this.detectViewMode();
     this.canvas = null;
     this.inspector = null;
+  }
+
+  async navigateToPage(urlOrSlug) {
+    if (this.viewMode === 'admin') {
+      const cleanSlug = String(urlOrSlug).replace(/^\?page=/, '').replace(/\.html$/, '');
+      const p = state.pages?.find(x => x.slug === cleanSlug || x.id === cleanSlug);
+      if (p) {
+        state.switchPage(p.id);
+        return true;
+      }
+    }
+    let targetUrl;
+    if (typeof urlOrSlug === 'string' && (urlOrSlug.startsWith('?') || urlOrSlug.includes('.html') || urlOrSlug.startsWith('/'))) {
+      targetUrl = new URL(urlOrSlug, window.location.href);
+    } else {
+      targetUrl = new URL(`?page=${urlOrSlug}`, window.location.href);
+    }
+    window.history.pushState(null, '', targetUrl.href);
+    await this.initPublicView();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
   }
 
   detectViewMode() {
@@ -532,6 +555,20 @@ class AetherApp {
             resolvedSections = [...resolvedSections, globalFoot];
             break;
           }
+        }
+      }
+    }
+
+    // Inject global Tour across pages if current page has no tour
+    const isGlobalTour = (s) =>
+      s.widgetType?.includes('tour') && s.props?.globalTour !== false && s.props?.globalTour !== 'false';
+    const hasTour = resolvedSections.some(s => s.widgetType?.includes('tour'));
+    if (!hasTour && Array.isArray(liveData.pages) && liveData.pages.length > 0) {
+      for (const pg of liveData.pages) {
+        const globalTourSec = (pg.sections || []).find(s => isGlobalTour(s));
+        if (globalTourSec) {
+          resolvedSections = [...resolvedSections, globalTourSec];
+          break;
         }
       }
     }

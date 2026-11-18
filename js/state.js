@@ -203,6 +203,21 @@ class BuilderState {
         }
       }
     }
+    // Inject global tour into editor view if page has no tour
+    const isGlobalTour = (s) =>
+      s.widgetType?.includes('tour') && s.props?.globalTour !== false && s.props?.globalTour !== 'false';
+    const hasTour = currentSections.some(s => s.widgetType?.includes('tour'));
+    if (!hasTour && Array.isArray(this.pages) && this.pages.length > 0) {
+      for (const pg of this.pages) {
+        if (pg.id === this.currentPageId) continue;
+        const globalTourSec = (pg.sections || []).find(s => isGlobalTour(s));
+        if (globalTourSec) {
+          currentSections = [...currentSections, globalTourSec];
+          break;
+        }
+      }
+    }
+
     return currentSections;
   }
 
