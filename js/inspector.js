@@ -1672,7 +1672,7 @@ export class InspectorPanel {
             subGroup.appendChild(nestedWrap);
 
           // ── PAGE LINK SELECTOR (Main Items) ──
-          } else if (subField.type === 'page-link' || subField.key === 'url' || subField.key === 'link') {
+          } else if (subField.type === 'page-link' || subField.key === 'url' || subField.key === 'link' || subField.key === 'navigateToUrl' || subField.key === 'pageUrl') {
             const linkWrapper = document.createElement('div');
             linkWrapper.style.display = 'flex';
             linkWrapper.style.flexDirection = 'column';
@@ -1765,7 +1765,7 @@ export class InspectorPanel {
               { val: '.wb-registration-widget, form', label: 'Any Registration / Contact Form' }
             ];
 
-            // Build page sections list
+            // Build page sections list & menu items
             const currentSections = state.sections || [];
             const pageName = state.currentPage?.title || 'Current Page';
 
@@ -1779,6 +1779,40 @@ export class InspectorPanel {
               opt.value = '#' + cid;
               opt.textContent = '[' + pageName + '] ➔ ' + wName + ' (#' + cid + ')';
               datalist.appendChild(opt);
+
+              // Auto-surface navbar menu items in datalist
+              if (Array.isArray(sec.props?.navItems)) {
+                sec.props.navItems.forEach((navItem, idx) => {
+                  const mLabel = (navItem.label || ('Menu #' + (idx + 1))).trim();
+                  const subOpt = document.createElement('option');
+                  subOpt.value = '#' + cid + ' .nav-item:nth-child(' + (idx + 1) + ') .nav-link';
+                  subOpt.textContent = '[' + pageName + '] ➔ 🔗 Menu: ' + mLabel;
+                  datalist.appendChild(subOpt);
+                });
+                if (sec.props.showCta) {
+                  const ctaOpt = document.createElement('option');
+                  ctaOpt.value = '#' + cid + ' .nav-cta-btn';
+                  ctaOpt.textContent = '[' + pageName + '] ➔ 🔘 Button: ' + (sec.props.ctaText || 'CTA');
+                  datalist.appendChild(ctaOpt);
+                }
+              }
+            });
+
+            // Surface other pages sections in datalist
+            const allSitePages = state.pages || [];
+            allSitePages.forEach(p => {
+              if (p.id === state.currentPage?.id || p.slug === state.currentPage?.slug) return;
+              (p.sections || []).forEach(sec => {
+                const rawId = sec.props?.customId || sec.id || '';
+                const cid = String(rawId).trim().replace(/^#+/, '');
+                if (!cid) return;
+                const wDef = WIDGET_REGISTRY[sec.widgetType];
+                const wName = wDef?.name || sec.widgetType;
+                const opt = document.createElement('option');
+                opt.value = '#' + cid;
+                opt.textContent = '[' + p.title + '] ➔ ' + wName + ' (#' + cid + ')';
+                datalist.appendChild(opt);
+              });
             });
 
             standardOptions.forEach(std => {
@@ -1813,6 +1847,39 @@ export class InspectorPanel {
               opt.value = '#' + cid;
               opt.textContent = '[' + pageName + '] ' + wName + ' (#' + cid + ')';
               quickSelect.appendChild(opt);
+
+              // Auto-surface navbar menu items in quickSelect dropdown
+              if (Array.isArray(sec.props?.navItems)) {
+                sec.props.navItems.forEach((navItem, idx) => {
+                  const mLabel = (navItem.label || ('Menu #' + (idx + 1))).trim();
+                  const subOpt = document.createElement('option');
+                  subOpt.value = '#' + cid + ' .nav-item:nth-child(' + (idx + 1) + ') .nav-link';
+                  subOpt.textContent = '  ↳ 🔗 ' + mLabel;
+                  quickSelect.appendChild(subOpt);
+                });
+                if (sec.props.showCta) {
+                  const ctaOpt = document.createElement('option');
+                  ctaOpt.value = '#' + cid + ' .nav-cta-btn';
+                  ctaOpt.textContent = '  ↳ 🔘 ' + (sec.props.ctaText || 'CTA Button');
+                  quickSelect.appendChild(ctaOpt);
+                }
+              }
+            });
+
+            // Surface other pages sections in quickSelect dropdown
+            allSitePages.forEach(p => {
+              if (p.id === state.currentPage?.id || p.slug === state.currentPage?.slug) return;
+              (p.sections || []).forEach(sec => {
+                const rawId = sec.props?.customId || sec.id || '';
+                const cid = String(rawId).trim().replace(/^#+/, '');
+                if (!cid) return;
+                const wDef = WIDGET_REGISTRY[sec.widgetType];
+                const wName = wDef?.name || sec.widgetType;
+                const opt = document.createElement('option');
+                opt.value = '#' + cid;
+                opt.textContent = '[' + p.title + '] ' + wName + ' (#' + cid + ')';
+                quickSelect.appendChild(opt);
+              });
             });
 
             quickSelect.addEventListener('change', (e) => {

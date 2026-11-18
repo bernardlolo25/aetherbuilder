@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.38';
+export const APP_VERSION = '2.9.39';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -599,6 +599,32 @@ class AetherApp {
     if (bttConfig.enabled !== false) {
       initBackToTopButton();
     }
+
+    // Auto-resume cross-page Guided Tour on secondary pages
+    try {
+      const resumeRaw = sessionStorage.getItem('aether_tour_cross_resume');
+      if (resumeRaw) {
+        const resume = JSON.parse(resumeRaw);
+        if (resume && resume.active && (Date.now() - resume.timestamp < 300000) && resume.tourProps) {
+          const hasTourOnPage = container.querySelector('.wb-tour-addon-widget');
+          if (!hasTourOnPage) {
+            const tourHost = document.createElement('div');
+            tourHost.className = 'wb-addon-virtual-tour-runner';
+            tourHost.style.display = 'none';
+            tourHost.innerHTML = '<div class="wb-tour-addon-widget" style="display:none;"><button class="wb-tour-launcher-btn" style="display:none;"></button></div>';
+            document.body.appendChild(tourHost);
+            const addonMgr = this.addonManager || window.aetherApp?.addonManager;
+            const tourDef = addonMgr ? (addonMgr.getAddon('addon_interactive_tour') || addonMgr.getAddon('addon_interactive_tour_pro')) : null;
+            if (tourDef && tourDef.customJs) {
+              try {
+                const fn = new Function('el', 'props', tourDef.customJs + '\nonMount(el, props);');
+                fn(tourHost, resume.tourProps);
+              } catch(e) { console.warn('Cross-page tour runner notice:', e); }
+            }
+          }
+        }
+      }
+    } catch(_) {}
 
     // Dismiss initial loading overlay
     removeInitialLoader();
