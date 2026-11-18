@@ -254,7 +254,7 @@ export class BuilderCanvas {
         }
 
         // ── Custom Element ID ────────────────────────────────────────────
-        if (props.customId) secWrapper.id = props.customId;
+        if (props.customId) secWrapper.id = String(props.customId).trim().replace(/^#+/, '');
       }
 
       // Scroll-reveal entrance animation (public mode only)

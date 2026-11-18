@@ -391,8 +391,15 @@ export class InspectorPanel {
         if (field.key === 'bgGradient') {
           input.placeholder = 'e.g. linear-gradient(135deg, #1a0533 0%, #0f1729 100%)';
         }
+        if (field.key === 'customId') {
+          input.placeholder = 'e.g. header, contact-form';
+        }
         input.addEventListener('input', (e) => {
-          activeEl.props[field.key] = e.target.value;
+          let val = e.target.value;
+          if (field.key === 'customId') {
+            val = val.replace(/^#+/, '').trim();
+          }
+          activeEl.props[field.key] = val;
           state.saveDraft();
           state.notify('propUpdate');
         });
@@ -1763,7 +1770,9 @@ export class InspectorPanel {
             const pageName = state.currentPage?.title || 'Current Page';
 
             currentSections.forEach((sec) => {
-              const cid = sec.props?.customId || sec.id;
+              const rawId = sec.props?.customId || sec.id || '';
+              const cid = String(rawId).trim().replace(/^#+/, '');
+              if (!cid) return;
               const wDef = WIDGET_REGISTRY[sec.widgetType];
               const wName = wDef?.name || sec.widgetType;
               const opt = document.createElement('option');
@@ -1795,7 +1804,9 @@ export class InspectorPanel {
             quickSelect.appendChild(defaultOpt);
 
             currentSections.forEach((sec) => {
-              const cid = sec.props?.customId || sec.id;
+              const rawId = sec.props?.customId || sec.id || '';
+              const cid = String(rawId).trim().replace(/^#+/, '');
+              if (!cid) return;
               const wDef = WIDGET_REGISTRY[sec.widgetType];
               const wName = wDef?.name || sec.widgetType;
               const opt = document.createElement('option');
@@ -1806,8 +1817,9 @@ export class InspectorPanel {
 
             quickSelect.addEventListener('change', (e) => {
               if (e.target.value) {
-                subInput.value = e.target.value;
-                item[subField.key] = e.target.value;
+                const cleanVal = e.target.value.replace(/^#+/, '#');
+                subInput.value = cleanVal;
+                item[subField.key] = cleanVal;
                 updateHeader();
                 state.saveDraft();
                 state.notify('propUpdate');

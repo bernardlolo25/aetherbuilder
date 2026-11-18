@@ -962,7 +962,8 @@ class BuilderState {
     sections.forEach(s => {
       if (!s.props) s.props = {};
       if (s.props.customId && typeof s.props.customId === 'string' && s.props.customId.trim()) {
-        const cid = s.props.customId.trim();
+        s.props.customId = s.props.customId.trim().replace(/^#+/, '');
+        const cid = s.props.customId;
         const parts = cid.split('-');
         const num = parseInt(parts[parts.length - 1], 10);
         const base = parts.slice(0, -1).join('-');
