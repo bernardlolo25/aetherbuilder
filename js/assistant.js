@@ -411,7 +411,8 @@ function injectChatbotStyles() {
     /* Chatbot Root */
     #aether-chatbot-root {
       position: fixed;
-      bottom: 24px;
+      bottom: calc(var(--footer-offset, 0px) + 24px);
+      transition: bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1);
       right: 24px;
       z-index: 99999;
       font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
@@ -724,7 +725,7 @@ function injectChatbotStyles() {
 
     @media (max-width: 480px) {
       #aether-chatbot-root {
-        bottom: 16px;
+        bottom: calc(var(--footer-offset, 0px) + 16px);
         right: 16px;
       }
       .aether-chatbot-window {

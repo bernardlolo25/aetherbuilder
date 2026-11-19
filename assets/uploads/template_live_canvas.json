@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-11-19T01:28:52.874Z",
+  "publishedAt": "2026-11-19T02:20:52.108Z",
   "currentPageId": "pg_1795051605607_pp80y",
   "pages": [
     {
@@ -338,7 +338,7 @@
             "logoType": "image",
             "logoImageUrl": "assets/uploads/USPF_LOGO_1790921145.png",
             "globalFooter": true,
-            "fixedBottom": false,
+            "fixedBottom": true,
             "fullWidth": true,
             "customId": "index-footer-1"
           }
@@ -1675,7 +1675,7 @@
             "portalTitle": "Staff & Registrations Portal",
             "portalSubtitle": "Sign in to manage attendee registrations, verify payments, and review incoming requests.",
             "portalIcon": "🛡️",
-            "brandLogo": "",
+            "brandLogo": "assets/uploads/USPF_LOGO.png",
             "theme": "dark-glass",
             "accentColor": "#6366f1",
             "cardBg": "rgba(15, 23, 42, 0.90)",

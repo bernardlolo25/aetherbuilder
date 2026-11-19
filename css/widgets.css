@@ -4901,3 +4901,74 @@
   margin: 0 !important;
   z-index: 1 !important;
 }
+
+/* ── Floating Add-on Respect for Fixed Bottom Footer & Smart Stacking ───────── */
+:root {
+  --footer-offset: 0px;
+}
+
+body.has-fixed-bottom-footer,
+body:has(.wb-footer.is-fixed-bottom),
+body:has(.wb-footer[data-fixed-bottom="true"]),
+body:has(.canvas-section-wrapper.is-fixed-bottom-section) {
+  --footer-offset: 72px; /* fallback minimal height */
+}
+
+/* Chat Assistant launcher & window respect fixed footer */
+#aether-chatbot-root {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+  transition: bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Guided Tour Launcher respect fixed footer */
+.wb-tour-launcher-bottom-right {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s, background 0.2s, bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.wb-tour-launcher-bottom-left {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s, background 0.2s, bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.wb-tour-presenter-host.wb-tour-pos-bottom-right {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+}
+.wb-tour-presenter-host.wb-tour-pos-bottom-left {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+}
+
+/* Live Chat FAB respect fixed footer */
+.wb-livechat-fab--bottom-right {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.wb-livechat-fab--bottom-left {
+  bottom: calc(var(--footer-offset, 0px) + 24px) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Smart Stacking: When BOTH Chat Assistant and Guided Tour are on bottom-right, stack Tour cleanly above Chat */
+body:has(#aether-chatbot-root) .wb-tour-launcher-bottom-right,
+body:has(.wb-livechat-fab--bottom-right) .wb-tour-launcher-bottom-right {
+  bottom: calc(var(--footer-offset, 0px) + 94px) !important;
+}
+body:has(#aether-chatbot-root) .wb-tour-presenter-host.wb-tour-pos-bottom-right,
+body:has(.wb-livechat-fab--bottom-right) .wb-tour-presenter-host.wb-tour-pos-bottom-right {
+  bottom: calc(var(--footer-offset, 0px) + 94px) !important;
+}
+
+@media (max-width: 768px) {
+  #aether-chatbot-root {
+    bottom: calc(var(--footer-offset, 0px) + 16px) !important;
+  }
+  .wb-tour-launcher-bottom-right,
+  .wb-tour-launcher-bottom-left {
+    bottom: calc(var(--footer-offset, 0px) + 16px) !important;
+  }
+  .wb-tour-presenter-host {
+    bottom: calc(var(--footer-offset, 0px) + 16px) !important;
+  }
+  body:has(#aether-chatbot-root) .wb-tour-launcher-bottom-right,
+  body:has(.wb-livechat-fab--bottom-right) .wb-tour-launcher-bottom-right {
+    bottom: calc(var(--footer-offset, 0px) + 84px) !important;
+  }
+}

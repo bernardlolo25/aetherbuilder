@@ -583,7 +583,22 @@ export class BuilderCanvas {
   }
 
   // Initialize interactive widgets (Counters, Sliders, Gallery Lightbox, Accordion, Contact, Floating Nav, Mobile Nav, Seminar Schedule, Payment Options, Lecturer Gallery)
+  updateFixedFooterOffset(container) {
+    const root = container || this.viewport || document;
+    const fixedFooter = root.querySelector('.wb-footer.is-fixed-bottom, .wb-footer[data-fixed-bottom="true"]')
+      || document.querySelector('.wb-footer.is-fixed-bottom, .wb-footer[data-fixed-bottom="true"]');
+    if (fixedFooter && (fixedFooter.offsetParent !== null || fixedFooter.offsetHeight > 0)) {
+      const h = Math.round(fixedFooter.getBoundingClientRect().height) || 72;
+      document.documentElement.style.setProperty('--footer-offset', h + 'px');
+      document.body.classList.add('has-fixed-bottom-footer');
+    } else {
+      document.documentElement.style.setProperty('--footer-offset', '0px');
+      document.body.classList.remove('has-fixed-bottom-footer');
+    }
+  }
+
   initRuntimeBehaviors(container) {
+    this.updateFixedFooterOffset(container);
     this.initFloatingNav(container);
     this.initMobileNavs(container);
     this.initScrollReveal(container);
@@ -3064,3 +3079,17 @@ export class BuilderCanvas {
     }
   }
 }
+
+// Global helper to refresh footer offset from anywhere (e.g. on window resize or addon mount)
+window.updateAetherFooterOffset = function() {
+  const fixedFooter = document.querySelector('.wb-footer.is-fixed-bottom, .wb-footer[data-fixed-bottom="true"]');
+  if (fixedFooter && (fixedFooter.offsetParent !== null || fixedFooter.offsetHeight > 0)) {
+    const h = Math.round(fixedFooter.getBoundingClientRect().height) || 72;
+    document.documentElement.style.setProperty('--footer-offset', h + 'px');
+    document.body.classList.add('has-fixed-bottom-footer');
+  } else {
+    document.documentElement.style.setProperty('--footer-offset', '0px');
+    document.body.classList.remove('has-fixed-bottom-footer');
+  }
+};
+window.addEventListener('resize', window.updateAetherFooterOffset);

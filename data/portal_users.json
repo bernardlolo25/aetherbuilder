@@ -1,0 +1,9 @@
+﻿{
+    "id":  "usr_init_admin",
+    "name":  "Portal Administrator",
+    "created_at":  "2026-11-19T10:16:36.3611104+08:00",
+    "password":  "Admin1234!",
+    "email":  "admin@portal.local",
+    "role":  "admin",
+    "status":  "active"
+}

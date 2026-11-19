@@ -1,5 +1,5 @@
 {
-  "version": "2.9.48",
+  "version": "2.9.49",
   "release_date": "2026-11-19",
   "changelog": [
     "v2.9.47: Client & Staff Portal Dashboard add-on — full-screen authenticated management portal with role-based access (Admin/Manager/Staff/Viewer), live registration tracking, status workflows, private staff notes, 1-click CSV export, MySQL auto-schema, and staff user management",

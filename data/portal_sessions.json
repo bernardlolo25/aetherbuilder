@@ -1,0 +1,52 @@
+﻿{
+    "ptok_03fb622b0d6d47a6b9f011fb259965d8":  {
+                                                  "created_at":  "2026-11-19T10:17:56.1775053+08:00",
+                                                  "expires_at":  "2026-11-26T10:17:56.1775053+08:00",
+                                                  "user":  {
+                                                               "email":  "admin@portal.local",
+                                                               "name":  "Portal Administrator",
+                                                               "id":  "usr_init_admin",
+                                                               "role":  "admin"
+                                                           }
+                                              },
+    "ptok_6d54f5fa3cf0482fab4bc2b5d4123094":  {
+                                                  "created_at":  "2026-11-19T10:17:10.6458010+08:00",
+                                                  "expires_at":  "2026-11-26T10:17:10.6458010+08:00",
+                                                  "user":  {
+                                                               "email":  "admin@portal.local",
+                                                               "name":  "Portal Administrator",
+                                                               "id":  "usr_init_admin",
+                                                               "role":  "admin"
+                                                           }
+                                              },
+    "ptok_e6ed88f18d584b2182872728e28cf9ad":  {
+                                                  "created_at":  "2026-11-19T10:17:04.0176859+08:00",
+                                                  "expires_at":  "2026-11-26T10:17:04.0176859+08:00",
+                                                  "user":  {
+                                                               "email":  "admin@portal.local",
+                                                               "name":  "Portal Administrator",
+                                                               "id":  "usr_init_admin",
+                                                               "role":  "admin"
+                                                           }
+                                              },
+    "ptok_81efd456ea92494fb35bc4c2b799ef3e":  {
+                                                  "created_at":  "2026-11-19T10:19:47.8293134+08:00",
+                                                  "expires_at":  "2026-11-26T10:19:47.8303047+08:00",
+                                                  "user":  {
+                                                               "email":  "admin@portal.local",
+                                                               "name":  "Portal Administrator",
+                                                               "id":  "usr_init_admin",
+                                                               "role":  "admin"
+                                                           }
+                                              },
+    "ptok_af6aac7a810d419693e706cc79918d05":  {
+                                                  "created_at":  "2026-11-19T10:16:51.0367681+08:00",
+                                                  "expires_at":  "2026-11-26T10:16:51.0367681+08:00",
+                                                  "user":  {
+                                                               "email":  "admin@portal.local",
+                                                               "name":  "Portal Administrator",
+                                                               "id":  "usr_init_admin",
+                                                               "role":  "admin"
+                                                           }
+                                              }
+}

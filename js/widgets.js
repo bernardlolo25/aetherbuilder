@@ -2129,7 +2129,7 @@ export const WIDGET_REGISTRY = {
       // Mode 1: Display ONLY Copyright Section
       if (props.showOnlyCopyright) {
         return spacerHtml + `
-          <footer class="wb-footer is-minimal" style="${fixedStyle} padding: 24px 20px; border-top: 1px solid var(--border-subtle); background: rgba(9, 13, 22, 0.7); width: 100%;">
+          <footer class="wb-footer is-minimal ${props.fixedBottom ? 'is-fixed-bottom' : ''}" data-fixed-bottom="${props.fixedBottom ? 'true' : 'false'}" style="${fixedStyle} padding: 24px 20px; border-top: 1px solid var(--border-subtle); background: rgba(9, 13, 22, 0.7); width: 100%;">
             <div class="wb-footer-bottom" style="margin: 0 auto; border-top: none; padding-top: 0; display: flex; align-items: center; justify-content: ${bottomLinksHtml ? 'space-between' : justifyVal}; text-align: ${align}; width: 100%; max-width: 1240px; flex-wrap: wrap; gap: 12px;">
               <div style="${bottomLinksHtml ? '' : `width: 100%; text-align: ${align};`} color: var(--text-dim); font-size: 0.88rem;">${rawCopyright}</div>
               ${bottomLinksHtml ? `<div style="display: flex; gap: 16px; flex-wrap: wrap;">${bottomLinksHtml}</div>` : ''}
@@ -2164,7 +2164,7 @@ export const WIDGET_REGISTRY = {
       ` : '';
 
       return spacerHtml + `
-        <footer class="wb-footer" style="${fixedStyle}">
+        <footer class="wb-footer ${props.fixedBottom ? 'is-fixed-bottom' : ''}" data-fixed-bottom="${props.fixedBottom ? 'true' : 'false'}" style="${fixedStyle}">
           <div class="wb-footer-grid" style="${props.showColumns === false ? 'grid-template-columns: 1fr;' : ''}">
             <div class="wb-footer-col">
               <div class="wb-nav-brand" style="margin-bottom: 8px;">
