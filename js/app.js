@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.50';
+export const APP_VERSION = '2.9.51';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -6843,9 +6843,59 @@ ${addonManager.getAllActiveJs()}
   // --------------------------------------------------------------------------
   // PRE-PUBLISH SEO & HEALTH AUDIT PRE-FLIGHT SCANNER
   // --------------------------------------------------------------------------
+  // PRE-PUBLISH SEO & HEALTH AUDIT PRE-FLIGHT SCANNER (INTERACTIVE DEEP-LINKING)
+  // --------------------------------------------------------------------------
   showSeoAuditModal() {
     let modal = document.getElementById('seo-audit-modal');
     if (modal) modal.remove();
+
+    // Helper: jump to section in canvas & open Inspector tab
+    const jumpToSection = (sectionId, propKey) => {
+      if (modal) modal.remove();
+      state.setActiveElement(sectionId);
+      this.switchSidebarTab('inspector');
+      const secEl = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (secEl) {
+        secEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        secEl.classList.remove('builder-element-highlight-pulse');
+        void secEl.offsetWidth;
+        secEl.classList.add('builder-element-highlight-pulse');
+        setTimeout(() => secEl.classList.remove('builder-element-highlight-pulse'), 2500);
+      }
+      if (propKey) {
+        setTimeout(() => {
+          const searchBox = document.getElementById('inspector-prop-search');
+          if (searchBox) {
+            searchBox.value = propKey === 'galleryImages' ? 'gallery' : (propKey === 'lecturers' ? 'lecturer' : propKey);
+            searchBox.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          const targetInput = document.querySelector(`[name="${propKey}"], [data-prop-key="${propKey}"]`);
+          if (targetInput) {
+            targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetInput.focus();
+            targetInput.classList.add('builder-input-highlight');
+            setTimeout(() => targetInput.classList.remove('builder-input-highlight'), 2200);
+          }
+        }, 180);
+      }
+    };
+
+    // Helper: jump to Page or Site Settings sidebar tab and focus field
+    const jumpToSettings = (tabName, fieldSelector) => {
+      if (modal) modal.remove();
+      this.switchSidebarTab(tabName);
+      if (fieldSelector) {
+        setTimeout(() => {
+          const targetEl = document.querySelector(fieldSelector);
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetEl.focus();
+            targetEl.classList.add('builder-input-highlight');
+            setTimeout(() => targetEl.classList.remove('builder-input-highlight'), 2200);
+          }
+        }, 180);
+      }
+    };
 
     // Perform Live Audit
     const page = state.currentPage || {};
@@ -6853,42 +6903,91 @@ ${addonManager.getAllActiveJs()}
     const ss = state.siteSettings || {};
     const sections = page.sections || state.sections || [];
 
-    // Collect DOM / section data
-    let h1Count = 0;
-    let missingAltCount = 0;
+    // Detailed tracking for pinpoint interactive jumping
+    const h1Sections = [];
+    const missingAltSections = [];
+    const emptyLinkSections = [];
     let totalImages = 0;
-    let emptyLinksCount = 0;
 
-    sections.forEach(s => {
+    sections.forEach((s, idx) => {
       const props = s.props || {};
-      // H1 check
+      const widgetDef = WIDGET_REGISTRY[s.widgetType];
+      const secName = widgetDef?.name || s.widgetType;
+      const secLabel = `Section ${idx + 1}: ${secName}`;
+
+      // 1. H1 Headings
       if (s.widgetType === 'hero' || s.widgetType === 'heading') {
-        if (props.tag === 'h1' || s.widgetType === 'hero') h1Count++;
+        if (props.tag === 'h1' || s.widgetType === 'hero') {
+          h1Sections.push({
+            id: s.id,
+            widgetType: s.widgetType,
+            label: secLabel,
+            snippet: (props.title || props.text || props.heading || 'Hero Title').slice(0, 36)
+          });
+        }
       }
-      // Image checks
+
+      // 2. Single Images
       ['image', 'imageUrl', 'bgImage', 'logoUrl', 'speakerAvatar'].forEach(k => {
         if (props[k]) {
           totalImages++;
-          if (!props.alt && !props.imageAlt) missingAltCount++;
+          if (!props.alt && !props.imageAlt) {
+            missingAltSections.push({
+              id: s.id,
+              widgetType: s.widgetType,
+              label: secLabel,
+              propKey: 'alt',
+              snippet: k
+            });
+          }
         }
       });
+
+      // 3. Gallery Images
       if (Array.isArray(props.galleryImages)) {
-        props.galleryImages.forEach(img => {
+        props.galleryImages.forEach((img, gIdx) => {
           totalImages++;
-          if (!img.alt) missingAltCount++;
-        });
-      }
-      if (Array.isArray(props.lecturers)) {
-        props.lecturers.forEach(lec => {
-          if (lec.photoUrl) {
-            totalImages++;
-            if (!lec.name) missingAltCount++;
+          if (!img.alt) {
+            missingAltSections.push({
+              id: s.id,
+              widgetType: s.widgetType,
+              label: `${secLabel} (Image #${gIdx + 1})`,
+              propKey: 'galleryImages',
+              snippet: 'Gallery Item'
+            });
           }
         });
       }
-      // Link checks
+
+      // 4. Lecturer Avatars
+      if (Array.isArray(props.lecturers)) {
+        props.lecturers.forEach((lec, lIdx) => {
+          if (lec.photoUrl) {
+            totalImages++;
+            if (!lec.name) {
+              missingAltSections.push({
+                id: s.id,
+                widgetType: s.widgetType,
+                label: `${secLabel} (Lecturer #${lIdx + 1})`,
+                propKey: 'lecturers',
+                snippet: 'Lecturer Avatar'
+              });
+            }
+          }
+        });
+      }
+
+      // 5. Button & Action Links
       ['buttonLink', 'ctaLink', 'linkUrl'].forEach(k => {
-        if (props[k] === '' || props[k] === '#') emptyLinksCount++;
+        if (props[k] === '' || props[k] === '#') {
+          emptyLinkSections.push({
+            id: s.id,
+            widgetType: s.widgetType,
+            label: secLabel,
+            propKey: k,
+            snippet: props.buttonText || props.ctaText || 'Button'
+          });
+        }
       });
     });
 
@@ -6896,68 +6995,199 @@ ${addonManager.getAllActiveJs()}
     let score = 100;
 
     // Check 1: Primary H1
-    if (h1Count === 1) {
-      checks.push({ status: 'passed', icon: '✅', title: 'Single Primary <h1> Heading', desc: 'Optimal SEO hierarchy. Found exactly 1 primary H1 heading on this page.' });
-    } else if (h1Count === 0) {
+    if (h1Sections.length === 1) {
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: 'Single Primary <h1> Heading',
+        desc: 'Optimal SEO hierarchy. Found exactly 1 primary H1 heading on this page.',
+        action: { label: 'View in Canvas', icon: '🔍', onClick: () => jumpToSection(h1Sections[0].id) }
+      });
+    } else if (h1Sections.length === 0) {
       score -= 15;
-      checks.push({ status: 'error', icon: '❌', title: 'Missing <h1> Heading', desc: 'No primary <h1> found. Add a Hero Banner or Heading element set to H1 for strong search engine indexing.' });
+      checks.push({
+        status: 'error',
+        icon: '❌',
+        title: 'Missing <h1> Heading',
+        desc: 'No primary <h1> found. Add a Hero Banner or Heading element set to H1 for strong search engine indexing.',
+        action: { label: 'Add Hero Banner', icon: '➕', onClick: () => { modal.remove(); this.showAddSectionModal(0); } }
+      });
     } else {
       score -= 8;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Multiple <h1> Headings Found (' + h1Count + ')', desc: 'Best SEO practice recommends having only one <h1> heading per page for clear topical hierarchy.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `Multiple <h1> Headings Found (${h1Sections.length})`,
+        desc: 'Best SEO practice recommends only 1 primary <h1> heading per page for clean topical hierarchy.',
+        subItems: h1Sections.map(h => ({
+          label: h.label,
+          snippet: h.snippet,
+          onJump: () => jumpToSection(h.id, 'tag')
+        }))
+      });
     }
 
     // Check 2: Page Title
     const title = (ps.pageTitle || '').trim();
     if (title.length >= 30 && title.length <= 65) {
-      checks.push({ status: 'passed', icon: '✅', title: `Page Title Length (${title.length} chars)`, desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30–65 chars).` });
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: `Page Title Length (${title.length} chars)`,
+        desc: `"${title}" is in the optimal sweet spot for Google SERP title snippets (30–65 chars).`,
+        action: { label: 'Edit Title', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-title-input') }
+      });
     } else if (title.length > 0 && title.length < 30) {
       score -= 6;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Page Title is Short (${title.length} chars)`, desc: `Consider adding descriptive keywords or school name to expand: "${title}".` });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `Page Title is Short (${title.length} chars)`,
+        desc: `Consider adding descriptive keywords or school name to expand: "${title}".`,
+        action: { label: 'Expand Title', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-title-input') }
+      });
     } else if (title.length > 65) {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Page Title Exceeds 65 Chars (${title.length} chars)`, desc: 'Long titles may get truncated with "..." on Google search results.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `Page Title Exceeds 65 Chars (${title.length} chars)`,
+        desc: 'Long titles may get truncated with "..." on Google search results.',
+        action: { label: 'Shorten Title', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-title-input') }
+      });
     } else {
       score -= 20;
-      checks.push({ status: 'error', icon: '❌', title: 'Missing Page Title', desc: 'Page title is empty. Set a title under the Page settings tab.' });
+      checks.push({
+        status: 'error',
+        icon: '❌',
+        title: 'Missing Page Title',
+        desc: 'Page title is empty. Set a title under the Page settings tab.',
+        action: { label: 'Set Title', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-title-input') }
+      });
     }
 
     // Check 3: Meta Description
     const metaDesc = (ps.metaDescription || '').trim();
     if (metaDesc.length >= 100 && metaDesc.length <= 165) {
-      checks.push({ status: 'passed', icon: '✅', title: `Meta Description (${metaDesc.length} chars)`, desc: 'Optimal length for search result snippet previews (100–165 chars).' });
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: `Meta Description (${metaDesc.length} chars)`,
+        desc: 'Optimal length for search result snippet previews (100–165 chars).',
+        action: { label: 'Edit Description', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-meta-description') }
+      });
     } else if (metaDesc.length > 0) {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: `Meta Description Length (${metaDesc.length} chars)`, desc: 'Aim for 120–160 characters for best organic search click-through rate.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `Meta Description Length (${metaDesc.length} chars)`,
+        desc: 'Aim for 120–160 characters for best organic search click-through rate.',
+        action: { label: 'Adjust Description', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-meta-description') }
+      });
     } else {
       score -= 12;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Missing Meta Description', desc: 'No meta description found. Search engines will generate an automatic fallback snippet.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: 'Missing Meta Description',
+        desc: 'No meta description found. Search engines will generate an automatic fallback snippet.',
+        action: { label: 'Write Description', icon: '✏️', onClick: () => jumpToSettings('settings', '#page-meta-description') }
+      });
     }
 
     // Check 4: Social Share Image (OpenGraph)
     if (ps.ogImage) {
-      checks.push({ status: 'passed', icon: '✅', title: 'Social Share Image (og:image)', desc: 'Banner image configured for Facebook, LinkedIn, Twitter/X, and Viber previews.' });
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: 'Social Share Image (og:image)',
+        desc: 'Banner image configured for Facebook, LinkedIn, Twitter/X, and Viber previews.',
+        action: { label: 'Change Image', icon: '🖼️', onClick: () => jumpToSettings('settings', '#page-og-image') }
+      });
     } else {
       score -= 8;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'Missing Social Share Image', desc: 'Set an OpenGraph banner in Page Settings so link previews look rich and attractive on social media.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: 'Missing Social Share Image',
+        desc: 'Set an OpenGraph banner in Page Settings so link previews look rich and attractive on social media.',
+        action: { label: 'Set Social Image', icon: '🖼️', onClick: () => jumpToSettings('settings', '#page-og-image') }
+      });
     }
 
-    // Check 5: Image Alt Tags
-    if (missingAltCount === 0 && totalImages > 0) {
-      checks.push({ status: 'passed', icon: '✅', title: `Accessible Images (${totalImages} images)`, desc: 'All images contain descriptive alternative text for accessibility and image search.' });
-    } else if (missingAltCount > 0) {
-      score -= Math.min(15, missingAltCount * 4);
-      checks.push({ status: 'warning', icon: '⚠️', title: `${missingAltCount} Image(s) Missing Alt Text`, desc: 'Add descriptive alt text to images to improve accessibility and image ranking.' });
+    // Check 5: Image Alt Tags (With Pinpoint Jump to Each Section)
+    if (missingAltSections.length === 0 && totalImages > 0) {
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: `Accessible Images (${totalImages} images)`,
+        desc: 'All images contain descriptive alternative text for accessibility and image search.'
+      });
+    } else if (missingAltSections.length > 0) {
+      score -= Math.min(15, missingAltSections.length * 4);
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `${missingAltSections.length} Image(s) Missing Alt Text`,
+        desc: 'Add descriptive alt text to images to improve accessibility and image ranking.',
+        subItems: missingAltSections.map(img => ({
+          label: img.label,
+          snippet: img.snippet,
+          onJump: () => jumpToSection(img.id, img.propKey)
+        }))
+      });
     }
 
-    // Check 6: Mobile Navigation & Viewport
-    checks.push({ status: 'passed', icon: '✅', title: 'Mobile Viewport & Drawer Health', desc: 'Responsive viewport meta tag and automated mobile slide-out drawer are active.' });
+    // Check 6: Dead / Empty Action Links (Surfaced & Actionable!)
+    if (emptyLinkSections.length === 0) {
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: 'Call-to-Action Links Healthy',
+        desc: 'All primary buttons and banners point to valid pages or destination URLs.'
+      });
+    } else {
+      score -= Math.min(10, emptyLinkSections.length * 3);
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: `${emptyLinkSections.length} Button / Link(s) Missing Target URL`,
+        desc: 'Buttons pointing to "#" or blank links confuse visitors. Link them to a section or page.',
+        subItems: emptyLinkSections.map(lnk => ({
+          label: lnk.label,
+          snippet: lnk.snippet,
+          onJump: () => jumpToSection(lnk.id, lnk.propKey)
+        }))
+      });
+    }
 
-    // Check 7: Lead Collection & Inquiries
+    // Check 7: Mobile Navigation & Viewport
+    checks.push({
+      status: 'passed',
+      icon: '✅',
+      title: 'Mobile Viewport & Drawer Health',
+      desc: 'Responsive viewport meta tag and automated mobile slide-out drawer are active.'
+    });
+
+    // Check 8: Lead Collection & Inquiries
     if (ss.notificationEmail) {
-      checks.push({ status: 'passed', icon: '✅', title: `Admin Lead Alert (${ss.notificationEmail})`, desc: 'Registrations and chatbot inquiries are routed directly to admin inbox.' });
+      checks.push({
+        status: 'passed',
+        icon: '✅',
+        title: `Admin Lead Alert (${ss.notificationEmail})`,
+        desc: 'Registrations and chatbot inquiries are routed directly to admin inbox.',
+        action: { label: 'Edit Email', icon: '📧', onClick: () => jumpToSettings('sitesettings', '#site-notif-email') }
+      });
     } else {
       score -= 5;
-      checks.push({ status: 'warning', icon: '⚠️', title: 'No Admin Notification Email Configured', desc: 'Set an email in Site Settings (⚙️) to receive immediate email notifications for new leads.' });
+      checks.push({
+        status: 'warning',
+        icon: '⚠️',
+        title: 'No Admin Notification Email Configured',
+        desc: 'Set an email in Site Settings (⚙️) to receive immediate email notifications for new leads.',
+        action: { label: 'Set Email', icon: '📧', onClick: () => jumpToSettings('sitesettings', '#site-notif-email') }
+      });
     }
 
     score = Math.max(10, Math.min(100, score));
@@ -6968,12 +7198,12 @@ ${addonManager.getAllActiveJs()}
     modal.id = 'seo-audit-modal';
     modal.className = 'modal-overlay animate-fade-in';
     modal.innerHTML = `
-      <div class="modal-box modal-wide animate-scale-in" style="max-width: 720px;">
+      <div class="modal-box modal-wide animate-scale-in" style="max-width: 760px; max-height: 90vh; display: flex; flex-direction: column;">
         <div class="modal-header">
           <div class="modal-title"><span>🛡️</span> Pre-Publish SEO &amp; Health Pre-Flight Audit</div>
           <button class="tool-icon-btn" id="close-seo-modal">✕</button>
         </div>
-        <div class="modal-body" style="padding: 22px;">
+        <div class="modal-body" style="padding: 22px; overflow-y: auto; flex: 1;">
           <div class="seo-audit-container">
             <div class="seo-score-banner">
               <div class="seo-score-circle ${scoreClass}">
@@ -6987,28 +7217,47 @@ ${addonManager.getAllActiveJs()}
                 <div style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;">
                   ${score >= 90 
                     ? '🎉 Outstanding! Your page adheres to high-performance SEO, semantic hierarchy, and mobile usability standards.' 
-                    : 'Review the recommendations below to maximize your organic Google visibility and attendee engagement.'}
+                    : 'Click any "Jump to Widget" or "Edit" button below to jump directly to that element and resolve recommendations.'}
                 </div>
               </div>
             </div>
 
             <div class="seo-checks-list">
-              ${checks.map(c => `
+              ${checks.map((c, cIdx) => `
                 <div class="seo-check-item ${c.status}">
                   <div class="seo-check-icon">${c.icon}</div>
                   <div class="seo-check-body">
-                    <div class="seo-check-title">${c.title}</div>
+                    <div class="seo-check-header">
+                      <div class="seo-check-title">${c.title}</div>
+                      ${c.action ? `<button type="button" class="seo-fix-btn" data-check-idx="${cIdx}"><span>${c.action.icon || '✏️'}</span> ${c.action.label}</button>` : ''}
+                    </div>
                     <div class="seo-check-desc">${c.desc}</div>
+                    ${c.subItems && c.subItems.length ? `
+                      <div class="seo-subitems-list">
+                        ${c.subItems.map((sub, sIdx) => `
+                          <div class="seo-subitem-row">
+                            <div class="seo-subitem-label">
+                              <span style="color:#6366f1;font-weight:700;">›</span>
+                              <span>${sub.label}</span>
+                              ${sub.snippet ? `<span class="seo-subitem-snippet">"${sub.snippet}"</span>` : ''}
+                            </div>
+                            <button type="button" class="seo-subitem-jump-btn" data-sub-idx="${cIdx}-${sIdx}">
+                              <span>🔍</span> Jump to Widget
+                            </button>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
                   </div>
                 </div>
               `).join('')}
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 14px; margin-top: 10px; border-top: 1px solid var(--border-subtle);">
               <button class="topbar-btn" id="btn-seo-fix-settings" style="font-size: 0.85rem;">
                 <span>⚙️</span> Open Page Settings
               </button>
-              <button class="topbar-btn topbar-btn-publish" id="btn-seo-publish-now" style="padding: 8px 20px;">
+              <button class="topbar-btn topbar-btn-publish" id="btn-seo-publish-now" style="padding: 8px 22px;">
                 <span>🚀</span> Ready to Publish Live
               </button>
             </div>
@@ -7019,12 +7268,44 @@ ${addonManager.getAllActiveJs()}
     document.body.appendChild(modal);
 
     modal.querySelector('#close-seo-modal').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    // Prevent accidental dismiss on backdrop click; require explicit X button
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        // Subtle shake animation so user knows it's guarded
+        const box = modal.querySelector('.modal-box');
+        if (box) {
+          box.style.transform = 'scale(1.015)';
+          setTimeout(() => box.style.transform = 'scale(1)', 150);
+        }
+      }
+    });
+
+    // Wire main check action buttons
+    modal.querySelectorAll('.seo-fix-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cIdx = parseInt(btn.getAttribute('data-check-idx'));
+        if (checks[cIdx] && typeof checks[cIdx].action?.onClick === 'function') {
+          checks[cIdx].action.onClick();
+        }
+      });
+    });
+
+    // Wire sub-item jump buttons
+    modal.querySelectorAll('.seo-subitem-jump-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const parts = btn.getAttribute('data-sub-idx').split('-');
+        const cIdx = parseInt(parts[0]);
+        const sIdx = parseInt(parts[1]);
+        if (checks[cIdx] && checks[cIdx].subItems && checks[cIdx].subItems[sIdx] && typeof checks[cIdx].subItems[sIdx].onJump === 'function') {
+          checks[cIdx].subItems[sIdx].onJump();
+        }
+      });
+    });
 
     modal.querySelector('#btn-seo-fix-settings').addEventListener('click', () => {
-      modal.remove();
-      const pageTab = document.querySelector('.sidebar-tab-btn[data-side-tab="settings"]');
-      if (pageTab) pageTab.click();
+      jumpToSettings('settings', '#page-title-input');
     });
 
     modal.querySelector('#btn-seo-publish-now').addEventListener('click', () => {
@@ -7034,7 +7315,7 @@ ${addonManager.getAllActiveJs()}
   }
 
   // --------------------------------------------------------------------------
-  // WORDPRESS-STYLE 1-CLICK SYSTEM UPDATER (GITHUB-CONNECTED)
+    // WORDPRESS-STYLE 1-CLICK SYSTEM UPDATER (GITHUB-CONNECTED)
   // --------------------------------------------------------------------------
   async checkForUpdates() {
     try {
