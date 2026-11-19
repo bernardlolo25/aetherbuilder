@@ -1,6 +1,6 @@
 {
-  "publishedAt": "2026-11-19T02:20:52.108Z",
-  "currentPageId": "pg_1795051605607_pp80y",
+  "publishedAt": "2026-11-19T04:34:39.059Z",
+  "currentPageId": "pg_1790921027480_izn5x",
   "pages": [
     {
       "id": "pg_1790921027480_izn5x",
@@ -160,7 +160,9 @@
             ],
             "paddingTop": "0px",
             "paddingBottom": "0px",
-            "customId": "index-slider-1"
+            "customId": "index-slider-1",
+            "customCss": "/* The container holding the lights */\n.christmas-lights {\n  position: relative;\n  padding-top: 40px; /* Gives space for the wire to show above content */\n  overflow: hidden;\n}\n\n/* The wire holding the lights */\n.christmas-lights::before {\n  content: '';\n  position: absolute;\n  top: 20px;\n  left: 0;\n  right: 0;\n  height: 20px;\n  border-bottom: 3px solid #2a2a2a; /* The dark wire color */\n  border-radius: 50%;\n  z-index: 1;\n}\n\n/* The bulbs themselves */\n.christmas-lights::after {\n  content: '';\n  position: absolute;\n  top: 18px;\n  left: 0;\n  right: 0;\n  height: 20px;\n  /* Creates 4 distinct dots repeated across the screen */\n  background-image: \n    radial-gradient(circle at 10px 15px, #ff2a2a 6px, transparent 7px), /* Red */\n    radial-gradient(circle at 40px 18px, #2aff2a 6px, transparent 7px), /* Green */\n    radial-gradient(circle at 70px 20px, #ffff2a 6px, transparent 7px), /* Yellow */\n    radial-gradient(circle at 100px 16px, #2a2aff 6px, transparent 7px); /* Blue */\n  background-size: 110px 30px;\n  background-repeat: repeat-x;\n  z-index: 2;\n  /* The animation */\n  animation: flashLights 1.5s infinite alternate;\n}\n\n/* The Flashing Keyframes */\n@keyframes flashLights {\n  0%, 24% {\n    opacity: 1;\n    filter: drop-shadow(0 0 10px #ff2a2a) drop-shadow(0 0 15px #2aff2a);\n  }\n  25%, 49% {\n    opacity: 0.6;\n    filter: drop-shadow(0 0 5px #ffff2a) drop-shadow(0 0 10px #2a2aff);\n  }\n  50%, 74% {\n    opacity: 0.3;\n    filter: drop-shadow(0 0 2px #ff2a2a) drop-shadow(0 0 5px #2aff2a);\n  }\n  75%, 100% {\n    opacity: 1;\n    filter: drop-shadow(0 0 15px #ffff2a) drop-shadow(0 0 20px #2a2aff);\n  }\n}\n\n/* Respect user accessibility settings */\n@media (prefers-reduced-motion: reduce) {\n  .christmas-lights::after {\n    animation: none;\n    opacity: 1;\n    filter: drop-shadow(0 0 8px #ff2a2a);\n  }\n}",
+            "customClass": "christmas-lights"
           }
         },
         {

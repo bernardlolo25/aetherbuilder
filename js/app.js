@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.52';
+export const APP_VERSION = '2.9.53');
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -6921,33 +6921,93 @@ ${addonManager.getAllActiveJs()}
       const secName = widgetDef?.name || s.widgetType;
       const secLabel = `Section ${idx + 1}: ${secName}`;
 
-      // 1. H1 Headings
-      if (s.widgetType === 'hero' || s.widgetType === 'heading') {
-        if (props.tag === 'h1' || s.widgetType === 'hero') {
-          h1Sections.push({
-            id: s.id,
-            widgetType: s.widgetType,
-            label: secLabel,
-            snippet: (props.title || props.text || props.heading || 'Hero Title').slice(0, 36)
-          });
+      // 1. H1 Headings (Hero Banners, Headings, Portfolio Showcase & Add-ons with H1)
+      let isH1 = false;
+      let h1Snippet = '';
+      let h1Prop = 'title';
+
+      if (s.widgetType === 'hero') {
+        isH1 = true;
+        h1Snippet = props.title || props.heading || 'Hero Title';
+        h1Prop = 'title';
+      } else if (s.widgetType === 'heading' && props.tag === 'h1') {
+        isH1 = true;
+        h1Snippet = props.text || props.title || 'Heading H1';
+        h1Prop = 'text';
+      } else if (s.widgetType === 'addon_portfolio_showcase' || s.widgetType.includes('portfolio')) {
+        // Portfolio Showcase is a full-featured Hero element with <h1 class="wb-pf-name">{{name}}</h1>
+        if (props.name && String(props.name).trim()) {
+          isH1 = true;
+          h1Snippet = String(props.name).trim();
+          h1Prop = 'name';
+        } else {
+          // Flag as empty H1 hero candidate
+          h1Snippet = '(Missing Full Name in Portfolio Showcase)';
+          h1Prop = 'name';
+        }
+      } else {
+        // Dynamic scan: Check if template has <h1> or rendered DOM contains <h1>
+        const secEl = document.querySelector(`[data-section-id="${s.id}"]`);
+        const domH1 = secEl ? secEl.querySelector('h1') : null;
+        if (domH1 && domH1.textContent.trim()) {
+          isH1 = true;
+          h1Snippet = domH1.textContent.trim();
+          h1Prop = props.title ? 'title' : (props.name ? 'name' : (props.text ? 'text' : 'heading'));
+        } else if (widgetDef?.template && /<h1[\s>]/i.test(widgetDef.template)) {
+          const cand = props.name || props.title || props.heading || props.text;
+          if (cand && String(cand).trim()) {
+            isH1 = true;
+            h1Snippet = String(cand).trim();
+            h1Prop = props.name ? 'name' : (props.title ? 'title' : 'text');
+          }
         }
       }
 
-      // 2. Single Images
-      ['image', 'imageUrl', 'bgImage', 'logoUrl', 'speakerAvatar'].forEach(k => {
+      if (isH1) {
+        h1Sections.push({
+          id: s.id,
+          widgetType: s.widgetType,
+          label: secLabel,
+          propKey: h1Prop,
+          snippet: h1Snippet.slice(0, 36)
+        });
+      }
+
+      // 2. Single Images (including Portfolio & Profile Avatars)
+      ['image', 'imageUrl', 'bgImage', 'logoUrl', 'speakerAvatar', 'photoUrl', 'avatarUrl'].forEach(k => {
         if (props[k]) {
           totalImages++;
-          if (!props.alt && !props.imageAlt) {
+          // For Portfolio Showcase / profile widgets, name or title acts as automatic alt text
+          const hasAlt = props.alt || props.imageAlt || (k === 'photoUrl' && props.name) || (k === 'speakerAvatar' && props.name);
+          if (!hasAlt) {
             missingAltSections.push({
               id: s.id,
               widgetType: s.widgetType,
               label: secLabel,
-              propKey: 'alt',
+              propKey: k === 'photoUrl' ? 'name' : 'alt',
               snippet: k
             });
           }
         }
       });
+
+      // Portfolio Projects repeater images
+      if (Array.isArray(props.projects)) {
+        props.projects.forEach((proj, pIdx) => {
+          if (proj.imageUrl) {
+            totalImages++;
+            if (!proj.title && !proj.alt) {
+              missingAltSections.push({
+                id: s.id,
+                widgetType: s.widgetType,
+                label: `${secLabel} (Project #${pIdx + 1})`,
+                propKey: 'projects',
+                snippet: 'Project Cover'
+              });
+            }
+          }
+        });
+      }
 
       // 3. Gallery Images
       if (Array.isArray(props.galleryImages)) {
@@ -6983,15 +7043,15 @@ ${addonManager.getAllActiveJs()}
         });
       }
 
-      // 5. Button & Action Links
-      ['buttonLink', 'ctaLink', 'linkUrl'].forEach(k => {
-        if (props[k] === '' || props[k] === '#') {
+      // 5. Button & Action Links (including Portfolio CTA buttons)
+      ['buttonLink', 'ctaLink', 'linkUrl', 'contactBtnLink', 'workBtnLink'].forEach(k => {
+        if (props[k] === '#') {
           emptyLinkSections.push({
             id: s.id,
             widgetType: s.widgetType,
             label: secLabel,
             propKey: k,
-            snippet: props.buttonText || props.ctaText || 'Button'
+            snippet: props.buttonText || props.ctaText || props.contactBtnText || props.workBtnText || 'Button'
           });
         }
       });

@@ -1,0 +1,258 @@
+{
+  "id": "addon_portfolio_showcase",
+  "name": "Portfolio Showcase",
+  "category": "addons",
+  "icon": "💼",
+  "version": "1.2.1",
+  "author": "Aether Studio",
+  "description": "Professional portfolio hero with separate link selectors for the CTA buttons.",
+  "enabled": true,
+  "defaultProps": {
+    "sectionTitle": "About Me",
+    "sectionSubtitle": "",
+    "photoUrl": "",
+    "name": "",
+    "jobTitle": "",
+    "location": "",
+    "email": "",
+    "summary": "",
+    "skillsLabel": "Expertise",
+    "skills": "",
+    "projectsLabel": "Selected Projects",
+    "projects": [],
+    "showProjects": true,
+    "showSkills": true,
+    "showContactButtons": true,
+    "contactBtnText": "Get in Touch",
+    "contactBtnLink": "",
+    "workBtnText": "View Work",
+    "workBtnLink": "",
+    "accentColor": "#6366f1",
+    "photoShape": "rounded",
+    "photoPosition": "left",
+    "cardStyle": "elevated",
+    "summaryAlign": "left"
+  },
+  "schema": {
+    "content": [
+      {
+        "key": "sectionTitle",
+        "label": "📝 Section Eyebrow",
+        "type": "text"
+      },
+      {
+        "key": "sectionSubtitle",
+        "label": "📄 Tagline",
+        "type": "textarea"
+      },
+      {
+        "key": "photoUrl",
+        "label": "🖼️ Your Photo",
+        "type": "image-picker"
+      },
+      {
+        "key": "name",
+        "label": "👤 Full Name",
+        "type": "text"
+      },
+      {
+        "key": "jobTitle",
+        "label": "💼 Job Title / Role",
+        "type": "text"
+      },
+      {
+        "key": "location",
+        "label": "📍 Location",
+        "type": "text"
+      },
+      {
+        "key": "email",
+        "label": "✉️ Contact Email",
+        "type": "text"
+      },
+      {
+        "key": "summary",
+        "label": "📖 Professional Summary",
+        "type": "textarea"
+      },
+      {
+        "key": "skillsLabel",
+        "label": "🏷️ Skills Section Label",
+        "type": "text"
+      },
+      {
+        "key": "skills",
+        "label": "🎯 Skills (comma-separated)",
+        "type": "text"
+      },
+      {
+        "key": "showSkills",
+        "label": "Show Skills",
+        "type": "toggle"
+      },
+      {
+        "key": "showContactButtons",
+        "label": "Show Contact Buttons",
+        "type": "toggle"
+      },
+      {
+        "key": "contactBtnText",
+        "label": "Contact Button Text",
+        "type": "text"
+      },
+      {
+        "key": "contactBtnLink",
+        "label": "Contact Button Link",
+        "type": "page-link"
+      },
+      {
+        "key": "workBtnText",
+        "label": "Work Button Text",
+        "type": "text"
+      },
+      {
+        "key": "workBtnLink",
+        "label": "Work Button Link",
+        "type": "page-link"
+      },
+      {
+        "key": "projectsLabel",
+        "label": "🗂️ Projects Section Label",
+        "type": "text"
+      },
+      {
+        "key": "showProjects",
+        "label": "Show Projects",
+        "type": "toggle"
+      },
+      {
+        "key": "projects",
+        "label": "🚀 Projects",
+        "type": "repeater",
+        "fields": [
+          {
+            "key": "title",
+            "label": "Project Title",
+            "type": "text"
+          },
+          {
+            "key": "description",
+            "label": "Description",
+            "type": "textarea"
+          },
+          {
+            "key": "imageUrl",
+            "label": "Cover Image",
+            "type": "image-picker"
+          },
+          {
+            "key": "techTags",
+            "label": "Tech / Tags (comma-separated)",
+            "type": "text"
+          },
+          {
+            "key": "projectUrl",
+            "label": "Project URL",
+            "type": "page-link"
+          },
+          {
+            "key": "role",
+            "label": "Your Role",
+            "type": "text"
+          },
+          {
+            "key": "year",
+            "label": "Year",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "style": [
+      {
+        "key": "summaryAlign",
+        "label": "📝 Summary Text Alignment",
+        "type": "select",
+        "options": [
+          {
+            "label": "Left (Default)",
+            "value": "left"
+          },
+          {
+            "label": "Center",
+            "value": "center"
+          },
+          {
+            "label": "Right",
+            "value": "right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify"
+          }
+        ]
+      },
+      {
+        "key": "photoShape",
+        "label": "🖼️ Photo Shape",
+        "type": "select",
+        "options": [
+          {
+            "label": "Rounded Rectangle",
+            "value": "rounded"
+          },
+          {
+            "label": "Circle",
+            "value": "circle"
+          },
+          {
+            "label": "Square",
+            "value": "square"
+          }
+        ]
+      },
+      {
+        "key": "photoPosition",
+        "label": "🧭 Photo Position",
+        "type": "select",
+        "options": [
+          {
+            "label": "Left (Default)",
+            "value": "left"
+          },
+          {
+            "label": "Right",
+            "value": "right"
+          }
+        ]
+      },
+      {
+        "key": "cardStyle",
+        "label": "🎨 Project Card Style",
+        "type": "select",
+        "options": [
+          {
+            "label": "Elevated (Default)",
+            "value": "elevated"
+          },
+          {
+            "label": "Flat",
+            "value": "flat"
+          },
+          {
+            "label": "Outlined",
+            "value": "outlined"
+          }
+        ]
+      },
+      {
+        "key": "accentColor",
+        "label": "🎨 Accent Color",
+        "type": "color"
+      }
+    ]
+  },
+  "template": "<div class=\"wb-addon-portfolio\" data-pf-photopos=\"{{photoPosition}}\" data-pf-shape=\"{{photoShape}}\" data-pf-cardstyle=\"{{cardStyle}}\" data-pf-showskills=\"{{showSkills}}\" data-pf-showprojects=\"{{showProjects}}\" data-pf-showcontact=\"{{showContactButtons}}\" data-pf-summaryalign=\"{{summaryAlign}}\" style=\"--pf-accent: {{accentColor}};\"><div class=\"wb-pf-hero\"><div class=\"wb-pf-photo-wrap\"><div class=\"wb-pf-photo\" data-pf-mount=\"photo\"></div></div><div class=\"wb-pf-intro\">{{#if sectionTitle}}<div class=\"wb-pf-eyebrow\">{{sectionTitle}}</div>{{/if}}{{#if name}}<h1 class=\"wb-pf-name\">{{name}}</h1>{{/if}}{{#if jobTitle}}<p class=\"wb-pf-title\">{{jobTitle}}</p>{{/if}}<div class=\"wb-pf-meta\" data-pf-mount=\"meta\"></div><div class=\"wb-pf-summary\" data-pf-mount=\"summary\"></div><div class=\"wb-pf-skills\" data-pf-mount=\"skills\"></div><div class=\"wb-pf-actions\" data-pf-mount=\"actions\"></div></div></div><div class=\"wb-pf-projects\" data-pf-mount=\"projects\"></div></div>",
+  "customCss": ".wb-addon-portfolio{--pf-accent:#6366f1;--pf-accent-soft:color-mix(in srgb,var(--pf-accent) 14%,transparent);--pf-accent-line:color-mix(in srgb,var(--pf-accent) 40%,transparent);--pf-accent-glow:color-mix(in srgb,var(--pf-accent) 45%,transparent);font-family:inherit;width:100%;box-sizing:border-box;padding:56px 24px;max-width:1200px;margin:0 auto;color:var(--text-main,#f8fafc)}\n.wb-addon-portfolio *,.wb-addon-portfolio *::before,.wb-addon-portfolio *::after{box-sizing:border-box}\n\n/* HERO LAYOUT */\n.wb-pf-hero{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:48px;align-items:center;margin-bottom:72px}\n.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-hero{grid-template-columns:1fr minmax(220px,300px)}\n.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-photo-wrap{order:2}\n.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-intro{order:1;text-align:right}\n.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-meta,.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-skills,.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-actions{justify-content:flex-end}\n\n/* SUMMARY ALIGNMENT */\n.wb-addon-portfolio[data-pf-summaryalign=\"left\"] .wb-pf-summary{text-align:left}\n.wb-addon-portfolio[data-pf-summaryalign=\"center\"] .wb-pf-summary{text-align:center;margin-left:auto;margin-right:auto}\n.wb-addon-portfolio[data-pf-summaryalign=\"right\"] .wb-pf-summary{text-align:right;margin-left:auto}\n.wb-addon-portfolio[data-pf-summaryalign=\"justify\"] .wb-pf-summary{text-align:justify}\n\n@media(max-width:820px){.wb-pf-hero,.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-hero{grid-template-columns:1fr;gap:32px;text-align:center}.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-photo-wrap{order:0}.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-intro{text-align:center}.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-meta,.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-skills,.wb-addon-portfolio[data-pf-photopos=\"right\"] .wb-pf-actions{justify-content:center}.wb-addon-portfolio .wb-pf-summary{text-align:center;margin-left:auto;margin-right:auto}}\n\n/* PHOTO */\n.wb-pf-photo-wrap{position:relative;display:flex;justify-content:center}\n.wb-pf-photo{position:relative;width:100%;aspect-ratio:1/1;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,var(--pf-accent),color-mix(in srgb,var(--pf-accent) 40%,#000));box-shadow:0 20px 50px -20px var(--pf-accent-glow),0 0 0 1px rgba(255,255,255,.06) inset;transition:transform .4s ease,box-shadow .4s ease}\n.wb-pf-photo::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.25));pointer-events:none}\n.wb-addon-portfolio[data-pf-shape=\"circle\"] .wb-pf-photo{border-radius:50%}\n.wb-addon-portfolio[data-pf-shape=\"square\"] .wb-pf-photo{border-radius:4px}\n.wb-pf-photo:hover{transform:translateY(-4px) rotate(-.4deg);box-shadow:0 28px 60px -20px var(--pf-accent-glow),0 0 0 1px rgba(255,255,255,.1) inset}\n.wb-pf-photo img{width:100%;height:100%;object-fit:cover;display:block}\n.wb-pf-photo-initial{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(3rem,7vw,5rem);font-weight:800;color:#fff;letter-spacing:-.02em;text-shadow:0 4px 20px rgba(0,0,0,.3)}\n.wb-pf-photo img[data-failed=\"1\"]{display:none}\n.wb-pf-photo img[data-failed=\"1\"] + .wb-pf-photo-initial{display:flex}\n.wb-pf-photo-initial{display:none}\n\n/* INTRO */\n.wb-pf-intro{min-width:0}\n.wb-pf-eyebrow{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--pf-accent-soft);border:1px solid var(--pf-accent-line);color:var(--pf-accent);font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}\n.wb-pf-name{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin:0 0 10px;background:linear-gradient(135deg,var(--text-main,#f8fafc) 40%,var(--pf-accent) 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.wb-pf-title{font-size:clamp(1rem,1.6vw,1.2rem);font-weight:600;color:var(--text-muted,#94a3b8);margin:0 0 16px;line-height:1.4}\n.wb-pf-meta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px;font-size:.88rem;color:var(--text-muted,#94a3b8)}\n.wb-pf-meta-item{display:inline-flex;align-items:center;gap:6px}\n.wb-pf-meta-item span:first-child{opacity:.8}\n.wb-pf-summary{font-size:1rem;line-height:1.75;color:var(--text-main,#e2e8f0);margin:0 0 28px;max-width:62ch;white-space:pre-wrap;transition:all .2s ease}\n.wb-pf-skills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}\n.wb-pf-skill{display:inline-block;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text-main,#f1f5f9);font-size:.8rem;font-weight:600;transition:all .2s ease}\n.wb-pf-skill:hover{background:var(--pf-accent-soft);border-color:var(--pf-accent-line);color:var(--pf-accent);transform:translateY(-1px)}\n.wb-pf-actions{display:flex;flex-wrap:wrap;gap:12px}\n.wb-pf-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s ease;border:1px solid transparent;line-height:1}\n.wb-pf-btn--primary{background:var(--pf-accent);color:#fff;box-shadow:0 8px 24px -8px var(--pf-accent-glow)}\n.wb-pf-btn--primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px var(--pf-accent-glow);filter:brightness(1.08)}\n.wb-pf-btn--ghost{background:transparent;border-color:rgba(255,255,255,.15);color:var(--text-main,#f8fafc)}\n.wb-pf-btn--ghost:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.3);transform:translateY(-1px)}\n\n/* PROJECTS */\n.wb-pf-projects{margin-top:8px}\n.wb-pf-projects-head{display:flex;align-items:center;gap:16px;margin-bottom:28px}\n.wb-pf-projects-head h2{font-size:1.4rem;font-weight:800;margin:0;letter-spacing:-.01em;color:var(--text-main,#f8fafc)}\n.wb-pf-projects-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.15),transparent)}\n.wb-pf-projects-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}\n@media(max-width:900px){.wb-pf-projects-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n@media(max-width:600px){.wb-pf-projects-grid{grid-template-columns:1fr}}\n.wb-pf-project{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--bg-card,#131b2e);transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;position:relative}\n.wb-addon-portfolio[data-pf-cardstyle=\"elevated\"] .wb-pf-project{box-shadow:0 4px 18px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)}\n.wb-addon-portfolio[data-pf-cardstyle=\"elevated\"] .wb-pf-project:hover{transform:translateY(-6px);box-shadow:0 20px 40px -12px var(--pf-accent-glow);border-color:var(--pf-accent-line)}\n.wb-addon-portfolio[data-pf-cardstyle=\"flat\"] .wb-pf-project{background:transparent;border:1px solid rgba(255,255,255,.08)}\n.wb-addon-portfolio[data-pf-cardstyle=\"flat\"] .wb-pf-project:hover{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.18)}\n.wb-addon-portfolio[data-pf-cardstyle=\"outlined\"] .wb-pf-project{background:transparent;border:1.5px solid var(--pf-accent-line)}\n.wb-addon-portfolio[data-pf-cardstyle=\"outlined\"] .wb-pf-project:hover{background:var(--pf-accent-soft);border-color:var(--pf-accent)}\n.wb-pf-project-cover{aspect-ratio:16/10;overflow:hidden;background:linear-gradient(135deg,var(--pf-accent),color-mix(in srgb,var(--pf-accent) 35%,#000));position:relative;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:800;color:rgba(255,255,255,.85)}\n.wb-pf-project-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}\n.wb-pf-project:hover .wb-pf-project-cover img{transform:scale(1.06)}\n.wb-pf-project-body{padding:18px 18px 20px;flex:1;display:flex;flex-direction:column}\n.wb-pf-project-meta{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--text-dim,#94a3b8);margin-bottom:8px;font-weight:600}\n.wb-pf-project-meta .dot{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.6}\n.wb-pf-project-title{font-size:1.08rem;font-weight:800;color:var(--text-main,#f8fafc);margin:0 0 8px;line-height:1.3}\n.wb-pf-project-desc{font-size:.88rem;line-height:1.6;color:var(--text-muted,#94a3b8);margin:0 0 14px;flex:1}\n.wb-pf-project-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}\n.wb-pf-project-tag{font-size:.66rem;padding:3px 8px;border-radius:999px;background:var(--pf-accent-soft);border:1px solid var(--pf-accent-line);color:var(--pf-accent);font-weight:700}\n.wb-pf-project-link{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;font-weight:700;color:var(--pf-accent);text-decoration:none;transition:gap .2s ease;margin-top:auto}\n.wb-pf-project-link:hover{gap:10px}\n.wb-pf-empty{padding:48px 20px;text-align:center;color:var(--text-dim,#94a3b8);border:1px dashed rgba(255,255,255,.12);border-radius:12px}\n\n@media(prefers-reduced-motion:reduce){.wb-addon-portfolio *{transition:none!important;animation:none!important}}",
+  "customJs": "function onMount(el, props) {\n  var root = el.querySelector('.wb-addon-portfolio');\n  if (!root) return;\n\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]; }); };\n  var $ = function (sel, ctx) { return (ctx || root).querySelector(sel); };\n  var accent = props.accentColor || '#6366f1';\n  root.style.setProperty('--pf-accent', accent);\n\n  // -------- PHOTO --------\n  var photoMount = $('[data-pf-mount=\"photo\"]');\n  if (photoMount) {\n    var initial = (props.name || '?').trim().charAt(0).toUpperCase() || '?';\n    var src = (props.photoUrl || '').trim();\n    var imgHtml = src\n      ? '<img src=\"' + esc(src) + '\" alt=\"' + esc(props.name || 'Portrait') + '\" onerror=\"this.setAttribute(&#39;data-failed&#39;,&#39;1&#39;)\">'\n      : '';\n    photoMount.innerHTML = imgHtml + '<div class=\"wb-pf-photo-initial\">' + esc(initial) + '</div>';\n  }\n\n  // -------- META (location / email) --------\n  var metaMount = $('[data-pf-mount=\"meta\"]');\n  if (metaMount) {\n    var meta = [];\n    // Inject emojis directly as HTML to bypass the esc() function which causes the '?' boxes on mobile\n    if (props.location) {\n      meta.push('<span class=\"wb-pf-meta-item\"><span aria-hidden=\"true\">📍</span><span>' + esc(props.location) + '</span></span>');\n    }\n    if (props.email) {\n      meta.push('<span class=\"wb-pf-meta-item\"><span aria-hidden=\"true\">✉️</span><a href=\"mailto:' + esc(props.email) + '\" style=\"color:inherit;text-decoration:none;border-bottom:1px dashed rgba(255,255,255,.2)\">' + esc(props.email) + '</a></span>');\n    }\n    metaMount.innerHTML = meta.join('');\n  }\n\n  // -------- SUMMARY --------\n  var sumMount = $('[data-pf-mount=\"summary\"]');\n  if (sumMount) sumMount.textContent = props.summary || '';\n\n  // -------- SKILLS --------\n  var skillsMount = $('[data-pf-mount=\"skills\"]');\n  var showSkills = props.showSkills !== false && props.showSkills !== 'false';\n  if (skillsMount) {\n    if (!showSkills || !props.skills) {\n      skillsMount.style.display = 'none';\n    } else {\n      var skills = String(props.skills).split(',').map(function (s) { return s.trim(); }).filter(Boolean);\n      skillsMount.innerHTML = skills.map(function (s) { return '<span class=\"wb-pf-skill\">' + esc(s) + '</span>'; }).join('');\n    }\n  }\n\n  // -------- CONTACT ACTIONS --------\n  var actMount = $('[data-pf-mount=\"actions\"]');\n  var showContact = props.showContactButtons !== false && props.showContactButtons !== 'false';\n  if (actMount) {\n    if (!showContact) { actMount.style.display = 'none'; }\n    else {\n      var btns = [];\n      if (props.contactBtnLink) btns.push('<a class=\"wb-pf-btn wb-pf-btn--primary\" href=\"' + esc(props.contactBtnLink) + '\">' + esc(props.contactBtnText || 'Get in Touch') + '</a>');\n      if (props.workBtnLink) btns.push('<a class=\"wb-pf-btn wb-pf-btn--ghost\" href=\"' + esc(props.workBtnLink) + '\" target=\"_blank\" rel=\"noopener noreferrer\">' + esc(props.workBtnText || 'View Work') + '</a>');\n      actMount.innerHTML = btns.join('');\n    }\n  }\n\n  // -------- PROJECTS --------\n  var projMount = $('[data-pf-mount=\"projects\"]');\n  var showProjects = props.showProjects !== false && props.showProjects !== 'false';\n  var projects = Array.isArray(props.projects) ? props.projects.filter(function (p) { return p && p.title; }) : [];\n  if (projMount) {\n    if (!showProjects || !projects.length) { projMount.style.display = 'none'; }\n    else {\n      var label = props.projectsLabel || 'Selected Projects';\n      var cards = projects.map(function (p) {\n        var cover = p.imageUrl\n          ? '<div class=\"wb-pf-project-cover\"><img src=\"' + esc(p.imageUrl) + '\" alt=\"' + esc(p.title) + '\" loading=\"lazy\" onerror=\"this.style.display=&#39;none&#39;\"></div>'\n          : '<div class=\"wb-pf-project-cover\">' + esc((p.title || '?').charAt(0).toUpperCase()) + '</div>';\n        var tags = String(p.techTags || '').split(',').map(function (t) { return t.trim(); }).filter(Boolean).map(function (t) { return '<span class=\"wb-pf-project-tag\">' + esc(t) + '</span>'; }).join('');\n        var metaBits = [];\n        if (p.role) metaBits.push(esc(p.role));\n        if (p.year) metaBits.push(esc(p.year));\n        var metaLine = metaBits.length ? '<div class=\"wb-pf-project-meta\">' + metaBits.join('<span class=\"dot\"></span>') + '</div>' : '';\n        var link = p.projectUrl ? '<a class=\"wb-pf-project-link\" href=\"' + esc(p.projectUrl) + '\" target=\"_blank\" rel=\"noopener noreferrer\">View Project <span aria-hidden=\"true\">→</span></a>' : '';\n        return '<article class=\"wb-pf-project\">' + cover + '<div class=\"wb-pf-project-body\">' + metaLine + '<h3 class=\"wb-pf-project-title\">' + esc(p.title) + '</h3><p class=\"wb-pf-project-desc\">' + esc(p.description || '') + '</p>' + (tags ? '<div class=\"wb-pf-project-tags\">' + tags + '</div>' : '') + link + '</div></article>';\n      }).join('');\n      projMount.innerHTML = '<div class=\"wb-pf-projects-head\"><h2>' + esc(label) + '</h2></div><div class=\"wb-pf-projects-grid\">' + cards + '</div>';\n    }\n  }\n\n  el.__wbDestroy = function () { /* nothing to tear down */ };\n}"
+}
