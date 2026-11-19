@@ -1,7 +1,8 @@
 {
-  "version": "2.9.53",
+  "version": "2.9.54",
   "release_date": "2026-11-19",
   "changelog": [
+    "v2.9.54: Critical fix for admin studio & public canvas module syntax error on bootstrap",
     "v2.9.53: SEO Pre-Flight Audit recognizes Portfolio Showcase & Custom Add-ons as full Hero elements — dynamic <h1> template & DOM detection, profile avatar alt validation, and registered Portfolio Showcase in Addon Library",
     "v2.9.52: Robust Custom CSS parser & @keyframes support — seamless support for complex animations (e.g. Christmas festive lights, multi-stop radial gradients), unscoped keyframe preservation, media queries, and standalone export bundling",
     "v2.9.51: Interactive deep-linking for Pre-Publish SEO & Health Pre-Flight Audit — 1-click Jump to Widget pinpoint navigation, canvas glow pulse, auto-filtered Inspector property focus, and direct Page/Site settings deep-linking",
