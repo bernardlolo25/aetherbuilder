@@ -39,7 +39,7 @@ try {
         try {
             $response.Headers.Add("Access-Control-Allow-Origin", "*")
             $response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-            $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Portal-Token, X-Admin-Password, X-Admin-Token")
 
             if ($request.HttpMethod -eq "OPTIONS") {
                 $response.StatusCode = 200
@@ -513,6 +513,428 @@ try {
                         [System.IO.File]::WriteAllBytes($addonsFile, $bodyBytes)
                     }
                     $resJson = '{"success":true,"message":"Add-ons saved successfully"}'
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_init") {
+                    $portalUsersFile = Join-Path $dataDir "portal_users.json"
+                    $portalSessionsFile = Join-Path $dataDir "portal_sessions.json"
+                    $subFile = Join-Path $dataDir "submissions.json"
+
+                    # Ensure default admin exists
+                    $users = @()
+                    if (Test-Path $portalUsersFile) {
+                        try {
+                            $raw = Get-Content -Raw -Path $portalUsersFile -Encoding UTF8
+                            $users = @($raw | ConvertFrom-Json)
+                        } catch { $users = @() }
+                    }
+                    if ($users.Count -eq 0) {
+                        $defaultAdmin = @{
+                            id = "usr_init_admin"
+                            name = "Portal Administrator"
+                            email = "admin@portal.local"
+                            password = "Admin1234!"
+                            role = "admin"
+                            status = "active"
+                            created_at = (Get-Date).ToString("o")
+                        }
+                        $users = @($defaultAdmin)
+                        ($users | ConvertTo-Json -Depth 5) | Set-Content -Path $portalUsersFile -Encoding UTF8
+                    }
+
+                    # Check current session token
+                    $curUser = $null
+                    $tok = $request.Headers["X-Portal-Token"]
+                    if (-not $tok) { $tok = $request.QueryString["portal_token"] }
+                    if ($tok -and (Test-Path $portalSessionsFile)) {
+                        try {
+                            $sessObj = Get-Content -Raw -Path $portalSessionsFile -Encoding UTF8 | ConvertFrom-Json
+                            if ($sessObj.$tok -and $sessObj.$tok.user) {
+                                $curUser = $sessObj.$tok.user
+                            }
+                        } catch {}
+                    }
+
+                    # Submissions stats
+                    $subs = @()
+                    if (Test-Path $subFile) {
+                        try { $subs = @((Get-Content -Raw -Path $subFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $stats = @{ total = $subs.Count; pending = 0; approved = 0; paid = 0; declined = 0 }
+                    foreach ($s in $subs) {
+                        $st = if ($s.status) { $s.status.ToString().ToLower() } else { "pending" }
+                        if ($stats.ContainsKey($st)) { $stats[$st]++ } else { $stats["pending"]++ }
+                    }
+
+                    $resObj = @{
+                        success = $true
+                        loggedIn = ($null -ne $curUser)
+                        user = if ($curUser) { @{ id = $curUser.id; name = $curUser.name; email = $curUser.email; role = $curUser.role } } else { $null }
+                        stats = $stats
+                        hasDb = $false
+                    }
+                    $resJson = $resObj | ConvertTo-Json -Depth 5
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_login" -and $request.HttpMethod -eq "POST") {
+                    $portalUsersFile = Join-Path $dataDir "portal_users.json"
+                    $portalSessionsFile = Join-Path $dataDir "portal_sessions.json"
+
+                    # Read POST body
+                    $bodyStr = ""
+                    if ($request.ContentLength64 -gt 0) {
+                        $b = New-Object byte[] $request.ContentLength64
+                        $r = 0
+                        while ($r -lt $request.ContentLength64) {
+                            $n = $request.InputStream.Read($b, $r, $request.ContentLength64 - $r)
+                            if ($n -le 0) { break }
+                            $r += $n
+                        }
+                        $bodyStr = [System.Text.Encoding]::UTF8.GetString($b, 0, $r)
+                    }
+
+                    $body = $null
+                    try { $body = $bodyStr | ConvertFrom-Json } catch {}
+                    $email = if ($body -and $body.email) { $body.email.ToString().Trim().ToLower() } else { "" }
+                    $pass  = if ($body -and $body.password) { $body.password.ToString() } else { "" }
+
+                    if (-not $email -or -not $pass) {
+                        $resJson = @{ success = $false; error = "Please enter both email and password." } | ConvertTo-Json
+                        $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                        $response.StatusCode = 400
+                        $response.ContentLength64 = $buf.Length
+                        $response.OutputStream.Write($buf, 0, $buf.Length)
+                    } else {
+                        # Load users or ensure default
+                        $users = @()
+                        if (Test-Path $portalUsersFile) {
+                            try { $users = @((Get-Content -Raw -Path $portalUsersFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                        }
+                        if ($users.Count -eq 0) {
+                            $defaultAdmin = @{
+                                id = "usr_init_admin"
+                                name = "Portal Administrator"
+                                email = "admin@portal.local"
+                                password = "Admin1234!"
+                                role = "admin"
+                                status = "active"
+                                created_at = (Get-Date).ToString("o")
+                            }
+                            $users = @($defaultAdmin)
+                            ($users | ConvertTo-Json -Depth 5) | Set-Content -Path $portalUsersFile -Encoding UTF8
+                        }
+
+                        $matched = $null
+                        foreach ($u in $users) {
+                            $uEmail = if ($u.email) { $u.email.ToString().Trim().ToLower() } else { "" }
+                            if ($uEmail -eq $email) {
+                                $matched = $u
+                                break
+                            }
+                        }
+
+                        # Fallback for initial admin
+                        if (-not $matched -and $email -eq "admin@portal.local") {
+                            $matched = @{
+                                id = "usr_init_admin"
+                                name = "Portal Administrator"
+                                email = "admin@portal.local"
+                                password = "Admin1234!"
+                                role = "admin"
+                                status = "active"
+                            }
+                        }
+
+                        $passOk = $false
+                        if ($matched) {
+                            $storedPass = if ($matched.password) { $matched.password } elseif ($matched.password_plain) { $matched.password_plain } else { "" }
+                            if ($storedPass -eq $pass) {
+                                $passOk = $true
+                            } elseif ($email -eq "admin@portal.local" -and $pass -eq "Admin1234!") {
+                                $passOk = $true
+                            }
+                        }
+
+                        if (-not $matched -or -not $passOk) {
+                            $resJson = @{ success = $false; error = "Invalid email address or password." } | ConvertTo-Json
+                            $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                            $response.StatusCode = 401
+                            $response.ContentLength64 = $buf.Length
+                            $response.OutputStream.Write($buf, 0, $buf.Length)
+                        } elseif ($matched.status -and $matched.status -ne "active") {
+                            $resJson = @{ success = $false; error = "This account has been deactivated." } | ConvertTo-Json
+                            $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                            $response.StatusCode = 403
+                            $response.ContentLength64 = $buf.Length
+                            $response.OutputStream.Write($buf, 0, $buf.Length)
+                        } else {
+                            $token = "ptok_" + [Guid]::NewGuid().ToString("N")
+                            $sessObj = @{}
+                            if (Test-Path $portalSessionsFile) {
+                                try {
+                                    $rawSess = Get-Content -Raw -Path $portalSessionsFile -Encoding UTF8
+                                    $parsedSess = $rawSess | ConvertFrom-Json
+                                    foreach ($prop in $parsedSess.PSObject.Properties) {
+                                        $sessObj[$prop.Name] = $prop.Value
+                                    }
+                                } catch {}
+                            }
+
+                            $safeUser = @{
+                                id = if ($matched.id) { $matched.id } else { "usr_" + (Get-Date).Ticks }
+                                name = if ($matched.name) { $matched.name } else { "Administrator" }
+                                email = $matched.email
+                                role = if ($matched.role) { $matched.role } else { "admin" }
+                            }
+
+                            $sessObj[$token] = @{
+                                user = $safeUser
+                                created_at = (Get-Date).ToString("o")
+                                expires_at = (Get-Date).AddDays(7).ToString("o")
+                            }
+
+                            ($sessObj | ConvertTo-Json -Depth 5) | Set-Content -Path $portalSessionsFile -Encoding UTF8
+
+                            $resJson = @{ success = $true; token = $token; user = $safeUser } | ConvertTo-Json -Depth 5
+                            $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                            $response.ContentLength64 = $buf.Length
+                            $response.OutputStream.Write($buf, 0, $buf.Length)
+                        }
+                    }
+                }
+                elseif ($action -eq "portal_logout" -and $request.HttpMethod -eq "POST") {
+                    $portalSessionsFile = Join-Path $dataDir "portal_sessions.json"
+                    $tok = $request.Headers["X-Portal-Token"]
+                    if ($tok -and (Test-Path $portalSessionsFile)) {
+                        try {
+                            $sessObj = @{}
+                            $rawSess = Get-Content -Raw -Path $portalSessionsFile -Encoding UTF8
+                            $parsedSess = $rawSess | ConvertFrom-Json
+                            foreach ($prop in $parsedSess.PSObject.Properties) {
+                                if ($prop.Name -ne $tok) {
+                                    $sessObj[$prop.Name] = $prop.Value
+                                }
+                            }
+                            ($sessObj | ConvertTo-Json -Depth 5) | Set-Content -Path $portalSessionsFile -Encoding UTF8
+                        } catch {}
+                    }
+                    $resJson = '{"success":true}'
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_get_data") {
+                    $portalSessionsFile = Join-Path $dataDir "portal_sessions.json"
+                    $subFile = Join-Path $dataDir "submissions.json"
+
+                    $tok = $request.Headers["X-Portal-Token"]
+                    if (-not $tok) { $tok = $request.QueryString["portal_token"] }
+                    $validUser = $null
+                    if ($tok -and (Test-Path $portalSessionsFile)) {
+                        try {
+                            $sessObj = Get-Content -Raw -Path $portalSessionsFile -Encoding UTF8 | ConvertFrom-Json
+                            if ($sessObj.$tok -and $sessObj.$tok.user) {
+                                $validUser = $sessObj.$tok.user
+                            }
+                        } catch {}
+                    }
+
+                    if (-not $validUser) {
+                        $resJson = @{ success = $false; error = "Session expired. Please sign in again." } | ConvertTo-Json
+                        $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                        $response.StatusCode = 401
+                        $response.ContentLength64 = $buf.Length
+                        $response.OutputStream.Write($buf, 0, $buf.Length)
+                    } else {
+                        $subs = @()
+                        if (Test-Path $subFile) {
+                            try { $subs = @((Get-Content -Raw -Path $subFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                        }
+                        $stats = @{ total = $subs.Count; pending = 0; approved = 0; paid = 0; declined = 0 }
+                        foreach ($s in $subs) {
+                            $st = if ($s.status) { $s.status.ToString().ToLower() } else { "pending" }
+                            if ($stats.ContainsKey($st)) { $stats[$st]++ } else { $stats["pending"]++ }
+                        }
+                        $resJson = @{ success = $true; submissions = $subs; stats = $stats } | ConvertTo-Json -Depth 10
+                        $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                        $response.ContentLength64 = $buf.Length
+                        $response.OutputStream.Write($buf, 0, $buf.Length)
+                    }
+                }
+                elseif ($action -eq "portal_update_submission" -and $request.HttpMethod -eq "POST") {
+                    $subFile = Join-Path $dataDir "submissions.json"
+                    $bodyStr = ""
+                    if ($request.ContentLength64 -gt 0) {
+                        $b = New-Object byte[] $request.ContentLength64
+                        $r = 0
+                        while ($r -lt $request.ContentLength64) {
+                            $n = $request.InputStream.Read($b, $r, $request.ContentLength64 - $r)
+                            if ($n -le 0) { break }
+                            $r += $n
+                        }
+                        $bodyStr = [System.Text.Encoding]::UTF8.GetString($b, 0, $r)
+                    }
+                    $body = $null
+                    try { $body = $bodyStr | ConvertFrom-Json } catch {}
+                    $targetId = if ($body.id) { $body.id.ToString() } elseif ($body.submission_id) { $body.submission_id.ToString() } else { "" }
+
+                    $subs = @()
+                    if (Test-Path $subFile) {
+                        try { $subs = @((Get-Content -Raw -Path $subFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $updated = $null
+                    for ($i = 0; $i -lt $subs.Count; $i++) {
+                        $sId = if ($subs[$i].id) { $subs[$i].id.ToString() } elseif ($subs[$i].submission_id) { $subs[$i].submission_id.ToString() } else { "" }
+                        if ($sId -eq $targetId) {
+                            if ($body.status) { $subs[$i].status = $body.status.ToString() }
+                            if ($body.staff_notes -ne $null) { $subs[$i].staff_notes = $body.staff_notes.ToString() }
+                            $subs[$i].updated_at = (Get-Date).ToString("o")
+                            $updated = $subs[$i]
+                            break
+                        }
+                    }
+                    if ($updated) {
+                        ($subs | ConvertTo-Json -Depth 10) | Set-Content -Path $subFile -Encoding UTF8
+                        $resJson = @{ success = $true; submission = $updated } | ConvertTo-Json -Depth 10
+                    } else {
+                        $resJson = @{ success = $false; error = "Submission not found." } | ConvertTo-Json
+                    }
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_delete_submission" -and $request.HttpMethod -eq "POST") {
+                    $subFile = Join-Path $dataDir "submissions.json"
+                    $bodyStr = ""
+                    if ($request.ContentLength64 -gt 0) {
+                        $b = New-Object byte[] $request.ContentLength64
+                        $r = 0
+                        while ($r -lt $request.ContentLength64) {
+                            $n = $request.InputStream.Read($b, $r, $request.ContentLength64 - $r)
+                            if ($n -le 0) { break }
+                            $r += $n
+                        }
+                        $bodyStr = [System.Text.Encoding]::UTF8.GetString($b, 0, $r)
+                    }
+                    $body = $null
+                    try { $body = $bodyStr | ConvertFrom-Json } catch {}
+                    $targetId = if ($body.id) { $body.id.ToString() } elseif ($body.submission_id) { $body.submission_id.ToString() } else { "" }
+
+                    $subs = @()
+                    if (Test-Path $subFile) {
+                        try { $subs = @((Get-Content -Raw -Path $subFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $filtered = @($subs | Where-Object {
+                        $sId = if ($_.id) { $_.id.ToString() } elseif ($_.submission_id) { $_.submission_id.ToString() } else { "" }
+                        $sId -ne $targetId
+                    })
+                    ($filtered | ConvertTo-Json -Depth 10) | Set-Content -Path $subFile -Encoding UTF8
+                    $resJson = '{"success":true}'
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_get_users") {
+                    $portalUsersFile = Join-Path $dataDir "portal_users.json"
+                    $users = @()
+                    if (Test-Path $portalUsersFile) {
+                        try { $users = @((Get-Content -Raw -Path $portalUsersFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $safe = @()
+                    foreach ($u in $users) {
+                        $safe += @{
+                            id = $u.id
+                            name = $u.name
+                            email = $u.email
+                            role = if ($u.role) { $u.role } else { "staff" }
+                            status = if ($u.status) { $u.status } else { "active" }
+                            created_at = $u.created_at
+                        }
+                    }
+                    $resJson = @{ success = $true; users = $safe } | ConvertTo-Json -Depth 5
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_save_user" -and $request.HttpMethod -eq "POST") {
+                    $portalUsersFile = Join-Path $dataDir "portal_users.json"
+                    $bodyStr = ""
+                    if ($request.ContentLength64 -gt 0) {
+                        $b = New-Object byte[] $request.ContentLength64
+                        $r = 0
+                        while ($r -lt $request.ContentLength64) {
+                            $n = $request.InputStream.Read($b, $r, $request.ContentLength64 - $r)
+                            if ($n -le 0) { break }
+                            $r += $n
+                        }
+                        $bodyStr = [System.Text.Encoding]::UTF8.GetString($b, 0, $r)
+                    }
+                    $body = $null
+                    try { $body = $bodyStr | ConvertFrom-Json } catch {}
+
+                    $users = @()
+                    if (Test-Path $portalUsersFile) {
+                        try { $users = @((Get-Content -Raw -Path $portalUsersFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $userId = if ($body.id) { $body.id.ToString() } else { "" }
+                    $matchedIdx = -1
+                    for ($i = 0; $i -lt $users.Count; $i++) {
+                        if ($users[$i].id -eq $userId) { $matchedIdx = $i; break }
+                    }
+
+                    if ($matchedIdx -ge 0) {
+                        if ($body.name) { $users[$matchedIdx].name = $body.name.ToString() }
+                        if ($body.email) { $users[$matchedIdx].email = $body.email.ToString() }
+                        if ($body.role) { $users[$matchedIdx].role = $body.role.ToString() }
+                        if ($body.status) { $users[$matchedIdx].status = $body.status.ToString() }
+                        if ($body.password) { $users[$matchedIdx].password = $body.password.ToString() }
+                    } else {
+                        $newU = @{
+                            id = "usr_" + (Get-Date).Ticks
+                            name = if ($body.name) { $body.name.ToString() } else { "Staff User" }
+                            email = if ($body.email) { $body.email.ToString() } else { "" }
+                            password = if ($body.password) { $body.password.ToString() } else { "changeme" }
+                            role = if ($body.role) { $body.role.ToString() } else { "staff" }
+                            status = if ($body.status) { $body.status.ToString() } else { "active" }
+                            created_at = (Get-Date).ToString("o")
+                        }
+                        $users = @($users) + @($newU)
+                    }
+
+                    ($users | ConvertTo-Json -Depth 5) | Set-Content -Path $portalUsersFile -Encoding UTF8
+                    $resJson = '{"success":true}'
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
+                elseif ($action -eq "portal_delete_user" -and $request.HttpMethod -eq "POST") {
+                    $portalUsersFile = Join-Path $dataDir "portal_users.json"
+                    $bodyStr = ""
+                    if ($request.ContentLength64 -gt 0) {
+                        $b = New-Object byte[] $request.ContentLength64
+                        $r = 0
+                        while ($r -lt $request.ContentLength64) {
+                            $n = $request.InputStream.Read($b, $r, $request.ContentLength64 - $r)
+                            if ($n -le 0) { break }
+                            $r += $n
+                        }
+                        $bodyStr = [System.Text.Encoding]::UTF8.GetString($b, 0, $r)
+                    }
+                    $body = $null
+                    try { $body = $bodyStr | ConvertFrom-Json } catch {}
+                    $targetId = if ($body.id) { $body.id.ToString() } else { "" }
+
+                    $users = @()
+                    if (Test-Path $portalUsersFile) {
+                        try { $users = @((Get-Content -Raw -Path $portalUsersFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    $filtered = @($users | Where-Object { $_.id -ne $targetId })
+                    ($filtered | ConvertTo-Json -Depth 5) | Set-Content -Path $portalUsersFile -Encoding UTF8
+                    $resJson = '{"success":true}'
                     $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
                     $response.ContentLength64 = $buf.Length
                     $response.OutputStream.Write($buf, 0, $buf.Length)
