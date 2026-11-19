@@ -12,6 +12,55 @@ import { WIDGET_REGISTRY, initCountdownTimers } from './widgets.js';
 import { normalizeGoogleSheetUrl, parseCsv, fetchGoogleSheetLecturers } from './sheets.js';
 import { showRegistrationReceiptModal } from './receipt.js';
 
+export function scopeSectionCss(css, sectionId) {
+  if (!css || !css.trim()) return '';
+  const scope = `[data-section-id="${sectionId}"]`;
+
+  // 1. Extract @keyframes blocks intact so their percentages & rules are preserved
+  const keyframes = [];
+  let cleaned = css.trim().replace(/@(?:-webkit-)?keyframes\s+([^{]+)\{((?:[^{}]+|\{[^{}]*\})*)\}/gi, (match) => {
+    keyframes.push(match);
+    return `/*__KEYFRAME_${keyframes.length - 1}__*/`;
+  });
+
+  const scopeSelectorList = (selectors) => {
+    return selectors.split(',').map(s => {
+      const commentMatch = s.match(/^(\s*\/\*[\s\S]*?\*\/\s*)+/);
+      const prefix = commentMatch ? commentMatch[0] : '';
+      const actual = s.slice(prefix.length).trim();
+      if (!actual || actual.startsWith(scope) || actual.startsWith('@') || actual.startsWith('/*__')) return s;
+      if (actual.startsWith('&')) {
+        return prefix + actual.replace('&', scope);
+      }
+      return `${prefix}${scope} ${actual}, ${scope}${actual}`;
+    }).filter(Boolean).join(', ');
+  };
+
+  // 2. Extract @media blocks and scope their inner selectors
+  const mediaBlocks = [];
+  cleaned = cleaned.replace(/@media[^{]+\{((?:[^{}]+|\{[^{}]*\})*)\}/gi, (match) => {
+    const firstBrace = match.indexOf('{');
+    const mediaHeader = match.slice(0, firstBrace + 1);
+    const mediaBody = match.slice(firstBrace + 1, match.lastIndexOf('}'));
+    const scopedInner = mediaBody.replace(/([^{}]+)\{/g, (m, selectors) => {
+      return `${scopeSelectorList(selectors)} {`;
+    });
+    mediaBlocks.push(`${mediaHeader}\n${scopedInner}\n}`);
+    return `/*__MEDIA_${mediaBlocks.length - 1}__*/`;
+  });
+
+  // 3. Scope regular rules
+  cleaned = cleaned.replace(/([^{}]+)\{/g, (m, selectors) => {
+    return `${scopeSelectorList(selectors)} {`;
+  });
+
+  // 4. Restore media blocks and keyframes
+  cleaned = cleaned.replace(/\/\*__MEDIA_(\d+)__\*\//g, (_, idx) => mediaBlocks[Number(idx)] || '');
+  cleaned = cleaned.replace(/\/\*__KEYFRAME_(\d+)__\*\//g, (_, idx) => keyframes[Number(idx)] || '');
+
+  return cleaned;
+}
+
 export class BuilderCanvas {
   constructor(viewportEl, isPublicMode = false) {
     this.viewport = viewportEl;
@@ -287,21 +336,7 @@ export class BuilderCanvas {
         if (existingStyle) existingStyle.remove();
         const styleTag = document.createElement('style');
         styleTag.id = `aether-custom-css-${sectionId}`;
-        // Scope all rules to the section wrapper by its data-section-id
-        const scopedCss = props.customCss.trim().replace(
-          /([^{}]+)\{/g,
-          (match, selectors) => {
-            const scoped = selectors.split(',').map(s => {
-              const trimmed = s.trim();
-              if (!trimmed) return '';
-              // If selector already contains the scope, don't double-scope
-              if (trimmed.startsWith(`[data-section-id="${sectionId}"]`)) return trimmed;
-              return `[data-section-id="${sectionId}"] ${trimmed}`;
-            }).filter(Boolean).join(', ');
-            return `${scoped} {`;
-          }
-        );
-        styleTag.textContent = scopedCss;
+        styleTag.textContent = scopeSectionCss(props.customCss, sectionId);
         document.head.appendChild(styleTag);
       }
 

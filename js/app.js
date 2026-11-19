@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.51';
+export const APP_VERSION = '2.9.52';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -8,7 +8,7 @@ import { auth } from './auth.js';
 import { state, sanitizeObject } from './state.js';
 import { WIDGET_REGISTRY } from './widgets.js';
 import { TEMPLATES } from './templates.js';
-import { BuilderCanvas } from './builder.js';
+import { BuilderCanvas, scopeSectionCss } from './builder.js';
 import { InspectorPanel } from './inspector.js';
 import { THEME_PRESETS, AVAILABLE_FONTS, applyTheme } from './themes.js';
 import { initPublicChatbot, DEFAULT_CHATBOT_CONFIG } from './assistant.js';
@@ -5570,6 +5570,11 @@ git push -u origin main</textarea>
         .map(([k, v]) => `    ${k}: ${v};`)
         .join('\n');
 
+      const sectionStyles = (liveData.sections || [])
+        .filter(s => s.props && s.props.customCss && s.props.customCss.trim())
+        .map(s => `  <style id="aether-custom-css-${s.id}">\n${scopeSectionCss(s.props.customCss, s.id)}\n  </style>`)
+        .join('\n');
+
       const renderedElements = (liveData.sections || [])
         .map((s) => {
           const wDef = WIDGET_REGISTRY[s.widgetType];
@@ -5613,6 +5618,7 @@ ${varCss}
     }
   </style>
   ${siteSettings.customCss ? `<style id="aether-site-custom-css">\n${siteSettings.customCss}\n  </style>` : ''}
+  ${sectionStyles}
   ${addonManager.getAllActiveCss() ? `<style id="wb-addons-css">\n${addonManager.getAllActiveCss()}\n  </style>` : ''}
   ${siteSettings.gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(siteSettings.gaId)}"></script>
   <script>
