@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.49');
+define('AETHER_VERSION', '2.9.50');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -2134,6 +2134,70 @@ if ($action === 'stage_remote_update' && $method === 'POST') {
 }
 
 // ============================================================================
+
+// ── GET: get_marquee_images (SQL & JSON Marquee Data Source) ────────────────
+if ($action === 'get_marquee_images' && $method === 'GET') {
+    $table = preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['table'] ?? 'aether_marquee_items');
+    if (empty($table)) $table = 'aether_marquee_items';
+    $pdo = portal_get_db();
+
+    if ($pdo) {
+        try {
+            // Auto-create default table if not exists
+            if ($table === 'aether_marquee_items') {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `aether_marquee_items` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `image_url` VARCHAR(500) NOT NULL,
+                    `tooltip_text` VARCHAR(255) DEFAULT '',
+                    `link` VARCHAR(500) DEFAULT '',
+                    `sort_order` INT DEFAULT 0,
+                    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+                // Seed initial rows if empty
+                $check = $pdo->query("SELECT COUNT(*) as cnt FROM `aether_marquee_items`")->fetch();
+                if (empty($check['cnt'])) {
+                    $seeds = [
+                        ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80', 'Project Alpha (SQL)', '#'],
+                        ['https://images.unsplash.com/photo-1618005192384-a83a8bd57fbe?w=500&q=80', 'Project Beta (SQL)', '#'],
+                        ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80', 'Project Gamma (SQL)', '#'],
+                        ['https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', 'Project Delta (SQL)', '#']
+                    ];
+                    $ins = $pdo->prepare("INSERT INTO `aether_marquee_items` (`image_url`, `tooltip_text`, `link`) VALUES (?, ?, ?)");
+                    foreach ($seeds as $s) { $ins->execute($s); }
+                }
+            }
+
+            $stmt = $pdo->query("SELECT * FROM `{$table}` ORDER BY id ASC LIMIT 50");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = array_map(function($r) {
+                return [
+                    'imageUrl'    => $r['image_url'] ?? ($r['imageUrl'] ?? ($r['img'] ?? '')),
+                    'tooltipText' => $r['tooltip_text'] ?? ($r['tooltipText'] ?? ($r['title'] ?? '')),
+                    'link'        => $r['link'] ?? ($r['url'] ?? '')
+                ];
+            }, $rows);
+            send_json(200, ['success' => true, 'source' => 'mysql', 'items' => $items]);
+        } catch (Throwable $e) {
+            error_log('[Marquee SQL error] ' . $e->getMessage());
+        }
+    }
+
+    // Flat JSON file fallback
+    $jsonFile = DATA_DIR . '/marquee_items.json';
+    if (!file_exists($jsonFile)) {
+        $defaultItems = [
+            ['imageUrl' => 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80', 'tooltipText' => 'Project Alpha (Local JSON)', 'link' => ''],
+            ['imageUrl' => 'https://images.unsplash.com/photo-1618005192384-a83a8bd57fbe?w=500&q=80', 'tooltipText' => 'Project Beta (Local JSON)', 'link' => ''],
+            ['imageUrl' => 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80', 'tooltipText' => 'Project Gamma (Local JSON)', 'link' => ''],
+            ['imageUrl' => 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', 'tooltipText' => 'Project Delta (Local JSON)', 'link' => '']
+        ];
+        write_json_file($jsonFile, $defaultItems);
+    }
+    $items = read_json_file($jsonFile, []);
+    send_json(200, ['success' => true, 'source' => 'json', 'items' => $items]);
+}
+
 // ── CLIENT & STAFF PORTAL / DASHBOARD API ───────────────────────────────────
 // ============================================================================
 

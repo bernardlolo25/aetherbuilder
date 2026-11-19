@@ -1,7 +1,8 @@
 {
-  "version": "2.9.49",
+  "version": "2.9.50",
   "release_date": "2026-11-19",
   "changelog": [
+    "v2.9.50: Infinite Gallery Marquee add-on — fixed tooltip headroom clipping, plus optional live sync via Google Sheets (CSV) and MySQL / REST API data sources",
     "v2.9.49: Chat Assistant & Guided Tour addons automatically respect fixed bottom footer via dynamic --footer-offset detection, breathing room padding, and smart vertical stacking",
     "v2.9.48: Fixed Client & Staff Portal Dashboard login authentication pipeline (emulation endpoints, CORS X-Portal-Token, session_start, and Content-Type headers)",
     "v2.9.47: Client & Staff Portal Dashboard add-on — full-screen authenticated management portal with role-based access, live registration tracking, status workflows, private staff notes, CSV export, MySQL auto-schema, and staff user management",

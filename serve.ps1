@@ -517,6 +517,26 @@ try {
                     $response.ContentLength64 = $buf.Length
                     $response.OutputStream.Write($buf, 0, $buf.Length)
                 }
+                                elseif ($action -eq "get_marquee_images") {
+                    $marqueeFile = Join-Path $dataDir "marquee_items.json"
+                    $items = @()
+                    if (Test-Path $marqueeFile) {
+                        try { $items = @((Get-Content -Raw -Path $marqueeFile -Encoding UTF8) | ConvertFrom-Json) } catch {}
+                    }
+                    if ($items.Count -eq 0) {
+                        $items = @(
+                            @{ imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80"; tooltipText = "Project Alpha (Emulated)"; link = "" },
+                            @{ imageUrl = "https://images.unsplash.com/photo-1618005192384-a83a8bd57fbe?w=500&q=80"; tooltipText = "Project Beta (Emulated)"; link = "" },
+                            @{ imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80"; tooltipText = "Project Gamma (Emulated)"; link = "" },
+                            @{ imageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80"; tooltipText = "Project Delta (Emulated)"; link = "" }
+                        )
+                        ($items | ConvertTo-Json -Depth 5) | Set-Content -Path $marqueeFile -Encoding UTF8
+                    }
+                    $resJson = @{ success = $true; source = "localhost_emulated"; items = $items } | ConvertTo-Json -Depth 5
+                    $buf = [System.Text.Encoding]::UTF8.GetBytes($resJson)
+                    $response.ContentLength64 = $buf.Length
+                    $response.OutputStream.Write($buf, 0, $buf.Length)
+                }
                 elseif ($action -eq "portal_init") {
                     $portalUsersFile = Join-Path $dataDir "portal_users.json"
                     $portalSessionsFile = Join-Path $dataDir "portal_sessions.json"

@@ -642,6 +642,22 @@ http.createServer(async (req, res) => {
     }
 
     // GET: portal_init
+    
+    // GET: get_marquee_images
+    if (req.method === 'GET' && action === 'get_marquee_images') {
+      const marqueeFile = path.join(ROOT, 'data', 'marquee_items.json');
+      let items = portalReadJson(marqueeFile, []);
+      if (!Array.isArray(items) || items.length === 0) {
+        items = [
+          { imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80", tooltipText: "Project Alpha (Node)", link: "" },
+          { imageUrl: "https://images.unsplash.com/photo-1618005192384-a83a8bd57fbe?w=500&q=80", tooltipText: "Project Beta (Node)", link: "" },
+          { imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80", tooltipText: "Project Gamma (Node)", link: "" },
+          { imageUrl: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80", tooltipText: "Project Delta (Node)", link: "" }
+        ];
+        portalWriteJson(marqueeFile, items);
+      }
+      return json(res, 200, { success: true, source: 'node_emulated', items });
+    }
     if (req.method === 'GET' && action === 'portal_init') {
       portalEnsureAdmin();
       const user = portalGetCurrentUser(req);
