@@ -1,30 +1,34 @@
-🧩 AetherBuilder — AI Prompt Guide for Creating Custom Add-ons
+🧩 AetherBuilder — AI Prompt Guide for Creating Custom Add-ons (v2.9.54+)
 
-Copy-paste this guide (or the Master Prompt at the bottom) into any AI chat to generate a production-ready add-on JSON package compatible with AetherBuilder's Add-on Maker.
+Copy-paste this guide (or the Master Prompt at the bottom) into any AI chat to generate a production-ready add-on JSON package compatible with AetherBuilder's Add-on Maker and Add-on Store.
 
-⚙️ Engine Technical Specifications
-Output Format
+================================================================================
+⚙️ ENGINE TECHNICAL SPECIFICATIONS
+================================================================================
+Output Format:
 Return a single, strictly valid JSON object — no markdown fences, no trailing commas, no comments.
-The top-level keys must be exactly: id, name, category, icon, version, author, description, enabled, defaultProps, schema, template, customCss, customJs.
-📐 Property Types (Inspector Controls)
-type	Inspector Control	Notes
-text	Single-line text input	Use for titles, labels, short strings
-textarea	Multi-line text input	Use for body copy, descriptions
-number	Numeric input	Default value should be a number
-toggle	On/Off switch	Default value: true or false
-color	Color picker	Default value: hex string, e.g. "#6366f1"
-select	Dropdown list	Requires options: [{ "label": "...", "value": "..." }] on the field definition
-image-picker	Image URL text + Media Library button	Value is a URL string. User can pick from the Media Library
-page-link	"Select Created Page..." dropdown + custom URL fallback	Value is a URL string (e.g. "index.html", "?page=about", "#section-id", "https://...")
-repeater	Elementor-style repeatable item list with add/remove	Requires fields: [...] array. Items are stored as an array of objects. Supports nesting.
+The top-level keys must be exactly:
+id, name, category, icon, version, author, description, enabled, defaultProps, schema, template, customCss, customJs.
 
-IMPORTANT — page-link vs plain text for links: Always use "type": "page-link" for any field that stores a destination URL (nav links, button links, CTA links, sub-menu links). This gives the admin the "Select Created Page" dropdown that lists all pages built inside AetherBuilder, plus a free-text URL input for external links, anchors, or custom slugs. Never use plain "text" for link fields.
+Property Types (Inspector Controls):
+--------------------------------------------------------------------------------
+type           Inspector Control                       Notes
+--------------------------------------------------------------------------------
+text           Single-line text input                  Use for titles, labels, short strings
+textarea       Multi-line text input                   Use for body copy, descriptions, CSV URLs
+number         Numeric input                           Default value should be a number
+toggle         On/Off switch                           Default value: true or false
+color          Color picker                            Default value: hex string, e.g. "#6366f1"
+select         Dropdown list                           Requires options: [{ "label": "...", "value": "..." }]
+image-picker   Image URL + Media Library button        Value is a URL string. User can pick from Media Library
+page-link      Page Selector + Custom URL              MANDATORY FOR ALL LINKS! Admin dropdown of created pages
+                                                       plus free-text for anchors (#section) and external URLs.
+                                                       Never use plain "text" for link fields.
+repeater       Elementor-style repeatable list         Requires fields: [...] array. Supports infinite nesting!
+--------------------------------------------------------------------------------
 
-📦 Repeater Fields — Nested Submenu / Children Support
-
+📦 REPEATER FIELDS & NESTED DROPDOWNS
 Repeaters support nested child repeaters. To create a navigation menu with dropdown submenus:
-
-json
 {
   "key": "navItems",
   "label": "Navigation Links",
@@ -44,32 +48,19 @@ json
   ]
 }
 
-In the Inspector, this renders as:
-
-Each nav item card has Label + Page Selector + a collapsible ↳ Submenu repeater.
-Sub-items also get their own Label and Page Selector dropdowns.
-🧩 Template Engine Syntax
-
-The template is rendered server-side and on the canvas using a recursive Handlebars-style compiler.
-
-Variables
+🧩 TEMPLATE ENGINE SYNTAX (Handlebars-Style)
+Variables:
 {{key}}           → Outputs the value of `key` from props
 {{@index}}        → 0-based index inside a loop
 {{@number}}       → 1-based index inside a loop (human-friendly)
 this              → In a primitive array loop, outputs the value itself
-Conditionals
+
+Conditionals:
 {{#if key}}...{{/if}}
 {{#if key}}...{{else}}...{{/if}}
 {{#unless key}}...{{/unless}}
-A value is truthy if it is non-empty, non-"false", non-"0", and (for arrays) has at least one item.
-Single-Level Loop
-{{#each items}}
-  <li>{{label}} — <a href="{{link}}">{{link}}</a></li>
-{{/each}}
-Nested Loop (NEW — Dropdown/Children Support)
 
-Nested {{#each}} inside another {{#each}} is fully supported:
-
+Loops & Nested Loops:
 {{#each navItems}}
   <li class="{{#if children}}has-dropdown{{/if}}">
     <a href="{{link}}">{{label}} {{#if children}}<span class="caret">▾</span>{{/if}}</a>
@@ -82,210 +73,77 @@ Nested {{#each}} inside another {{#each}} is fully supported:
     {{/if}}
   </li>
 {{/each}}
+Inside nested loops, parent scope variables are accessible automatically.
 
-Inside a nested {{#each children}}, you can still access parent scope variables (e.g., the parent item's label or link) — the compiler walks up the scope chain automatically.
+================================================================================
+🚀 NEW ADVANCED CAPABILITIES (v2.9.46 - v2.9.54)
+================================================================================
 
-Auto-JSON Parsing (NEW)
+1. Multi-Source Live Sync (Google Sheets & SQL/REST API):
+Add-ons can dynamically fetch live data while keeping local fallback JSON:
+- Provide a select field for "sourceType" ("manual", "gsheet", "api").
+- In customJs, if "gsheet" is selected, fetch CSV from Google Sheets published URL,
+  parse rows, and render dynamically. If fetch fails or is offline, fall back to props.items.
 
-If a prop value is a valid JSON string starting with [ or {, the compiler automatically parses it into an array/object before rendering. This means textarea fields containing raw JSON arrays are handled transparently.
+2. SEO Primary Heading (<h1>) & Hero Add-on Standard:
+If an add-on serves as a Hero section, Portfolio showcase, or Page Header:
+- Always wrap the primary headline in an <h1> tag: <h1 class="wb-addon-title">{{title}}</h1>
+- AetherBuilder's Pre-Publish SEO & Health Pre-Flight Audit automatically inspects
+  add-on templates and the canvas DOM for <h1> tags and enables 1-click "Jump to Widget".
 
-🖥️ Inspector Tab Assignment
+3. Floating Add-on Footer Collision Detection:
+For floating widgets (Chat Assistant, Guided Tour, Live Chat FAB, Sticky CTA):
+- Always use `var(--footer-offset, 0px)` in your CSS so your widget floats cleanly
+  above fixed-bottom footers:
+  bottom: calc(24px + var(--footer-offset, 0px));
 
-Every field item in schema.content or schema.style belongs to a tab:
-
-Schema Array	Inspector Tab
-schema.content	Content tab (text, links, repeaters, toggles)
-schema.style	Style tab (colors, typography, spacing)
-
-Put all link and navigation fields in schema.content. Put all colors, sizes, and visual style toggles in schema.style.
-
-🔌 Client JavaScript (customJs)
-Must define function onMount(el, props) { ... } (or the builder will warn you).
-el = the root DOM element of your widget instance.
-props = the resolved key/value object of all your widget's properties.
-The function is auto-called each time the widget renders on the canvas or public view.
-Use for: click handlers, counters, accordions, sliders, dropdown toggles.
-javascript
-function onMount(el, props) {
-  // Example: mobile hamburger toggle
-  var btn = el.querySelector('.mobile-toggle');
-  var drawer = el.querySelector('.mobile-drawer');
-  if (btn && drawer) {
-    btn.addEventListener('click', function() {
-      drawer.classList.toggle('is-open');
-    });
+4. Full-Screen Web Apps & POS Registers (Point-of-Sale):
+Add-ons can function as full applications (like Staff Portal or POS Cashier Register):
+- Client-side ticket/cart calculation (subtotals, discounts, cash change calculation).
+- Thermal receipt print formatting (58mm/80mm):
+  @media print {
+    body * { visibility: hidden; }
+    .pos-receipt-print-area, .pos-receipt-print-area * { visibility: visible; }
+    .pos-receipt-print-area { position: absolute; left: 0; top: 0; width: 80mm; }
   }
-}
-🎨 CSS Guidelines
-Scope all CSS rules under your widget's unique class: .wb-addon-YOUR_ID { ... }
-Use AetherBuilder CSS design tokens where appropriate:
-Token	Usage
-var(--radius-lg, 12px)	Border radius
-var(--bg-card, #131b2e)	Card / panel background
-var(--text-dim, #94a3b8)	Muted / secondary text
-var(--text-main, #f8fafc)	Primary text
-var(--border-subtle, rgba(255,255,255,0.08))	Borders and dividers
-var(--bg-elevated, #1e293b)	Elevated elements
-Use inline CSS custom properties for user-controlled colors:
-html
-<div class="wb-addon-my-widget" style="--accent: {{accentColor}}; --bg: {{bgColor}};">
-📦 Required JSON Schema
-json
-{
-  "id": "addon_unique_snake_case_id",
-  "name": "Widget Display Name",
-  "category": "addons",
-  "icon": "🧩",
-  "version": "1.0.0",
-  "author": "Your Name",
-  "description": "Short 1–2 sentence description of what this widget does.",
-  "enabled": true,
-  "defaultProps": {
-    "title": "My Widget",
-    "accentColor": "#6366f1",
-    "showCta": true,
-    "ctaText": "Learn More",
-    "ctaLink": "index.html",
-    "navItems": [
-      {
-        "label": "Home",
-        "link": "index.html",
-        "children": []
-      },
-      {
-        "label": "Services",
-        "link": "#services",
-        "children": [
-          { "label": "Design", "link": "?page=design" },
-          { "label": "Development", "link": "?page=dev" }
-        ]
-      }
-    ]
-  },
-  "schema": {
-    "content": [
-      { "key": "title", "label": "Widget Title", "type": "text" },
-      {
-        "key": "navItems",
-        "label": "Navigation Links",
-        "type": "repeater",
-        "fields": [
-          { "key": "label", "label": "Menu Label", "type": "text" },
-          { "key": "link",  "label": "Page / URL",  "type": "page-link" },
-          {
-            "key": "children",
-            "label": "Submenu (Dropdown Items)",
-            "type": "repeater",
-            "fields": [
-              { "key": "label", "label": "Sub-item Label", "type": "text" },
-              { "key": "link",  "label": "Sub-item Link",  "type": "page-link" }
-            ]
-          }
-        ]
-      },
-      { "key": "showCta", "label": "Show Button", "type": "toggle" },
-      { "key": "ctaText", "label": "Button Label", "type": "text" },
-      { "key": "ctaLink", "label": "Button Destination", "type": "page-link" }
-    ],
-    "style": [
-      { "key": "accentColor", "label": "Accent Color", "type": "color" }
-    ]
-  },
-  "template": "<div class=\"wb-addon-unique-id\" style=\"--accent: {{accentColor}};\">{{title}}</div>",
-  "customCss": ".wb-addon-unique-id { padding: 24px; border-radius: var(--radius-lg, 12px); background: var(--bg-card, #131b2e); }",
-  "customJs": "function onMount(el, props) {\n  // your interactive JS here\n}"
-}
-📋 Master Copy-Paste Prompt
+- Dynamic payment QR code rendering (GCash, Maya, Stripe).
 
-Paste this into any AI, replacing [WIDGET IDEA]:
+5. CSS Keyframe Animations & Gradients:
+Add-on CSS fully supports unscoped @keyframes, multi-stop radial gradients, and
+@media (prefers-reduced-motion: reduce) accessibility rules.
 
-You are an expert add-on developer for **AetherBuilder**, an Elementor-style visual web builder with a built-in Add-on Maker.
+================================================================================
+🔌 CLIENT JAVASCRIPT (customJs)
+================================================================================
+- MUST define function onMount(el, props) { ... }
+- el = root DOM element of widget instance
+- props = resolved key/value properties object
+- Optional teardown: el.__wbDestroy = function() { ... }; (cleans up intervals/events)
+
+================================================================================
+🎨 CSS GUIDELINES
+================================================================================
+- Scope all CSS rules under your widget's unique class: .wb-addon-YOUR_ID { ... }
+- Use standard AetherBuilder CSS design tokens:
+  var(--radius-lg, 12px)
+  var(--bg-card, #131b2e)
+  var(--text-dim, #94a3b8)
+  var(--text-main, #f8fafc)
+  var(--border-subtle, rgba(255,255,255,0.08))
+
+================================================================================
+📋 MASTER COPY-PASTE PROMPT FOR AI MODELS
+================================================================================
+Copy-paste everything below into ChatGPT, Claude, or Gemini:
+
+You are an expert add-on developer for AetherBuilder, an Elementor-style visual web builder with a built-in Add-on Maker.
 Create a complete, production-ready custom Add-on JSON package for:
-**Widget Idea:** [WIDGET IDEA — e.g. "A responsive navbar with logo, multi-level dropdown submenus, a sticky toggle, and a CTA button"]
+Widget Idea: [WIDGET IDEA — e.g. "A POS Cashier Register with product grid, touch cart, cash change calculator, and thermal receipt print"]
+
 ### ⚙️ ENGINE RULES (follow exactly):
-**Output**: Return ONLY a single, strictly valid JSON object — no markdown code fences, no explanations.
-**Property Types**:
-- `text` → single-line text
-- `textarea` → multiline text
-- `number` → numeric
-- `toggle` → boolean (true/false)
-- `color` → hex color string
-- `select` → dropdown (add `options: [{label, value}]` on the field)
-- `image-picker` → image URL + media library button
-- `page-link` → "Select Created Page" dropdown + custom URL input (USE THIS FOR ALL LINKS, NEVER `text`)
-- `repeater` → Elementor-style repeatable list; add `fields: [...]` for item sub-fields; supports nesting for submenu/children
-**Nested Repeater for Submenus**:
-When creating navigation menus, ALWAYS use a nested repeater for children:
-```json
-{
-  "key": "navItems", "label": "Nav Items", "type": "repeater",
-  "fields": [
-    { "key": "label", "label": "Label", "type": "text" },
-    { "key": "link", "label": "Page / URL", "type": "page-link" },
-    {
-      "key": "children", "label": "Dropdown Items", "type": "repeater",
-      "fields": [
-        { "key": "label", "label": "Sub Label", "type": "text" },
-        { "key": "link", "label": "Sub Link", "type": "page-link" }
-      ]
-    }
-  ]
-}
-```
-**Template Syntax**:
-- `{{key}}` → variable
-- `{{#if key}}...{{else}}...{{/if}}` → conditional
-- `{{#unless key}}...{{/unless}}` → inverted conditional
-- `{{#each list}}...{{/each}}` → loop (use `{{@index}}`, `{{@number}}`, `{{this}}` for meta)
-- Nested `{{#each children}}...{{/each}}` INSIDE `{{#each navItems}}` is fully supported
-- Inside nested loops, parent scope variables are accessible automatically
-**CSS Rules**:
-- Scope ALL styles under `.wb-addon-YOUR_ID { ... }` to prevent style bleeding
-- Use design tokens: `var(--radius-lg, 12px)`, `var(--bg-card, #131b2e)`, `var(--text-dim, #94a3b8)`, `var(--border-subtle, rgba(255,255,255,0.08))`
-- Pass user colors as inline CSS vars: `style="--accent: {{accentColor}};"`
-**JavaScript** (`customJs`):
-- MUST define `function onMount(el, props) { ... }`
-- `el` = root DOM container of widget instance
-- `props` = resolved key/value properties
-- Use for: dropdown toggles, hamburger menus, accordions, counters, sliders
-**Schema Tabs**:
-- `schema.content` → Content tab (text, links, repeaters, images, toggles for visibility)
-- `schema.style` → Style tab (colors, sizes, spacing, font choices)
-- `schema.advanced` → Advanced tab (API keys, service IDs, credentials — developer-only settings that should not clutter Content/Style)
-
-🔐 schema.advanced — Advanced Inspector Tab (NEW)
-The Advanced tab in the Inspector is for sensitive or technical fields that shouldn't clutter the main Content or Style views. Use it for:
-- API keys, service IDs, tokens (e.g. EmailJS credentials)
-- Developer-only toggles or overrides
-- Third-party integration identifiers
-
-Fields defined in schema.advanced appear at the TOP of the Advanced tab, before the standard Section Settings controls (CSS class, z-index, animation). Their keys must also exist in defaultProps and in schema.content or as standalone fields (best practice: also list them in schema.content so they're always visible there too).
-
-json
-{
-  "schema": {
-    "content": [
-      { "key": "emailServiceId",  "label": "📧 EmailJS Service ID",  "type": "text" },
-      { "key": "emailTemplateId", "label": "📧 EmailJS Template ID", "type": "text" },
-      { "key": "emailPublicKey",  "label": "📧 EmailJS Public Key",  "type": "text" }
-    ],
-    "style": [
-      { "key": "accentColor", "label": "🎨 Accent Color", "type": "color" }
-    ],
-    "advanced": [
-      { "key": "emailServiceId",  "label": "📧 EmailJS Service ID",  "type": "text" },
-      { "key": "emailTemplateId", "label": "📧 EmailJS Template ID", "type": "text" },
-      { "key": "emailPublicKey",  "label": "📧 EmailJS Public Key",  "type": "text" }
-    ]
-  }
-}
-
-In customJs, read these values from the props object exactly like any other prop:
-javascript
-function onMount(el, props) {
-  var svc = (props.emailServiceId || '').trim();
-  var tpl = (props.emailTemplateId || '').trim();
-  var pub = (props.emailPublicKey || '').trim();
-  var configured = !!(svc && tpl && pub);
-  // ...
-}
+1. Output: Return ONLY a single, strictly valid JSON object — no markdown code fences, no explanations.
+2. Property Types: text, textarea, number, toggle, color, select (with options: [{label, value}]), image-picker, page-link (MANDATORY FOR ALL LINKS/URLS, never text), and repeater (with fields: [...], supports nested repeaters for submenus).
+3. Template: Handlebars-style syntax ({{key}}, {{#if key}}...{{else}}...{{/if}}, {{#each items}}...{{/each}}). If this is a Hero or header widget, place the headline inside an <h1> for automated SEO Pre-Flight audit recognition.
+4. CSS: Scope all CSS rules strictly under .wb-addon-[id]. Use design tokens: var(--radius-lg, 12px), var(--bg-card, #131b2e), var(--text-main, #f8fafc), var(--text-dim, #94a3b8), var(--border-subtle, rgba(255,255,255,0.08)). If creating a floating widget, use bottom: calc(24px + var(--footer-offset, 0px)) so it clears fixed-bottom footers.
+5. JavaScript: MUST declare function onMount(el, props) { ... }. Use it for all interactions, computations, click handlers, or external data fetching.
+6. Schema Tabs: Divide settings cleanly into schema.content (texts, links, repeaters, toggles), schema.style (colors, padding, alignments), and schema.advanced (technical keys/APIs).
