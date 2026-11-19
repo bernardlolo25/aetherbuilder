@@ -1,5 +1,5 @@
 {
-  "version": "2.9.47",
+  "version": "2.9.48",
   "release_date": "2026-11-19",
   "changelog": [
     "v2.9.47: Client & Staff Portal Dashboard add-on — full-screen authenticated management portal with role-based access (Admin/Manager/Staff/Viewer), live registration tracking, status workflows, private staff notes, 1-click CSV export, MySQL auto-schema, and staff user management",
@@ -18,5 +18,6 @@
   "download_url": "https://raw.githubusercontent.com/bernardlolo25/aetherbuilder-releases/main/aetherbuilder-update.zip",
   "min_php": "7.4",
   "requires": "2.9.20",
-  "date": "2026-11-19"
+  "date": "2026-11-19",
+  "updated": "2026-11-19"
 }

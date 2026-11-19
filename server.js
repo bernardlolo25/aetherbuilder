@@ -586,6 +586,220 @@ http.createServer(async (req, res) => {
       }
     }
 
+
+    // ── PORTAL DASHBOARD ENDPOINTS ─────────────────────────────────────────
+    // Mirrors the PHP portal_* handlers in api.php for localhost dev server.
+
+    const portalUsersFile    = path.join(ROOT, 'data', 'portal_users.json');
+    const portalSessionsFile = path.join(ROOT, 'data', 'portal_sessions.json');
+    const submissionsFile    = path.join(ROOT, 'data', 'submissions.json');
+
+    function portalReadJson(file, def) {
+      try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return def; }
+    }
+    function portalWriteJson(file, data) {
+      fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    }
+
+    function portalEnsureAdmin() {
+      let users = portalReadJson(portalUsersFile, []);
+      if (!Array.isArray(users) || users.length === 0) {
+        const bcryptish = crypto.createHash('sha256').update('Admin1234!').digest('hex');
+        const admin = {
+          id: 'usr_init_' + Date.now(),
+          name: 'Portal Administrator',
+          email: 'admin@portal.local',
+          password_plain: 'Admin1234!',   // stored only for dev server
+          password_hash: bcryptish,       // placeholder for JS comparison
+          role: 'admin',
+          status: 'active',
+          created_at: new Date().toISOString()
+        };
+        users = [admin];
+        portalWriteJson(portalUsersFile, users);
+      }
+      return users;
+    }
+
+    function portalVerifyPassword(plain, stored) {
+      // Dev server uses SHA-256 or plain comparison (no bcrypt in Node without libs)
+      const hash = crypto.createHash('sha256').update(plain).digest('hex');
+      return hash === stored || plain === stored || (stored && stored.startsWith('Admin1234') && plain === 'Admin1234!');
+    }
+
+    function portalGetCurrentUser(req) {
+      const token = req.headers['x-portal-token'] || '';
+      if (!token) return null;
+      const sessions = portalReadJson(portalSessionsFile, {});
+      const sess = sessions[token];
+      if (!sess) return null;
+      if (sess.expires_at && new Date(sess.expires_at) < new Date()) {
+        delete sessions[token];
+        portalWriteJson(portalSessionsFile, sessions);
+        return null;
+      }
+      return sess.user || null;
+    }
+
+    // GET: portal_init
+    if (req.method === 'GET' && action === 'portal_init') {
+      portalEnsureAdmin();
+      const user = portalGetCurrentUser(req);
+      const subs = portalReadJson(submissionsFile, []);
+      const stats = { total: subs.length, pending: 0, approved: 0, paid: 0, declined: 0 };
+      subs.forEach(s => {
+        const st = (s.status || 'pending').toLowerCase();
+        if (st in stats) stats[st]++; else stats.pending++;
+      });
+      return json(res, 200, { success: true, loggedIn: !!user, user: user || null, stats, hasDb: false });
+    }
+
+    // POST: portal_login
+    if (req.method === 'POST' && action === 'portal_login') {
+      const bodyStr = (await readBody(req)).toString('utf8');
+      let body = {};
+      try { body = JSON.parse(bodyStr); } catch {}
+      const email = (body.email || '').trim().toLowerCase();
+      const pass  = body.password || '';
+      if (!email || !pass) return json(res, 400, { success: false, error: 'Please enter both email and password.' });
+
+      portalEnsureAdmin();
+      const users = portalReadJson(portalUsersFile, []);
+      const matched = users.find(u => (u.email || '').toLowerCase() === email);
+      if (!matched) return json(res, 401, { success: false, error: 'Invalid email address or password.' });
+      if ((matched.status || 'active') !== 'active') return json(res, 403, { success: false, error: 'This account has been deactivated.' });
+
+      // Check password: plain match (dev default) or hash
+      const passOk = (pass === matched.password_plain) || portalVerifyPassword(pass, matched.password_hash);
+      if (!passOk) return json(res, 401, { success: false, error: 'Invalid email address or password.' });
+
+      const token = 'ptok_' + crypto.randomBytes(24).toString('hex');
+      const sessions = portalReadJson(portalSessionsFile, {});
+      const safeUser = { id: matched.id, name: matched.name, email: matched.email, role: matched.role || 'staff' };
+      sessions[token] = { user: safeUser, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 7*86400000).toISOString() };
+      portalWriteJson(portalSessionsFile, sessions);
+      return json(res, 200, { success: true, token, user: safeUser });
+    }
+
+    // POST: portal_logout
+    if (req.method === 'POST' && action === 'portal_logout') {
+      const token = req.headers['x-portal-token'] || '';
+      if (token) {
+        const sessions = portalReadJson(portalSessionsFile, {});
+        delete sessions[token];
+        portalWriteJson(portalSessionsFile, sessions);
+      }
+      return json(res, 200, { success: true });
+    }
+
+    // GET: portal_get_data
+    if (req.method === 'GET' && action === 'portal_get_data') {
+      const user = portalGetCurrentUser(req);
+      if (!user) return json(res, 401, { success: false, error: 'Session expired. Please sign in again.' });
+      const subs = portalReadJson(submissionsFile, []);
+      const stats = { total: subs.length, pending: 0, approved: 0, paid: 0, declined: 0 };
+      subs.forEach(s => {
+        const st = (s.status || 'pending').toLowerCase();
+        if (st in stats) stats[st]++; else stats.pending++;
+      });
+      return json(res, 200, { success: true, submissions: subs, stats });
+    }
+
+    // POST: portal_update_submission
+    if (req.method === 'POST' && action === 'portal_update_submission') {
+      const user = portalGetCurrentUser(req);
+      if (!user) return json(res, 401, { success: false, error: 'Session expired.' });
+      const bodyStr = (await readBody(req)).toString('utf8');
+      let body = {};
+      try { body = JSON.parse(bodyStr); } catch {}
+      const subId = body.id || body.submission_id || '';
+      const subs = portalReadJson(submissionsFile, []);
+      const idx = subs.findIndex(s => s.id === subId || s.submission_id === subId);
+      if (idx === -1) return json(res, 404, { success: false, error: 'Submission not found.' });
+      if (body.status)       subs[idx].status = body.status;
+      if (body.staff_notes !== undefined) subs[idx].staff_notes = body.staff_notes;
+      subs[idx].updated_at = new Date().toISOString();
+      portalWriteJson(submissionsFile, subs);
+      return json(res, 200, { success: true, submission: subs[idx] });
+    }
+
+    // POST: portal_delete_submission
+    if (req.method === 'POST' && action === 'portal_delete_submission') {
+      const user = portalGetCurrentUser(req);
+      if (!user || user.role !== 'admin') return json(res, 403, { success: false, error: 'Admin role required.' });
+      const bodyStr = (await readBody(req)).toString('utf8');
+      let body = {};
+      try { body = JSON.parse(bodyStr); } catch {}
+      const subId = body.id || body.submission_id || '';
+      let subs = portalReadJson(submissionsFile, []);
+      const before = subs.length;
+      subs = subs.filter(s => s.id !== subId && s.submission_id !== subId);
+      portalWriteJson(submissionsFile, subs);
+      return json(res, 200, { success: true, deleted: before - subs.length });
+    }
+
+    // GET: portal_get_users
+    if (req.method === 'GET' && action === 'portal_get_users') {
+      const user = portalGetCurrentUser(req);
+      if (!user || user.role !== 'admin') return json(res, 403, { success: false, error: 'Admin role required.' });
+      const users = portalReadJson(portalUsersFile, []);
+      const safe = users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, created_at: u.created_at }));
+      return json(res, 200, { success: true, users: safe });
+    }
+
+    // POST: portal_save_user
+    if (req.method === 'POST' && action === 'portal_save_user') {
+      const user = portalGetCurrentUser(req);
+      if (!user || user.role !== 'admin') return json(res, 403, { success: false, error: 'Admin role required.' });
+      const bodyStr = (await readBody(req)).toString('utf8');
+      let body = {};
+      try { body = JSON.parse(bodyStr); } catch {}
+      let users = portalReadJson(portalUsersFile, []);
+      const userId = body.id || '';
+      if (userId) {
+        const idx = users.findIndex(u => u.id === userId);
+        if (idx !== -1) {
+          if (body.name)   users[idx].name   = body.name;
+          if (body.email)  users[idx].email  = body.email;
+          if (body.role)   users[idx].role   = body.role;
+          if (body.status) users[idx].status = body.status;
+          if (body.password) {
+            users[idx].password_plain = body.password;
+            users[idx].password_hash  = crypto.createHash('sha256').update(body.password).digest('hex');
+          }
+        }
+      } else {
+        const newUser = {
+          id: 'usr_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+          name: body.name || 'Staff User',
+          email: body.email || '',
+          password_plain: body.password || 'changeme',
+          password_hash: crypto.createHash('sha256').update(body.password || 'changeme').digest('hex'),
+          role: body.role || 'staff',
+          status: body.status || 'active',
+          created_at: new Date().toISOString()
+        };
+        users.push(newUser);
+      }
+      portalWriteJson(portalUsersFile, users);
+      return json(res, 200, { success: true });
+    }
+
+    // POST: portal_delete_user
+    if (req.method === 'POST' && action === 'portal_delete_user') {
+      const user = portalGetCurrentUser(req);
+      if (!user || user.role !== 'admin') return json(res, 403, { success: false, error: 'Admin role required.' });
+      const bodyStr = (await readBody(req)).toString('utf8');
+      let body = {};
+      try { body = JSON.parse(bodyStr); } catch {}
+      const delId = body.id || '';
+      let users = portalReadJson(portalUsersFile, []);
+      users = users.filter(u => u.id !== delId);
+      portalWriteJson(portalUsersFile, users);
+      return json(res, 200, { success: true });
+    }
+    // ── END PORTAL DASHBOARD ENDPOINTS ──────────────────────────────────────
+
     json(res, 400, { error: 'unknown action: ' + action });
     return;
   }

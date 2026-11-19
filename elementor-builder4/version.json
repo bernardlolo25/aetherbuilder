@@ -1,0 +1,16 @@
+{
+  "name": "AetherBuilder",
+  "version": "2.5.0",
+  "release_date": "2026-10-31",
+  "min_php": "7.4",
+  "changelog": [
+    "WordPress-style 1-Click Update System with zero-downtime safety",
+    "Preserves all site pages, media uploads, and custom add-ons during updates",
+    "Automatic pre-update safety backup in data/backups/",
+    "Ultra Navigation Bar with dual background image & curved wave divider",
+    "Full Section-level sticky positioning in visual canvas and public views",
+    "Global multi-page header propagation for custom add-ons",
+    "Nested repeater and page-link visual UI in Add-on Maker"
+  ],
+  "download_url": "version.json"
+}

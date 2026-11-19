@@ -41,7 +41,7 @@ if (!empty($origin)) {
     header('Access-Control-Allow-Origin: *');
 }
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, X-Admin-Password, X-Admin-Token, X-Portal-Token, Authorization');
 
 // Security & Perimeter Defense Headers (HSTS, Clickjacking, MIME sniffing, Referrer privacy, CSP)
 header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
@@ -52,6 +52,7 @@ header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), paymen
 header("Content-Security-Policy: default-src 'self' 'unsafe-inline' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' data: blob: https:; media-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src 'self' https:; frame-ancestors 'self';");
 
 // Fatal Error & Exception Interceptor: guarantees clean JSON responses on shared hosts (no empty 500s!)
+if (!headers_sent() && session_status() === PHP_SESSION_NONE) { @session_start(); }
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
@@ -75,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.47');
+define('AETHER_VERSION', '2.9.48');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
