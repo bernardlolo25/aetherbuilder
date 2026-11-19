@@ -10,7 +10,7 @@ export const DEFAULT_CHATBOT_CONFIG = {
   enabled: true,
   title: 'AI Assistant',
   subtitle: 'Automated 24/7 Guidance & Inquiries',
-  avatar: '⚖️',
+  avatar: '💬',
   bubbleText: 'Need help? Ask us!',
   primaryColor: '#6366f1',
   messengerEnabled: false,
@@ -19,62 +19,46 @@ export const DEFAULT_CHATBOT_CONFIG = {
   nodes: [
     {
       id: 'start',
-      message: 'Hello and Mabuhay! Welcome to the Official Customer Support Portal. How can we help you today, Counsel?',
+      message: 'Hello and welcome! How can we assist you today?',
       options: [
-        { label: '📅 Upcoming Seminar Schedules', next: 'schedules' },
-        { label: '💳 Registration Fees & Payment', next: 'fees' },
-        { label: '📜 Compliance Units & Certificates', next: 'compliance' },
-        { label: '📞 Speak with an MCLE Officer', next: 'contact' }
+        { label: '🚀 Explore Services & Solutions', next: 'services' },
+        { label: '💳 View Pricing & Packages', next: 'pricing' },
+        { label: '📅 Book a Free Consultation', next: 'lead_form' },
+        { label: '📞 Speak with Support', next: 'contact' }
       ]
     },
     {
-      id: 'schedules',
-      message: 'Our next accredited MCLE Program is open for registration! We offer complete 36-unit compliance tracks, as well as per-day modular sessions covering Legal Ethics, Trial Techniques, and Supreme Court Updates.',
+      id: 'services',
+      message: 'We deliver custom digital products, web experiences, and dedicated technology consulting tailored to your business goals.',
       options: [
-        { label: '📝 Reserve a Slot / Register', next: 'lead_form' },
-        { label: '💳 View Fee Structure', next: 'fees' },
+        { label: '💳 View Pricing & Packages', next: 'pricing' },
+        { label: '📝 Request a Custom Quote', next: 'lead_form' },
         { label: '↩️ Return to Main Menu', next: 'start' }
       ]
     },
     {
-      id: 'fees',
-      message: 'MCLE Program Rates:\n• Full Compliance (36 Units): ₱9,500 (Early Bird)\n• Daily / Modular Pass: ₱2,500 / day\n\nPayment options include BDO Bank Deposit, Online Bank Transfer, and GCash.',
+      id: 'pricing',
+      message: 'Flexible packages designed for your growth:\n• Starter Package: Essential online presence and setup\n• Professional Package: Advanced features, integrations & analytics\n• Enterprise Package: Custom architecture, priority support & SLA',
       options: [
-        { label: '🏦 Get Bank & Payment Details', next: 'payment_info' },
-        { label: '📝 Register Online Now', next: 'lead_form' },
-        { label: '↩️ Main Menu', next: 'start' }
-      ]
-    },
-    {
-      id: 'payment_info',
-      message: 'Bank Details:\n• Account Name: Standard Organization\n• Bank: BDO / Landbank\n• Account No: Available upon slot confirmation\n\nPlease keep your deposit slip or transaction screenshot for official receipt issuance.',
-      options: [
-        { label: '✍️ Submit My Registration Request', next: 'lead_form' },
-        { label: '↩️ Main Menu', next: 'start' }
-      ]
-    },
-    {
-      id: 'compliance',
-      message: 'Certificates of Attendance and Compliance are electronically certified and submitted directly to the Supreme Court Mandatory Continuing Legal Education Office. Digital copies are emailed to attendees within 3–5 working days post-evaluation.',
-      options: [
-        { label: '🔍 Inquire on Past Compliance Status', next: 'lead_form' },
-        { label: '↩️ Main Menu', next: 'start' }
+        { label: '✍️ Request a Proposal', next: 'lead_form' },
+        { label: '📞 Speak with Our Team', next: 'contact' },
+        { label: '↩️ Return to Main Menu', next: 'start' }
       ]
     },
     {
       id: 'contact',
-      message: 'Our MCLE Secretariat is available Monday to Saturday, 8:00 AM – 5:00 PM. Leave your contact details below, and an officer will reach out to you directly.',
+      message: 'Our support team is available Monday to Friday, 9:00 AM – 6:00 PM. Leave your contact info below, and an advisor will get back to you promptly!',
       options: [
         { label: '✍️ Leave Contact Details', next: 'lead_form' },
-        { label: '↩️ Main Menu', next: 'start' }
+        { label: '↩️ Return to Main Menu', next: 'start' }
       ]
     },
     {
       id: 'lead_form',
-      message: 'Please provide your details below and an MCLE Secretariat coordinator will assist you right away:',
+      message: 'Please provide your details below and a team member will reach out to assist you shortly:',
       isLeadCapture: true,
       options: [
-        { label: '↩️ Return to Menu', next: 'start' }
+        { label: '↩️ Return to Main Menu', next: 'start' }
       ]
     }
   ]
@@ -90,7 +74,7 @@ export function renderChatbotAvatar(avatarStr) {
     str.startsWith('/') ||
     /\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/i.test(str)
   ) {
-    return `<img src="${str}" alt="Chatbot" onerror="this.onerror=null; this.parentElement.innerHTML='⚖️';" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+    return `<img src="${str}" alt="Chatbot" onerror="this.onerror=null; this.parentElement.innerHTML='💬';" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
   }
   return str;
 }
@@ -320,8 +304,8 @@ export function initPublicChatbot(customConfig = {}) {
             formBox.innerHTML = `
               <div style="text-align:center;padding:12px 6px;">
                 <div style="font-size:1.8rem;margin-bottom:4px;">🎉</div>
-                <div style="font-weight:700;font-size:0.85rem;color:#38bdf8;">Thank you, Counsel!</div>
-                <div style="font-size:0.73rem;color:var(--text-muted);margin-top:2px;">Our MCLE coordinator has received your details and will contact you promptly.</div>
+                <div style="font-weight:700;font-size:0.85rem;color:#38bdf8;">Thank you!</div>
+                <div style="font-size:0.73rem;color:var(--text-muted);margin-top:2px;">Our team has received your details and will contact you promptly.</div>
                 <button type="button" id="chat-back-to-menu" style="margin-top:10px;padding:5px 12px;font-size:0.72rem;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;border-radius:6px;cursor:pointer;">
                   ↩️ Return to Main Menu
                 </button>

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.45';
+export const APP_VERSION = '2.9.46';
 /**
  * AETHERBUILDER - APPLICATION ROOT & ROUTER
  * Coordinates Public vs. Admin Studio views, authentication gates, and Topbar tools.
@@ -6485,39 +6485,48 @@ ${addonManager.getAllActiveJs()}
   showChatbotFlowModal() {
     const currentCb = state.siteSettings?.chatbot || DEFAULT_CHATBOT_CONFIG;
     let nodes = JSON.parse(JSON.stringify(currentCb.nodes || DEFAULT_CHATBOT_CONFIG.nodes));
+    let isDirty = false;
 
     const modal = document.createElement('div');
-    modal.className = 'media-modal-overlay';
+    modal.className = 'media-modal-overlay animate-fade-in';
     modal.id = 'chatbot-flow-modal';
+    modal.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;z-index:100000;background:#090d16;padding:0;margin:0;display:flex;flex-direction:column;';
     modal.innerHTML = `
-      <div class="media-modal-panel" style="max-width: 860px; height: 640px; display: flex; flex-direction: column;">
-        <div class="media-modal-header" style="padding: 14px 18px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">🌳</span>
+      <div class="media-modal-panel" style="width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;border:none;box-shadow:none;display:flex;flex-direction:column;background:#0b1120;margin:0;">
+        <div class="media-modal-header" style="padding:16px 28px;background:#0f172a;border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span style="font-size:1.6rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);padding:6px 12px;border-radius:10px;">🌳</span>
             <div>
-              <div style="font-weight: 700; font-size: 1.05rem; color: #f8fafc;">Chatbot Decision-Tree Flowchart</div>
-              <div style="font-size: 0.74rem; color: var(--text-dim);">Customize bot questions, quick-reply choice buttons, and lead capture steps</div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-weight:800;font-size:1.2rem;color:#f8fafc;">Chatbot Decision-Tree Flowchart Studio</span>
+                <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);padding:2px 8px;border-radius:12px;letter-spacing:0.5px;">Full Studio Mode</span>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-dim);margin-top:2px;">Customize bot dialog steps, interactive quick-reply branching, and automated lead capture</div>
             </div>
           </div>
-          <button class="media-modal-close" id="close-cb-flow-modal">✕</button>
+          <button class="topbar-btn topbar-btn-sm" id="close-cb-flow-modal" style="display:flex;align-items:center;gap:6px;font-weight:600;color:#cbd5e1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:6px 14px;border-radius:6px;cursor:pointer;">
+            <span>✕</span> Exit Studio
+          </button>
         </div>
 
-        <div style="flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px;" id="cb-nodes-container">
-          <!-- Nodes rendered here -->
+        <div style="flex:1;overflow-y:auto;padding:28px 32px;background:#090d16;" id="cb-nodes-scroll-wrap">
+          <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px;" id="cb-nodes-container">
+            <!-- Nodes rendered here -->
+          </div>
         </div>
 
-        <div class="media-modal-footer" style="padding: 10px 18px; justify-content: space-between;">
-          <div style="display: flex; gap: 8px;">
-            <button type="button" id="btn-add-cb-node" class="topbar-btn topbar-btn-sm" style="background: rgba(99,102,241,0.18); border-color: #6366f1; color: #a5b4fc;">
+        <div class="media-modal-footer" style="padding:14px 28px;justify-content:space-between;background:#0f172a;border-top:1px solid var(--border-subtle);flex-shrink:0;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button type="button" id="btn-add-cb-node" class="topbar-btn topbar-btn-sm" style="background:rgba(99,102,241,0.22);border-color:#6366f1;color:#a5b4fc;font-weight:700;padding:7px 16px;">
               + Add Question / Step
             </button>
-            <button type="button" id="btn-restore-cb-default" class="topbar-btn topbar-btn-sm" style="color: var(--text-dim);">
-              🔄 Restore Default MCLE Flow
+            <button type="button" id="btn-restore-cb-default" class="topbar-btn topbar-btn-sm" style="color:var(--text-dim);padding:7px 14px;" title="Reset flowchart to standard business consultation tree">
+              🔄 Load Starter Business Flow
             </button>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="topbar-btn" id="btn-cancel-cb-flow">Cancel</button>
-            <button class="topbar-btn topbar-btn-publish" id="btn-save-cb-flow">Save Flowchart ✓</button>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="topbar-btn" id="btn-cancel-cb-flow" style="padding:7px 16px;">Cancel</button>
+            <button class="topbar-btn topbar-btn-publish" id="btn-save-cb-flow" style="padding:7px 20px;font-weight:700;">Save Flowchart ✓</button>
           </div>
         </div>
       </div>
@@ -6525,10 +6534,22 @@ ${addonManager.getAllActiveJs()}
 
     document.body.appendChild(modal);
 
-    const closeModal = () => modal.remove();
-    modal.querySelector('#close-cb-flow-modal').addEventListener('click', closeModal);
-    modal.querySelector('#btn-cancel-cb-flow').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    const closeModal = (force = false) => {
+      if (!force && isDirty) {
+        if (!confirm('You have unsaved changes in your chatbot flowchart. Are you sure you want to discard them and exit?')) {
+          return;
+        }
+      }
+      modal.remove();
+    };
+
+    modal.querySelector('#close-cb-flow-modal').addEventListener('click', () => closeModal(false));
+    modal.querySelector('#btn-cancel-cb-flow').addEventListener('click', () => closeModal(false));
+
+    // Accidental outside-click prevention: NO backdrop click dismiss
+
+    modal.addEventListener('input', () => { isDirty = true; });
+    modal.addEventListener('change', () => { isDirty = true; });
 
     const renderNodes = () => {
       const container = modal.querySelector('#cb-nodes-container');
@@ -6539,43 +6560,43 @@ ${addonManager.getAllActiveJs()}
       nodes.forEach((node, nodeIdx) => {
         const card = document.createElement('div');
         card.className = 'cb-node-card';
-        card.style.cssText = 'background: rgba(30,41,59,0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px;';
+        card.style.cssText = 'background:rgba(30,41,59,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);';
 
         card.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.72rem; font-weight: 700; color: #a5b4fc; background: rgba(99,102,241,0.2); padding: 3px 8px; border-radius: 6px;">Step ID:</span>
-              <input type="text" class="node-id-input" value="${node.id}" style="font-family: monospace; font-size: 0.78rem; font-weight: 700; background: var(--bg-deep); border: 1px solid var(--border-subtle); color: #38bdf8; border-radius: 4px; padding: 3px 6px; width: 140px;" ${node.id === 'start' ? 'disabled title="start is the initial entry node"' : ''} />
-              ${node.id === 'start' ? '<span style="font-size:0.68rem;color:#10b981;font-weight:700;">(Entry Node)</span>' : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:0.75rem;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,0.2);padding:4px 10px;border-radius:6px;letter-spacing:0.3px;">Step ID:</span>
+              <input type="text" class="node-id-input" value="${node.id}" style="font-family:monospace;font-size:0.82rem;font-weight:700;background:var(--bg-deep);border:1px solid var(--border-subtle);color:#38bdf8;border-radius:6px;padding:5px 8px;width:160px;" ${node.id === 'start' ? 'disabled title="start is the initial entry node"' : ''} />
+              ${node.id === 'start' ? '<span style="font-size:0.72rem;color:#10b981;font-weight:700;background:rgba(16,185,129,0.15);padding:3px 8px;border-radius:6px;">(Entry Node)</span>' : ''}
             </div>
-            ${node.id !== 'start' ? `<button class="btn-del-node" style="font-size:0.75rem;color:var(--danger);background:transparent;border:none;cursor:pointer;" title="Delete this step">🗑️ Delete Step</button>` : ''}
+            ${node.id !== 'start' ? `<button class="btn-del-node" style="font-size:0.78rem;font-weight:600;color:var(--danger);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:4px 10px;cursor:pointer;" title="Delete this step">🗑️ Delete Step</button>` : ''}
           </div>
 
           <div>
-            <label class="prop-label" style="font-size:0.75rem;margin-bottom:3px;">Bot Response Message</label>
-            <textarea class="node-message-input" rows="2" style="width:100%;font-size:0.78rem;padding:6px;border-radius:6px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:var(--text-main);resize:vertical;">${node.message || ''}</textarea>
+            <label class="prop-label" style="font-size:0.78rem;margin-bottom:4px;font-weight:600;color:#cbd5e1;">Bot Response Message</label>
+            <textarea class="node-message-input" rows="3" style="width:100%;font-size:0.82rem;padding:8px 10px;border-radius:6px;background:var(--bg-deep);border:1px solid var(--border-subtle);color:var(--text-main);resize:vertical;line-height:1.45;">${node.message || ''}</textarea>
           </div>
 
-          <label style="font-size: 0.78rem; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-            <input type="checkbox" class="node-lead-capture-cb" ${node.isLeadCapture ? 'checked' : ''} style="cursor: pointer;" />
+          <label style="font-size:0.8rem;color:var(--text-main);display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+            <input type="checkbox" class="node-lead-capture-cb" ${node.isLeadCapture ? 'checked' : ''} style="cursor:pointer;width:16px;height:16px;" />
             <span>✍️ Include Lead Capture Form at this step (Name &amp; Phone/Email inputs)</span>
           </label>
 
           <!-- Choices List -->
-          <div style="margin-top: 4px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Quick-Reply Choice Buttons:</span>
-              <button class="btn-add-choice" style="font-size:0.7rem;padding:2px 7px;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:4px;cursor:pointer;">+ Add Choice Button</button>
+          <div style="margin-top:4px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.1);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:0.74rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Quick-Reply Choice Buttons:</span>
+              <button class="btn-add-choice" style="font-size:0.74rem;font-weight:600;padding:3px 10px;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.35);color:#a5b4fc;border-radius:6px;cursor:pointer;">+ Add Choice Button</button>
             </div>
-            <div class="choices-container" style="display:flex;flex-direction:column;gap:6px;">
+            <div class="choices-container" style="display:flex;flex-direction:column;gap:8px;">
               ${(node.options || []).map((opt, optIdx) => `
-                <div class="choice-row" style="display:flex;gap:6px;align-items:center;">
-                  <input type="text" class="choice-label-input" value="${opt.label || ''}" placeholder="Button Text (e.g. 📅 Seminar Schedules)" style="flex:1;font-size:0.76rem;padding:4px 8px;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:var(--text-main);" />
-                  <span style="font-size:0.72rem;color:var(--text-dim);">➜</span>
-                  <select class="choice-next-select" style="font-size:0.74rem;padding:4px 6px;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:#38bdf8;width:150px;">
+                <div class="choice-row" style="display:flex;gap:8px;align-items:center;background:rgba(15,23,42,0.5);padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.05);">
+                  <input type="text" class="choice-label-input" value="${opt.label || ''}" placeholder="Button Text (e.g. 🚀 Explore Services)" style="flex:1;font-size:0.8rem;padding:6px 10px;border-radius:6px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:var(--text-main);" />
+                  <span style="font-size:0.8rem;color:var(--text-dim);font-weight:700;">➜</span>
+                  <select class="choice-next-select" style="font-size:0.78rem;padding:6px 8px;border-radius:6px;border:1px solid var(--border-subtle);background:var(--bg-deep);color:#38bdf8;width:180px;cursor:pointer;">
                     ${allNodeIds.map(nid => `<option value="${nid}" ${nid === opt.next ? 'selected' : ''}>${nid}</option>`).join('')}
                   </select>
-                  <button class="btn-del-choice" data-opt-idx="${optIdx}" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem;" title="Remove choice">✕</button>
+                  <button class="btn-del-choice" data-opt-idx="${optIdx}" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:4px;color:var(--danger);cursor:pointer;font-size:0.85rem;padding:4px 8px;" title="Remove choice">✕</button>
                 </div>
               `).join('')}
             </div>
@@ -6584,15 +6605,19 @@ ${addonManager.getAllActiveJs()}
 
         // Wire inputs on this card
         card.querySelector('.node-id-input')?.addEventListener('input', (e) => {
+          isDirty = true;
           node.id = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
         });
         card.querySelector('.node-message-input')?.addEventListener('input', (e) => {
+          isDirty = true;
           node.message = e.target.value;
         });
         card.querySelector('.node-lead-capture-cb')?.addEventListener('change', (e) => {
+          isDirty = true;
           node.isLeadCapture = e.target.checked;
         });
         card.querySelector('.btn-del-node')?.addEventListener('click', () => {
+          isDirty = true;
           nodes.splice(nodeIdx, 1);
           renderNodes();
         });
@@ -6600,22 +6625,26 @@ ${addonManager.getAllActiveJs()}
         // Choices wiring
         card.querySelectorAll('.choice-label-input').forEach((inp, idx) => {
           inp.addEventListener('input', (e) => {
+            isDirty = true;
             if (node.options && node.options[idx]) node.options[idx].label = e.target.value;
           });
         });
         card.querySelectorAll('.choice-next-select').forEach((sel, idx) => {
           sel.addEventListener('change', (e) => {
+            isDirty = true;
             if (node.options && node.options[idx]) node.options[idx].next = e.target.value;
           });
         });
         card.querySelectorAll('.btn-del-choice').forEach((btn) => {
           btn.addEventListener('click', () => {
+            isDirty = true;
             const idx = parseInt(btn.getAttribute('data-opt-idx'));
             node.options.splice(idx, 1);
             renderNodes();
           });
         });
         card.querySelector('.btn-add-choice')?.addEventListener('click', () => {
+          isDirty = true;
           if (!node.options) node.options = [];
           node.options.push({ label: 'New Option', next: 'start' });
           renderNodes();
@@ -6629,6 +6658,7 @@ ${addonManager.getAllActiveJs()}
 
     // Add New Question Node
     modal.querySelector('#btn-add-cb-node').addEventListener('click', () => {
+      isDirty = true;
       const newId = `step_${nodes.length + 1}`;
       nodes.push({
         id: newId,
@@ -6638,13 +6668,14 @@ ${addonManager.getAllActiveJs()}
         ]
       });
       renderNodes();
-      const container = modal.querySelector('#cb-nodes-container');
-      container.scrollTop = container.scrollHeight;
+      const wrap = modal.querySelector('#cb-nodes-scroll-wrap');
+      if (wrap) wrap.scrollTop = wrap.scrollHeight;
     });
 
-    // Restore Default Flow
+    // Restore Default Starter Flow
     modal.querySelector('#btn-restore-cb-default').addEventListener('click', () => {
-      if (!confirm('Reset flowchart back to default consultation tree?')) return;
+      if (!confirm('Load the starter business consultation flow? This will replace your current unsaved steps.')) return;
+      isDirty = true;
       nodes = JSON.parse(JSON.stringify(DEFAULT_CHATBOT_CONFIG.nodes));
       renderNodes();
     });
@@ -6654,10 +6685,10 @@ ${addonManager.getAllActiveJs()}
       const curCb = state.siteSettings?.chatbot || DEFAULT_CHATBOT_CONFIG;
       state.setSiteSetting('chatbot', { ...curCb, nodes });
       this.canvas?.showToast('🌳 Chatbot flowchart saved successfully!', 'success');
-      closeModal();
+      isDirty = false;
+      closeModal(true);
     });
   }
-
   // --------------------------------------------------------------------------
   // PUBLISH VERSION HISTORY & 1-CLICK ROLLBACK MODAL
   // --------------------------------------------------------------------------

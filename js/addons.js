@@ -1505,9 +1505,10 @@ export const addonManager = new AddonManager();
 export class AddonMaker {
   static open(existingAddon = null, onSaved = null) {
     const isEdit = !!existingAddon;
+    let isDirty = false;
     const modal = document.createElement('div');
     modal.className = 'modal-overlay animate-fade-in wb-addon-maker-modal';
-    modal.style.zIndex = '99999';
+    modal.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;z-index:100000;background:#090d16;padding:0;margin:0;display:flex;flex-direction:column;';
 
     // Initial state
     const currentData = existingAddon ? JSON.parse(JSON.stringify(existingAddon)) : {
@@ -1537,20 +1538,25 @@ export class AddonMaker {
     };
 
     modal.innerHTML = `
-      <div class="modal-box modal-wide" style="max-width: 960px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
-        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);">
-          <div class="modal-title" style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size: 1.4rem;">🧩</span>
+      <div class="modal-box modal-wide" style="width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;margin:0;border:none;box-shadow:none;display:flex;flex-direction:column;background:#0b1120;">
+        <div class="modal-header" style="padding:16px 28px;background:#0f172a;border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <div class="modal-title" style="display:flex;align-items:center;gap:14px;">
+            <span style="font-size:1.6rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);padding:6px 12px;border-radius:10px;">🧩</span>
             <div>
-              <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">${isEdit ? 'Edit Add-On: ' + currentData.name : 'Aether Add-On Maker Studio'}</div>
-              <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 2px;">Design, configure, preview &amp; package custom widgets for AetherBuilder</div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-weight:800;font-size:1.2rem;color:#fff;">${isEdit ? 'Edit Add-On: ' + (currentData.name || 'Widget') : 'Aether Add-On Maker Studio'}</span>
+                <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);padding:2px 8px;border-radius:12px;letter-spacing:0.5px;">Full Studio Mode</span>
+              </div>
+              <div style="font-size:0.8rem;color:#94a3b8;margin-top:2px;">Design, configure, preview &amp; package custom widgets for AetherBuilder</div>
             </div>
           </div>
-          <button class="tool-icon-btn" id="btn-close-maker" style="font-size: 1.2rem;">✕</button>
+          <button class="topbar-btn topbar-btn-sm" id="btn-close-maker" style="display:flex;align-items:center;gap:6px;font-weight:600;color:#cbd5e1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:6px 14px;border-radius:6px;cursor:pointer;">
+            <span>✕</span> Exit Studio
+          </button>
         </div>
 
         <!-- Wizard Navigation Tabs -->
-        <div class="maker-tabs-bar" style="display:flex;gap:4px;padding:8px 20px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border-subtle);overflow-x:auto;">
+        <div class="maker-tabs-bar" style="display:flex;gap:6px;padding:10px 28px;background:rgba(15,23,42,0.7);border-bottom:1px solid var(--border-subtle);overflow-x:auto;flex-shrink:0;">
           <button type="button" class="maker-tab-btn active" data-tab="meta">1. 📝 Identity &amp; Info</button>
           <button type="button" class="maker-tab-btn" data-tab="props">2. ⚙️ Props &amp; Controls</button>
           <button type="button" class="maker-tab-btn" data-tab="template">3. 📄 HTML Template</button>
@@ -1560,7 +1566,8 @@ export class AddonMaker {
         </div>
 
         <!-- Body Area -->
-        <div class="modal-body" style="flex:1;overflow-y:auto;padding:20px;">
+        <div class="modal-body" style="flex:1;overflow-y:auto;padding:28px 32px;background:#090d16;">
+          <div style="max-width:1200px;margin:0 auto;width:100%;">
           <!-- TAB 1: META & IDENTITY -->
           <div id="maker-tab-meta" class="maker-tab-pane active">
             <div class="maker-meta-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -1640,7 +1647,7 @@ export class AddonMaker {
               <span style="font-size:0.75rem;font-weight:700;color:#c7d2fe;margin-right:8px;">Click to Insert Prop:</span>
               <span id="maker-token-pills" style="display:inline-flex;flex-wrap:wrap;gap:6px;"></span>
             </div>
-            <textarea id="maker-template" rows="12" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;"></textarea>
+            <textarea id="maker-template" style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;width:100%;height:calc(100vh - 380px);min-height:400px;line-height:1.5;background:#030712;color:#f8fafc;border:1px solid #1f2937;border-radius:8px;padding:16px;box-sizing:border-box;resize:none;"></textarea>
           </div>
 
           <!-- TAB 4: SCOPED CSS -->
@@ -1651,7 +1658,7 @@ export class AddonMaker {
                 <div style="font-size:0.78rem;color:#cbd5e1;margin-top:2px;">Write clean CSS for your widget. It will be loaded on the canvas and in the live site.</div>
               </div>
             </div>
-            <textarea id="maker-css" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;"></textarea>
+            <textarea id="maker-css" style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;width:100%;height:calc(100vh - 380px);min-height:400px;line-height:1.5;background:#030712;color:#f8fafc;border:1px solid #1f2937;border-radius:8px;padding:16px;box-sizing:border-box;resize:none;"></textarea>
           </div>
 
           <!-- TAB 5: CLIENT JS -->
@@ -1673,7 +1680,7 @@ export class AddonMaker {
   //   fetch(...)
 }</code>
             </div>
-            <textarea id="maker-js" rows="14" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;resize:vertical;line-height:1.45;" placeholder="// Write your onMount(el, props) function here...&#10;function onMount(el, props) {&#10;  // e.g. attach a click counter&#10;  var btn = el.querySelector('.my-btn');&#10;  if (btn) btn.addEventListener('click', function() {&#10;    alert('Clicked!');&#10;  });&#10;}"></textarea>
+            <textarea id="maker-js" style="font-family:'JetBrains Mono',monospace;font-size:0.86rem;width:100%;height:calc(100vh - 430px);min-height:380px;line-height:1.5;background:#030712;color:#f8fafc;border:1px solid #1f2937;border-radius:8px;padding:16px;box-sizing:border-box;resize:none;" placeholder="// Write your onMount(el, props) function here...&#10;function onMount(el, props) {&#10;  // e.g. attach a click counter&#10;  var btn = el.querySelector('.my-btn');&#10;  if (btn) btn.addEventListener('click', function() {&#10;    alert('Clicked!');&#10;  });&#10;}"></textarea>
           </div>
 
           <!-- TAB 6: LIVE PREVIEW -->
@@ -1687,14 +1694,15 @@ export class AddonMaker {
                 <span style="color:#ffffff !important;">🔄 Refresh Preview</span>
               </button>
             </div>
-            <div id="maker-preview-container" style="padding:24px;border-radius:12px;background:#090d16;border:1px dashed rgba(255,255,255,0.15);min-height:180px;">
+            <div id="maker-preview-container" style="padding:24px;border-radius:12px;background:#090d16;border:1px dashed rgba(255,255,255,0.15);min-height:280px;">
               <!-- Live preview rendered here -->
             </div>
+          </div>
           </div>
         </div>
 
         <!-- Footer Actions -->
-        <div class="modal-footer" style="padding:14px 20px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.2);">
+        <div class="modal-footer" style="padding:14px 28px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;background:#0f172a;flex-shrink:0;">
           <div style="display:flex;align-items:center;gap:8px;">
             <button type="button" id="btn-maker-export" class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:#ffffff !important;border:1px solid var(--border-subtle);padding:7px 14px;border-radius:6px;cursor:pointer;">
               <span style="color:#ffffff !important;">📦 Export .json Package</span>
@@ -1721,6 +1729,9 @@ export class AddonMaker {
     _safeSet('maker-js',       currentData.customJs    || '');
 
     document.body.appendChild(modal);
+
+    modal.addEventListener('input', () => { isDirty = true; });
+    modal.addEventListener('change', () => { isDirty = true; });
 
     // Tab switcher
     const tabBtns = modal.querySelectorAll('.maker-tab-btn');
@@ -1759,7 +1770,7 @@ export class AddonMaker {
 
     if (propsState.length === 0) {
       propsState = [
-        { key: 'heading', label: 'Main Heading', type: 'text', section: 'content', defVal: 'Welcome to our Seminar' },
+        { key: 'heading', label: 'Main Heading', type: 'text', section: 'content', defVal: 'Welcome to our Site' },
         { key: 'accentColor', label: 'Accent Color', type: 'color', section: 'style', defVal: '#6366f1' }
       ];
     }
@@ -2195,6 +2206,7 @@ export class AddonMaker {
     modal.querySelector('#btn-maker-save').addEventListener('click', () => {
       const pkg = saveAddonPackage();
       if (pkg) {
+        isDirty = false;
         modal.remove();
         if (typeof onSaved === 'function') onSaved(pkg);
       }
@@ -2239,6 +2251,7 @@ export class AddonMaker {
             window.aetherApp.canvas.showToast('Saved locally. Enter GitHub PAT in Developer Tab to publish to remote feed.', 'info');
           }
         }
+        isDirty = false;
         modal.remove();
         if (typeof onSaved === 'function') onSaved(pkg);
       } catch (err) {
@@ -2259,6 +2272,11 @@ export class AddonMaker {
     const closeBtn = modal.querySelector('#btn-close-maker');
     const cancelBtn = modal.querySelector('#btn-maker-cancel');
     const doClose = () => {
+      if (isDirty) {
+        if (!confirm('You have unsaved changes in this Add-On. Are you sure you want to discard them and exit?')) {
+          return;
+        }
+      }
       modal.remove();
       const prevStyle = document.getElementById('maker-preview-scoped-style');
       if (prevStyle) prevStyle.remove();
