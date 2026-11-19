@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ── Path Setup ────────────────────────────────────────────────────────────────
-define('AETHER_VERSION', '2.9.46');
+define('AETHER_VERSION', '2.9.47');
 define('ROOT',        rtrim(__DIR__, '/\\'));
 define('DATA_DIR',    ROOT . '/data');
 define('UPLOADS_DIR', ROOT . '/assets/uploads');
@@ -2131,6 +2131,559 @@ if ($action === 'stage_remote_update' && $method === 'POST') {
 
     send_json(500, ['success' => false, 'error' => 'Failed to pre-download remote update package to server. Check server outgoing connection.']);
 }
+
+// ============================================================================
+// ── CLIENT & STAFF PORTAL / DASHBOARD API ───────────────────────────────────
+// ============================================================================
+
+function portal_get_db() {
+    $dbConfigFile = DATA_DIR . '/db_config.json';
+    if (!file_exists($dbConfigFile)) return null;
+    $dbCfg = read_json_file($dbConfigFile, []);
+    if (empty($dbCfg['enabled']) || empty($dbCfg['host']) || empty($dbCfg['database']) || !extension_loaded('pdo_mysql')) {
+        return null;
+    }
+    try {
+        $dbHost = $dbCfg['host'];
+        $dbPort = !empty($dbCfg['port']) ? intval($dbCfg['port']) : 3306;
+        $dbName = $dbCfg['database'];
+        $dbUser = $dbCfg['username'] ?? '';
+        $dbPass = $dbCfg['password'] ?? '';
+        $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4";
+        $pdo = new PDO($dsn, $dbUser, $dbPass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT => 4
+        ]);
+
+        // Auto-create portal users table
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `aether_portal_users` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id` VARCHAR(64) NOT NULL UNIQUE,
+            `name` VARCHAR(150) NOT NULL,
+            `email` VARCHAR(191) NOT NULL UNIQUE,
+            `password_hash` VARCHAR(255) NOT NULL,
+            `role` VARCHAR(50) DEFAULT 'staff',
+            `status` VARCHAR(50) DEFAULT 'active',
+            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_email (`email`),
+            INDEX idx_role (`role`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        return $pdo;
+    } catch (Throwable $e) {
+        error_log("[Portal DB Error] " . $e->getMessage());
+        return null;
+    }
+}
+
+function portal_get_users_list($pdo = null) {
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT user_id as id, name, email, role, status, created_at, password_hash FROM `aether_portal_users`");
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($users)) return $users;
+        } catch (Throwable $e) {}
+    }
+    $usersFile = DATA_DIR . '/portal_users.json';
+    $users = read_json_file($usersFile, []);
+    return is_array($users) ? $users : [];
+}
+
+function portal_save_users_list($users, $pdo = null) {
+    $usersFile = DATA_DIR . '/portal_users.json';
+    write_json_file($usersFile, $users);
+}
+
+function portal_ensure_initial_user($pdo = null) {
+    $users = portal_get_users_list($pdo);
+    if (empty($users)) {
+        $defaultAdmin = [
+            'id'            => 'usr_' . time() . '_' . substr(md5(uniqid('', true)), 0, 6),
+            'name'          => 'Portal Administrator',
+            'email'         => 'admin@portal.local',
+            'password_hash' => password_hash('Admin1234!', PASSWORD_DEFAULT),
+            'role'          => 'admin',
+            'status'        => 'active',
+            'created_at'    => date('Y-m-d H:i:s')
+        ];
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO `aether_portal_users` (`user_id`, `name`, `email`, `password_hash`, `role`, `status`, `created_at`) VALUES (:uid, :name, :email, :pwd, :role, :status, :created)");
+                $stmt->execute([
+                    ':uid'     => $defaultAdmin['id'],
+                    ':name'    => $defaultAdmin['name'],
+                    ':email'   => $defaultAdmin['email'],
+                    ':pwd'     => $defaultAdmin['password_hash'],
+                    ':role'    => $defaultAdmin['role'],
+                    ':status'  => $defaultAdmin['status'],
+                    ':created' => $defaultAdmin['created_at']
+                ]);
+            } catch (Throwable $e) {}
+        }
+        $users[] = $defaultAdmin;
+        portal_save_users_list($users, $pdo);
+        return $defaultAdmin;
+    }
+    return null;
+}
+
+function portal_get_current_user() {
+    $token = $_SERVER['HTTP_X_PORTAL_TOKEN'] ?? $_SESSION['aether_portal_token'] ?? null;
+    if (!$token) {
+        // Check query param if GET
+        $token = $_GET['portal_token'] ?? null;
+    }
+    if (!$token) return null;
+
+    $sessions = read_json_file(DATA_DIR . '/portal_sessions.json', []);
+    if (!is_array($sessions) || empty($sessions[$token])) return null;
+
+    $sessionData = $sessions[$token];
+    if (!empty($sessionData['expires_at']) && strtotime($sessionData['expires_at']) < time()) {
+        unset($sessions[$token]);
+        write_json_file(DATA_DIR . '/portal_sessions.json', $sessions);
+        return null;
+    }
+    return $sessionData['user'] ?? null;
+}
+
+function portal_get_all_submissions($pdo = null) {
+    if ($pdo) {
+        $dbConfigFile = DATA_DIR . '/db_config.json';
+        $dbCfg = read_json_file($dbConfigFile, []);
+        $rawTbl = $dbCfg['table'] ?? 'registrations';
+        $tbl = preg_replace('/[^a-zA-Z0-9_]/', '', $rawTbl) ?: 'registrations';
+        try {
+            $stmt = $pdo->query("SELECT * FROM `$tbl` ORDER BY `id` DESC LIMIT 500");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($rows)) {
+                $mapped = [];
+                foreach ($rows as $r) {
+                    $item = @json_decode($r['form_data'] ?? '', true);
+                    if (!is_array($item)) $item = [];
+                    $item['id'] = $r['sub_id'] ?? ('sub_' . $r['id']);
+                    $item['name'] = $r['name'] ?? ($item['name'] ?? 'Anonymous');
+                    $item['email'] = $r['email'] ?? ($item['email'] ?? '');
+                    $item['phone'] = $r['phone'] ?? ($item['phone'] ?? '');
+                    $item['status'] = $item['status'] ?? ($r['status'] ?? 'pending');
+                    $item['notes'] = $item['notes'] ?? ($r['notes'] ?? '');
+                    $item['submitted_at'] = $r['submitted_at'] ?? ($item['submitted_at'] ?? '');
+                    $mapped[] = $item;
+                }
+                return $mapped;
+            }
+        } catch (Throwable $e) {}
+    }
+
+    $subsFile = DATA_DIR . '/submissions.json';
+    $subs = read_json_file($subsFile, []);
+    return is_array($subs) ? $subs : [];
+}
+
+function portal_update_submission_record($subId, $newStatus, $newNotes = null, $pdo = null) {
+    $subsFile = DATA_DIR . '/submissions.json';
+    $subs = read_json_file($subsFile, []);
+    $updated = false;
+    if (is_array($subs)) {
+        foreach ($subs as &$s) {
+            if (($s['id'] ?? '') === $subId) {
+                if ($newStatus !== null) $s['status'] = $newStatus;
+                if ($newNotes !== null) $s['notes'] = $newNotes;
+                $updated = true;
+                break;
+            }
+        }
+        unset($s);
+        if ($updated) write_json_file($subsFile, $subs);
+    }
+
+    if ($pdo) {
+        $dbConfigFile = DATA_DIR . '/db_config.json';
+        $dbCfg = read_json_file($dbConfigFile, []);
+        $rawTbl = $dbCfg['table'] ?? 'registrations';
+        $tbl = preg_replace('/[^a-zA-Z0-9_]/', '', $rawTbl) ?: 'registrations';
+        try {
+            try { $pdo->exec("ALTER TABLE `$tbl` ADD COLUMN `status` VARCHAR(50) DEFAULT 'pending'"); } catch (Throwable $_) {}
+            try { $pdo->exec("ALTER TABLE `$tbl` ADD COLUMN `notes` TEXT DEFAULT NULL"); } catch (Throwable $_) {}
+
+            $stmt = $pdo->prepare("SELECT `form_data` FROM `$tbl` WHERE `sub_id` = :sid LIMIT 1");
+            $stmt->execute([':sid' => $subId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $formData = @json_decode($row['form_data'] ?? '', true);
+                if (!is_array($formData)) $formData = [];
+                if ($newStatus !== null) $formData['status'] = $newStatus;
+                if ($newNotes !== null) $formData['notes'] = $newNotes;
+
+                $upStmt = $pdo->prepare("UPDATE `$tbl` SET `status` = :st, `notes` = :nt, `form_data` = :fd WHERE `sub_id` = :sid");
+                $upStmt->execute([
+                    ':st'  => $newStatus ?? 'pending',
+                    ':nt'  => $newNotes ?? '',
+                    ':fd'  => json_encode($formData, JSON_UNESCAPED_UNICODE),
+                    ':sid' => $subId
+                ]);
+            }
+        } catch (Throwable $e) {
+            error_log("[Portal DB Update Error] " . $e->getMessage());
+        }
+    }
+    return $updated;
+}
+
+// ── GET: portal_init ───────────────────────────────────────────────────────────
+if ($action === 'portal_init') {
+    $pdo = portal_get_db();
+    portal_ensure_initial_user($pdo);
+    $user = portal_get_current_user();
+    $subs = portal_get_all_submissions($pdo);
+
+    $stats = [
+        'total'    => count($subs),
+        'pending'  => 0,
+        'approved' => 0,
+        'paid'     => 0,
+        'declined' => 0
+    ];
+    foreach ($subs as $s) {
+        $st = strtolower($s['status'] ?? 'pending');
+        if (isset($stats[$st])) {
+            $stats[$st]++;
+        } else {
+            $stats['pending']++;
+        }
+    }
+
+    send_json(200, [
+        'success'  => true,
+        'loggedIn' => !empty($user),
+        'user'     => $user ? [
+            'id'    => $user['id'],
+            'name'  => $user['name'],
+            'email' => $user['email'],
+            'role'  => $user['role']
+        ] : null,
+        'stats'    => $stats,
+        'hasDb'    => !empty($pdo)
+    ]);
+}
+
+// ── POST: portal_login ────────────────────────────────────────────────────────
+if ($action === 'portal_login' && $method === 'POST') {
+    $body = @json_decode(get_request_body(), true);
+    $email = trim($body['email'] ?? '');
+    $pass  = $body['password'] ?? '';
+
+    if (empty($email) || empty($pass)) {
+        send_json(400, ['success' => false, 'error' => 'Please enter both email and password.']);
+    }
+
+    $pdo = portal_get_db();
+    portal_ensure_initial_user($pdo);
+    $users = portal_get_users_list($pdo);
+
+    $matched = null;
+    foreach ($users as $u) {
+        if (strtolower($u['email']) === strtolower($email)) {
+            $matched = $u;
+            break;
+        }
+    }
+
+    if (!$matched || empty($matched['password_hash']) || !password_verify($pass, $matched['password_hash'])) {
+        send_json(401, ['success' => false, 'error' => 'Invalid email address or password.']);
+    }
+
+    if (($matched['status'] ?? 'active') !== 'active') {
+        send_json(403, ['success' => false, 'error' => 'This account has been deactivated. Contact an administrator.']);
+    }
+
+    // Create session token
+    $token = 'ptok_' . bin2hex(random_bytes(24));
+    $sessions = read_json_file(DATA_DIR . '/portal_sessions.json', []);
+    if (!is_array($sessions)) $sessions = [];
+
+    $safeUser = [
+        'id'    => $matched['id'],
+        'name'  => $matched['name'],
+        'email' => $matched['email'],
+        'role'  => $matched['role'] ?? 'staff'
+    ];
+
+    $sessions[$token] = [
+        'user'       => $safeUser,
+        'created_at' => date('c'),
+        'expires_at' => date('c', time() + (86400 * 7)) // 7 days
+    ];
+    write_json_file(DATA_DIR . '/portal_sessions.json', $sessions);
+    $_SESSION['aether_portal_token'] = $token;
+
+    send_json(200, [
+        'success' => true,
+        'token'   => $token,
+        'user'    => $safeUser
+    ]);
+}
+
+// ── POST: portal_logout ───────────────────────────────────────────────────────
+if ($action === 'portal_logout') {
+    $token = $_SERVER['HTTP_X_PORTAL_TOKEN'] ?? $_SESSION['aether_portal_token'] ?? null;
+    if ($token) {
+        $sessions = read_json_file(DATA_DIR . '/portal_sessions.json', []);
+        if (is_array($sessions) && isset($sessions[$token])) {
+            unset($sessions[$token]);
+            write_json_file(DATA_DIR . '/portal_sessions.json', $sessions);
+        }
+    }
+    unset($_SESSION['aether_portal_token']);
+    send_json(200, ['success' => true]);
+}
+
+// ── GET: portal_get_data ──────────────────────────────────────────────────────
+if ($action === 'portal_get_data') {
+    $user = portal_get_current_user();
+    if (!$user) {
+        send_json(401, ['success' => false, 'error' => 'Unauthorized portal session. Please sign in.']);
+    }
+
+    $pdo = portal_get_db();
+    $subs = portal_get_all_submissions($pdo);
+
+    // Calculate stats
+    $stats = [
+        'total'    => count($subs),
+        'pending'  => 0,
+        'approved' => 0,
+        'paid'     => 0,
+        'declined' => 0
+    ];
+    foreach ($subs as $s) {
+        $st = strtolower($s['status'] ?? 'pending');
+        if (isset($stats[$st])) {
+            $stats[$st]++;
+        } else {
+            $stats['pending']++;
+        }
+    }
+
+    send_json(200, [
+        'success'     => true,
+        'user'        => $user,
+        'submissions' => $subs,
+        'stats'       => $stats,
+        'totalCount'  => count($subs)
+    ]);
+}
+
+// ── POST: portal_update_submission ────────────────────────────────────────────
+if ($action === 'portal_update_submission' && $method === 'POST') {
+    $user = portal_get_current_user();
+    if (!$user) {
+        send_json(401, ['success' => false, 'error' => 'Unauthorized portal session.']);
+    }
+    if (!in_array($user['role'], ['admin', 'manager', 'staff'])) {
+        send_json(403, ['success' => false, 'error' => 'Insufficient permissions to update records.']);
+    }
+
+    $body = @json_decode(get_request_body(), true);
+    $subId = $body['id'] ?? null;
+    $status = $body['status'] ?? null;
+    $notes = $body['notes'] ?? null;
+
+    if (!$subId) {
+        send_json(400, ['success' => false, 'error' => 'Submission ID is required.']);
+    }
+
+    $pdo = portal_get_db();
+    $ok = portal_update_submission_record($subId, $status, $notes, $pdo);
+
+    send_json(200, ['success' => true, 'updated' => $ok]);
+}
+
+// ── POST: portal_delete_submission ────────────────────────────────────────────
+if ($action === 'portal_delete_submission' && $method === 'POST') {
+    $user = portal_get_current_user();
+    if (!$user || $user['role'] !== 'admin') {
+        send_json(403, ['success' => false, 'error' => 'Only portal administrators can delete records.']);
+    }
+
+    $body = @json_decode(get_request_body(), true);
+    $subId = $body['id'] ?? null;
+    if (!$subId) send_json(400, ['success' => false, 'error' => 'Missing submission ID.']);
+
+    $subsFile = DATA_DIR . '/submissions.json';
+    $subs = read_json_file($subsFile, []);
+    if (is_array($subs)) {
+        $subs = array_values(array_filter($subs, function($s) use ($subId) {
+            return ($s['id'] ?? '') !== $subId;
+        }));
+        write_json_file($subsFile, $subs);
+    }
+
+    $pdo = portal_get_db();
+    if ($pdo) {
+        $dbConfigFile = DATA_DIR . '/db_config.json';
+        $dbCfg = read_json_file($dbConfigFile, []);
+        $rawTbl = $dbCfg['table'] ?? 'registrations';
+        $tbl = preg_replace('/[^a-zA-Z0-9_]/', '', $rawTbl) ?: 'registrations';
+        try {
+            $stmt = $pdo->prepare("DELETE FROM `$tbl` WHERE `sub_id` = :sid");
+            $stmt->execute([':sid' => $subId]);
+        } catch (Throwable $_) {}
+    }
+
+    send_json(200, ['success' => true]);
+}
+
+// ── GET: portal_get_users ─────────────────────────────────────────────────────
+if ($action === 'portal_get_users') {
+    $user = portal_get_current_user();
+    if (!$user || $user['role'] !== 'admin') {
+        send_json(403, ['success' => false, 'error' => 'Admin access required.']);
+    }
+
+    $pdo = portal_get_db();
+    $users = portal_get_users_list($pdo);
+    $safeUsers = array_map(function($u) {
+        return [
+            'id'         => $u['id'],
+            'name'       => $u['name'],
+            'email'      => $u['email'],
+            'role'       => $u['role'] ?? 'staff',
+            'status'     => $u['status'] ?? 'active',
+            'created_at' => $u['created_at'] ?? ''
+        ];
+    }, $users);
+
+    send_json(200, ['success' => true, 'users' => $safeUsers]);
+}
+
+// ── POST: portal_save_user ────────────────────────────────────────────────────
+if ($action === 'portal_save_user' && $method === 'POST') {
+    $user = portal_get_current_user();
+    if (!$user || $user['role'] !== 'admin') {
+        send_json(403, ['success' => false, 'error' => 'Admin access required.']);
+    }
+
+    $body = @json_decode(get_request_body(), true);
+    $userId = $body['id'] ?? null;
+    $name   = trim($body['name'] ?? '');
+    $email  = trim($body['email'] ?? '');
+    $pass   = $body['password'] ?? '';
+    $role   = $body['role'] ?? 'staff';
+    $status = $body['status'] ?? 'active';
+
+    if (empty($name) || empty($email)) {
+        send_json(400, ['success' => false, 'error' => 'Name and email are required.']);
+    }
+
+    $pdo = portal_get_db();
+    $users = portal_get_users_list($pdo);
+
+    if ($userId) {
+        // Edit existing
+        $found = false;
+        foreach ($users as &$u) {
+            if ($u['id'] === $userId) {
+                $u['name']   = $name;
+                $u['email']  = $email;
+                $u['role']   = $role;
+                $u['status'] = $status;
+                if (!empty($pass)) {
+                    $u['password_hash'] = password_hash($pass, PASSWORD_DEFAULT);
+                }
+                $found = true;
+                break;
+            }
+        }
+        unset($u);
+        if (!$found) send_json(404, ['success' => false, 'error' => 'User not found.']);
+
+        if ($pdo) {
+            try {
+                if (!empty($pass)) {
+                    $stmt = $pdo->prepare("UPDATE `aether_portal_users` SET `name` = :name, `email` = :email, `role` = :role, `status` = :status, `password_hash` = :pwd WHERE `user_id` = :uid");
+                    $stmt->execute([':name' => $name, ':email' => $email, ':role' => $role, ':status' => $status, ':pwd' => password_hash($pass, PASSWORD_DEFAULT), ':uid' => $userId]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE `aether_portal_users` SET `name` = :name, `email` = :email, `role` = :role, `status` = :status WHERE `user_id` = :uid");
+                    $stmt->execute([':name' => $name, ':email' => $email, ':role' => $role, ':status' => $status, ':uid' => $userId]);
+                }
+            } catch (Throwable $_) {}
+        }
+    } else {
+        // Add new
+        if (empty($pass)) {
+            send_json(400, ['success' => false, 'error' => 'Password is required for new users.']);
+        }
+        foreach ($users as $u) {
+            if (strtolower($u['email']) === strtolower($email)) {
+                send_json(400, ['success' => false, 'error' => 'A user with this email already exists.']);
+            }
+        }
+
+        $newEntry = [
+            'id'            => 'usr_' . time() . '_' . substr(md5(uniqid('', true)), 0, 6),
+            'name'          => $name,
+            'email'         => $email,
+            'password_hash' => password_hash($pass, PASSWORD_DEFAULT),
+            'role'          => $role,
+            'status'        => $status,
+            'created_at'    => date('Y-m-d H:i:s')
+        ];
+        $users[] = $newEntry;
+
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO `aether_portal_users` (`user_id`, `name`, `email`, `password_hash`, `role`, `status`, `created_at`) VALUES (:uid, :name, :email, :pwd, :role, :status, :created)");
+                $stmt->execute([
+                    ':uid'     => $newEntry['id'],
+                    ':name'    => $newEntry['name'],
+                    ':email'   => $newEntry['email'],
+                    ':pwd'     => $newEntry['password_hash'],
+                    ':role'    => $newEntry['role'],
+                    ':status'  => $newEntry['status'],
+                    ':created' => $newEntry['created_at']
+                ]);
+            } catch (Throwable $_) {}
+        }
+    }
+
+    portal_save_users_list($users, $pdo);
+    send_json(200, ['success' => true]);
+}
+
+// ── POST: portal_delete_user ──────────────────────────────────────────────────
+if ($action === 'portal_delete_user' && $method === 'POST') {
+    $user = portal_get_current_user();
+    if (!$user || $user['role'] !== 'admin') {
+        send_json(403, ['success' => false, 'error' => 'Admin access required.']);
+    }
+
+    $body = @json_decode(get_request_body(), true);
+    $targetId = $body['id'] ?? null;
+
+    if ($targetId === $user['id']) {
+        send_json(400, ['success' => false, 'error' => 'You cannot delete your own active administrator account.']);
+    }
+
+    $pdo = portal_get_db();
+    $users = portal_get_users_list($pdo);
+    $users = array_values(array_filter($users, function($u) use ($targetId) {
+        return $u['id'] !== $targetId;
+    }));
+    portal_save_users_list($users, $pdo);
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("DELETE FROM `aether_portal_users` WHERE `user_id` = :uid");
+            $stmt->execute([':uid' => $targetId]);
+        } catch (Throwable $_) {}
+    }
+
+    send_json(200, ['success' => true]);
+}
+
 
 // ── Fallback: unknown action ──────────────────────────────────────────────────
 send_json(400, ['error' => 'Unknown or missing action: ' . htmlspecialchars($action)]);

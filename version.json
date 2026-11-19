@@ -1,7 +1,8 @@
 {
-  "version": "2.9.46",
+  "version": "2.9.47",
   "release_date": "2026-11-19",
   "changelog": [
+    "v2.9.47: Client & Staff Portal Dashboard add-on — full-screen authenticated management portal with role-based access (Admin/Manager/Staff/Viewer), live registration tracking, status workflows, private staff notes, 1-click CSV export, MySQL auto-schema, and staff user management",
     "v2.9.46: Full-Page Studio mode & accidental close protection for Add-On Maker and Chatbot Flowchart editor, plus clean universal business starter flow replacing legacy MCLE samples",
     "v2.9.45: Universal Inspector Search Bar — cleanly docked directly below the floating Content/Style/Advanced tabs; instantly filters all widget properties, settings, and repeater items in realtime",
     "v2.9.44: Fixed step title & explanation display with multi-field fallback (title/stepTitle/targetLabel & content/explanation/description), bulletproof auto-close on last step timeout, and Admin Studio (?view=admin) cross-page navigation detection",
