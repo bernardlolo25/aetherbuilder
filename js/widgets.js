@@ -160,6 +160,8 @@ export const WIDGET_REGISTRY = {
       showBrandText: true,
       showWave: false,
       topbarInfo: '',
+      navPosition: 'top',
+      sidebarWidth: 260,
       // Background options
       bgMode: 'glass',
       bgColor: 'rgba(17, 24, 39, 0.75)',
@@ -295,6 +297,17 @@ export const WIDGET_REGISTRY = {
         { key: 'bgGradient', label: 'Custom CSS Gradient', type: 'text', default: 'linear-gradient(135deg, #06103c, #1e1b4b)' },
         { key: 'bannerBgColor', label: 'Banner Background (Institutional/Two-Tier)', type: 'color', default: '#06103c' },
         { key: 'showWave', label: '🌊 Bottom Wave / Curved Edge', type: 'toggle' },
+        {
+          key: 'navPosition',
+          label: '📐 Navigation Position / Layout',
+          type: 'select',
+          options: [
+            { label: '⬆️ Top Bar (Default Horizontal)', value: 'top' },
+            { label: '◀️ Left Sidebar (Vertical Menu)', value: 'left' },
+            { label: '▶️ Right Sidebar (Vertical Menu)', value: 'right' }
+          ]
+        },
+        { key: 'sidebarWidth', label: 'Sidebar Width (px) — Left/Right only', type: 'number' },
         { key: 'textColor', label: 'Nav Links Text Color', type: 'color', default: '#ffffff' },
         { key: 'brandTextColor', label: 'Brand Title Text Color', type: 'color', default: '#ffffff' },
         { key: 'brandSubtitleColor', label: 'Brand Subtitle Color', type: 'color', default: 'rgba(255, 255, 255, 0.75)' },
@@ -312,11 +325,15 @@ export const WIDGET_REGISTRY = {
       const headerStyle = props.headerStyle || 'modern';
       const isFloating = props.floating !== false;
       const isSticky = props.sticky !== false;
+      const navPosition = props.navPosition || 'top';
+      const isSidebar = navPosition === 'left' || navPosition === 'right';
+      const sidebarWidth = Number(props.sidebarWidth) || 260;
       const navClass = [
         `style-${headerStyle}`,
         isFloating ? 'is-floating' : '',
         isSticky ? 'is-sticky' : '',
-        props.showWave ? 'has-wave' : ''
+        props.showWave ? 'has-wave' : '',
+        isSidebar ? `is-sidebar sidebar-${navPosition}` : ''
       ].filter(Boolean).join(' ');
 
       const brandLayout = props.brandLayout || 'horizontal';
@@ -488,6 +505,24 @@ export const WIDGET_REGISTRY = {
           </svg>
         </div>
       ` : '';
+
+      // ── Sidebar (Left / Right) Navigation Layout ──────────────────────────────
+      if (isSidebar) {
+        const sidebarInlineStyle = `width: ${sidebarWidth}px;`;
+        return `
+          <header class="wb-navbar ${navClass} ${hasCustomBg ? 'has-custom-bg' : ''}" data-nav-position="${navPosition}" style="${sidebarInlineStyle}">
+            ${bgLayerHtml}
+            <div class="wb-nav-sidebar-inner">
+              ${brandHtml}
+              <ul class="wb-nav-links wb-nav-links--vertical">
+                ${linksHtml}
+              </ul>
+              ${ctaBtnHtml ? `<div class="wb-nav-sidebar-cta">${ctaBtnHtml}</div>` : ''}
+            </div>
+          </header>
+          <div class="wb-sidebar-push-spacer" data-sidebar-side="${navPosition}" style="width: ${sidebarWidth}px; flex-shrink: 0;"></div>
+        `;
+      }
 
       // Two-Tier Header Layout
       if (headerStyle === 'twotier') {

@@ -4972,3 +4972,205 @@ body:has(.wb-livechat-fab--bottom-right) .wb-tour-presenter-host.wb-tour-pos-bot
     bottom: calc(var(--footer-offset, 0px) + 84px) !important;
   }
 }
+
+
+/* ==========================================================================
+   NAVBAR SIDEBAR POSITION  (Left / Right Sidebar Navigation)
+   v2.9.56 — navPosition: 'left' | 'right'
+   ========================================================================== */
+
+/* ── Sidebar shell ───────────────────────────────────────────────────────── */
+.wb-navbar[data-nav-position="left"],
+.wb-navbar[data-nav-position="right"] {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 999;
+  /* remove horizontal-only styles */
+  border-radius: 0;
+  margin: 0;
+}
+.wb-navbar[data-nav-position="left"]  { left: 0;  border-right: 1px solid rgba(255,255,255,0.08); }
+.wb-navbar[data-nav-position="right"] { right: 0; border-left:  1px solid rgba(255,255,255,0.08); }
+
+/* ── Sidebar inner column ────────────────────────────────────────────────── */
+.wb-nav-sidebar-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 24px 16px 32px;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Brand stacks nicely at top of sidebar */
+.wb-navbar[data-nav-position="left"] .wb-nav-brand,
+.wb-navbar[data-nav-position="right"] .wb-nav-brand {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* ── Vertical nav links ──────────────────────────────────────────────────── */
+.wb-nav-links--vertical {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  width: 100%;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  flex: 1;
+}
+.wb-nav-links--vertical .wb-nav-item {
+  width: 100%;
+  position: relative;
+}
+.wb-nav-links--vertical .wb-nav-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+  box-sizing: border-box;
+  gap: 8px;
+  white-space: nowrap;
+}
+.wb-nav-links--vertical .wb-nav-link:hover,
+.wb-nav-links--vertical .wb-nav-link.active {
+  background: rgba(255,255,255,0.1);
+}
+.wb-nav-links--vertical .wb-nav-link.active {
+  font-weight: 700;
+}
+
+/* Submenu inside sidebar: shown as indented block */
+.wb-nav-links--vertical .wb-nav-submenu {
+  position: static !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 2px 0 2px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wb-nav-links--vertical .wb-nav-submenu .wb-nav-sublink {
+  padding: 7px 12px;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  display: block;
+  opacity: 0.8;
+  text-decoration: none;
+  transition: background 0.15s, opacity 0.15s;
+}
+.wb-nav-links--vertical .wb-nav-submenu .wb-nav-sublink:hover {
+  background: rgba(255,255,255,0.08);
+  opacity: 1;
+}
+
+/* ── CTA button at bottom of sidebar ────────────────────────────────────── */
+.wb-nav-sidebar-cta {
+  margin-top: auto;
+  padding-top: 16px;
+  width: 100%;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.wb-nav-sidebar-cta .wb-nav-cta {
+  display: block;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Push page content away from sidebar ────────────────────────────────── */
+/* The invisible spacer div we render alongside the sidebar does the pushing */
+.wb-sidebar-push-spacer {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* body:has() approach as extra safety for pages that use flow layout */
+body:has(.wb-navbar[data-nav-position="left"]) > #site-root,
+body:has(.wb-navbar[data-nav-position="left"]) > main,
+body:has(.wb-navbar[data-nav-position="left"]) > .page-wrapper {
+  margin-left: var(--wb-sidebar-width, 260px);
+}
+body:has(.wb-navbar[data-nav-position="right"]) > #site-root,
+body:has(.wb-navbar[data-nav-position="right"]) > main,
+body:has(.wb-navbar[data-nav-position="right"]) > .page-wrapper {
+  margin-right: var(--wb-sidebar-width, 260px);
+}
+
+/* ── Mobile: collapse sidebar to top bar on small screens ───────────────── */
+@media (max-width: 768px) {
+  .wb-navbar[data-nav-position="left"],
+  .wb-navbar[data-nav-position="right"] {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    left: auto !important;
+    right: auto !important;
+    border-right: none !important;
+    border-left: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    overflow: visible;
+  }
+  .wb-nav-sidebar-inner {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  .wb-nav-links--vertical {
+    display: none; /* hidden on mobile – toggle if needed in future */
+  }
+  .wb-nav-sidebar-cta {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .wb-sidebar-push-spacer {
+    display: none !important;
+  }
+  body:has(.wb-navbar[data-nav-position="left"]) > #site-root,
+  body:has(.wb-navbar[data-nav-position="left"]) > main,
+  body:has(.wb-navbar[data-nav-position="right"]) > #site-root,
+  body:has(.wb-navbar[data-nav-position="right"]) > main {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* ── Builder canvas: sidebar stays inside canvas viewport ───────────────── */
+.builder-canvas-viewport .wb-navbar[data-nav-position="left"],
+.builder-canvas-viewport .wb-navbar[data-nav-position="right"] {
+  position: relative !important;
+  width: 260px !important;
+  height: auto !important;
+  left: auto !important;
+  right: auto !important;
+  min-height: 400px;
+  display: inline-flex !important;
+  vertical-align: top;
+  z-index: 1 !important;
+}
+.builder-canvas-viewport .wb-sidebar-push-spacer {
+  display: none !important;
+}
+
