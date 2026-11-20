@@ -4858,5 +4858,16 @@
     "description": "Professional portfolio hero with separate link selectors for the CTA buttons.",
     "enabled": true,
     "file": "data/addon_portfolio_showcase.json"
+  },
+  {
+    "id": "addon_pos_register",
+    "name": "AetherPOS Register & Terminal",
+    "category": "addons",
+    "icon": "🛒",
+    "version": "1.0.0",
+    "author": "Aether Studio",
+    "description": "Touch-optimized Point of Sale (POS) terminal with dual-pane register, 4 themes, live change calculator, thermal receipt printer, and shift sales reports.",
+    "enabled": true,
+    "file": "data/addon_pos_register.json"
   }
 ]
