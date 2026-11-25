@@ -34,6 +34,9 @@ const coreRootFiles = [
   'public.html',
   'api.php',
   'server.js',
+  'package.json',
+  'vercel.json',
+  '.env.example',
   'version.json',
   'favicon.png',
   'favicon.ico',
@@ -46,8 +49,8 @@ coreRootFiles.forEach(f => {
   if (fs.existsSync(p)) fs.copyFileSync(p, path.join(stageDir, f));
 });
 
-// 2. Core js and css modules
-['js', 'css'].forEach(d => {
+// 2. Core js, css, and api serverless modules
+['js', 'css', 'api'].forEach(d => {
   const p = path.join(rootDir, d);
   if (fs.existsSync(p)) copyRecursive(p, path.join(stageDir, d));
 });

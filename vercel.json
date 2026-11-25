@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "data/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/api.php", "destination": "/api/index.js" },
+    { "source": "/api", "destination": "/api/index.js" },
+    { "source": "/api/:match*", "destination": "/api/:match*" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS,DELETE" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,X-Admin-Password,X-Admin-Token,X-Portal-Token,Authorization" }
+      ]
+    }
+  ]
+}
