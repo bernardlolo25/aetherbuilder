@@ -946,6 +946,154 @@ export class InspectorPanel {
         group.appendChild(repeaterBox);
         break;
       }
+
+      // ── Dynamic Voice Select ─────────────────────────────────────────────
+      // Reads window.speechSynthesis.getVoices() at render time so every
+      // voice the user's OS / browser provides appears in the dropdown,
+      // grouped and sorted exactly like the Chrome extension side-panel.
+      case 'voice-select': {
+        const vsWrap = document.createElement('div');
+        vsWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+
+        // ── Search box ────────────────────────────────────────────────────
+        const vsSearch = document.createElement('input');
+        vsSearch.type = 'text';
+        vsSearch.placeholder = '🔍 Search voices (e.g. Aria, Jenny, Google…)';
+        vsSearch.style.cssText = 'font-size:0.8rem;padding:5px 8px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:inherit;';
+        vsWrap.appendChild(vsSearch);
+
+        // ── Voice <select> ────────────────────────────────────────────────
+        const vsSelect = document.createElement('select');
+        vsSelect.style.cssText = 'font-size:0.82rem;padding:5px 8px;border-radius:5px;';
+
+        const isNaturalVoice = (v) => {
+          const n = (v.name || '').toLowerCase();
+          return n.includes('natural') || n.includes('neural') || n.includes('online') ||
+                 n.includes('google') || n.includes('aria') || n.includes('jenny') ||
+                 n.includes('guy') || n.includes('ana') || n.includes('andrew') ||
+                 n.includes('brian') || n.includes('emma') || n.includes('ryan') ||
+                 n.includes('sonia') || n.includes('libby') || n.includes('steffan') ||
+                 n.includes('eric') || n.includes('christopher') || n.includes('mia') ||
+                 n.includes('neerja') || n.includes('samantha') || n.includes('enhanced') ||
+                 n.includes('premium');
+        };
+
+        const populateVsVoices = (query = '') => {
+          vsSelect.innerHTML = '';
+          if (!('speechSynthesis' in window)) {
+            const noSupport = document.createElement('option');
+            noSupport.textContent = '⚠️ Speech synthesis not supported in this browser';
+            vsSelect.appendChild(noSupport);
+            return;
+          }
+
+          const autoOpt = document.createElement('option');
+          autoOpt.value = 'auto';
+          autoOpt.textContent = '🌟 Auto — Best Natural Voice';
+          if ((currentValue || 'auto') === 'auto') autoOpt.selected = true;
+          vsSelect.appendChild(autoOpt);
+
+          const voices = window.speechSynthesis.getVoices() || [];
+          const q = query.toLowerCase().trim();
+          const filtered = voices.filter(v => {
+            if (!q) return true;
+            return (v.name || '').toLowerCase().includes(q) || (v.lang || '').toLowerCase().includes(q);
+          });
+
+          const sorted = [...filtered].sort((a, b) => {
+            const aN = isNaturalVoice(a) ? 1 : 0;
+            const bN = isNaturalVoice(b) ? 1 : 0;
+            if (aN !== bN) return bN - aN;
+            return (a.name || '').localeCompare(b.name || '');
+          });
+
+          const natGroup = document.createElement('optgroup');
+          natGroup.label = '✨ Natural & Neural AI Voices (Recommended)';
+          const stdGroup = document.createElement('optgroup');
+          stdGroup.label = '🖥️ Standard & System Voices';
+
+          sorted.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.name;
+            const isNat = isNaturalVoice(v);
+            opt.textContent = (isNat ? '✨ ' : '') + v.name + (v.lang ? ' (' + v.lang + ')' : '');
+            if (v.name === currentValue) opt.selected = true;
+            if (isNat) natGroup.appendChild(opt);
+            else stdGroup.appendChild(opt);
+          });
+
+          if (natGroup.children.length > 0) vsSelect.appendChild(natGroup);
+          if (stdGroup.children.length > 0) vsSelect.appendChild(stdGroup);
+
+          if (filtered.length === 0 && q) {
+            const none = document.createElement('option');
+            none.disabled = true;
+            none.textContent = `No voices match "${query}"`;
+            vsSelect.appendChild(none);
+          }
+        };
+
+        // Populate immediately + re-populate when voices load asynchronously
+        populateVsVoices();
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.onvoiceschanged = () => {
+            populateVsVoices(vsSearch.value);
+          };
+          // Trigger load on Chrome (voices are async on first access)
+          window.speechSynthesis.getVoices();
+          setTimeout(() => populateVsVoices(vsSearch.value), 400);
+        }
+
+        vsSearch.addEventListener('input', (e) => populateVsVoices(e.target.value));
+        vsSelect.addEventListener('change', (e) => {
+          activeEl.props[field.key] = e.target.value;
+          state.saveDraft();
+          state.notify('propUpdate');
+        });
+        vsWrap.appendChild(vsSelect);
+
+        // ── Preview / Test button ─────────────────────────────────────────
+        const vsPreviewRow = document.createElement('div');
+        vsPreviewRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+
+        const vsPreviewBtn = document.createElement('button');
+        vsPreviewBtn.type = 'button';
+        vsPreviewBtn.textContent = '🔊 Preview Voice';
+        vsPreviewBtn.style.cssText = 'flex:1;padding:5px 8px;font-size:0.78rem;border-radius:5px;cursor:pointer;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:inherit;';
+        vsPreviewBtn.addEventListener('click', () => {
+          if (!('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const sampleText = 'Hello! I am your AI tour narrator. I will guide your users through every step clearly.';
+          const utt = new SpeechSynthesisUtterance(sampleText);
+          const voices = window.speechSynthesis.getVoices() || [];
+          const chosen = vsSelect.value;
+          if (chosen && chosen !== 'auto') {
+            const v = voices.find(v => v.name === chosen);
+            if (v) utt.voice = v;
+          }
+          vsPreviewBtn.textContent = '🔊 Speaking…';
+          vsPreviewBtn.disabled = true;
+          const done = () => { vsPreviewBtn.textContent = '🔊 Preview Voice'; vsPreviewBtn.disabled = false; };
+          utt.onend = done; utt.onerror = done;
+          window.speechSynthesis.speak(utt);
+        });
+
+        const vsVoiceCount = document.createElement('span');
+        vsVoiceCount.style.cssText = 'font-size:0.72rem;color:var(--text-dim);white-space:nowrap;';
+        const updateCount = () => {
+          const n = ('speechSynthesis' in window) ? (window.speechSynthesis.getVoices() || []).length : 0;
+          vsVoiceCount.textContent = n ? `${n} voices` : '';
+        };
+        updateCount();
+        setTimeout(updateCount, 500);
+
+        vsPreviewRow.appendChild(vsPreviewBtn);
+        vsPreviewRow.appendChild(vsVoiceCount);
+        vsWrap.appendChild(vsPreviewRow);
+
+        group.appendChild(vsWrap);
+        break;
+      }
     }
 
     return group;
@@ -1493,13 +1641,51 @@ export class InspectorPanel {
     countPill.className = 'repeater-search-count';
     countPill.textContent = `${items.length} ${rawNoun.toLowerCase()}`;
 
+    // Accordion Mode Toggle: Allow only 1 repeater item open at a time to minimize scrolling
+    let isAccordionMode = localStorage.getItem('wb_repeater_accordion_mode') !== 'false';
+
+    const metaActions = document.createElement('div');
+    metaActions.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+    const accordionBtn = document.createElement('button');
+    accordionBtn.type = 'button';
+    accordionBtn.className = 'repeater-accordion-btn' + (isAccordionMode ? ' is-active' : '');
+    accordionBtn.title = 'Accordion Mode: When active, opening an item closes all other items to minimize scrolling';
+    accordionBtn.innerHTML = isAccordionMode ? '🪗 1 Open' : '🪗 Multi';
+
+    accordionBtn.addEventListener('click', () => {
+      isAccordionMode = !isAccordionMode;
+      localStorage.setItem('wb_repeater_accordion_mode', isAccordionMode ? 'true' : 'false');
+      accordionBtn.classList.toggle('is-active', isAccordionMode);
+      accordionBtn.innerHTML = isAccordionMode ? '🪗 1 Open' : '🪗 Multi';
+
+      if (isAccordionMode) {
+        // If enabling accordion mode, collapse all open items except the first one
+        let keptFirst = false;
+        itemsWrapper.querySelectorAll('.repeater-item').forEach((card) => {
+          if (!card.classList.contains('is-collapsed')) {
+            if (!keptFirst) {
+              keptFirst = true;
+            } else {
+              card.classList.add('is-collapsed');
+              const c = card.querySelector('.repeater-chevron');
+              if (c) c.textContent = '▸';
+            }
+          }
+        });
+      }
+    });
+
     const toggleCollapseBtn = document.createElement('button');
     toggleCollapseBtn.type = 'button';
     toggleCollapseBtn.className = 'repeater-toggle-all-btn';
     toggleCollapseBtn.textContent = '↕ Collapse All';
 
+    metaActions.appendChild(accordionBtn);
+    metaActions.appendChild(toggleCollapseBtn);
+
     metaRow.appendChild(countPill);
-    metaRow.appendChild(toggleCollapseBtn);
+    metaRow.appendChild(metaActions);
 
     searchBar.appendChild(metaRow);
     container.appendChild(searchBar);
@@ -1534,14 +1720,21 @@ export class InspectorPanel {
         itemCard.className = 'repeater-item';
         itemCard.setAttribute('data-repeater-idx', idx);
 
+        // In accordion mode on initial render, collapse items after the first one so only 1 starts open
+        const isInitiallyCollapsed = isAccordionMode && idx > 0;
+        if (isInitiallyCollapsed) {
+          itemCard.classList.add('is-collapsed');
+        }
+
         const itemHeader = document.createElement('div');
         itemHeader.className = 'repeater-item-header';
         itemHeader.style.cursor = 'pointer';
 
         const initialTitle = `#${idx + 1} ${item.label || item.name || item.title || item.topic || 'Item'}`;
+        const chevChar = isInitiallyCollapsed ? '▸' : '▾';
         itemHeader.innerHTML = `
           <div class="repeater-item-header-title">
-            <span class="repeater-chevron">▾</span>
+            <span class="repeater-chevron">${chevChar}</span>
             <span class="repeater-title-text">${initialTitle}</span>
           </div>
           <div class="repeater-item-header-actions">
@@ -1551,9 +1744,22 @@ export class InspectorPanel {
 
         itemHeader.addEventListener('click', (e) => {
           if (e.target.closest('.repeater-remove-btn')) return;
-          const isCollapsed = itemCard.classList.toggle('is-collapsed');
+          const wasCollapsed = itemCard.classList.contains('is-collapsed');
+
+          if (wasCollapsed && isAccordionMode) {
+            // Auto-collapse other sibling items so only this one opens
+            itemsWrapper.querySelectorAll('.repeater-item').forEach((otherCard) => {
+              if (otherCard !== itemCard && !otherCard.classList.contains('is-collapsed')) {
+                otherCard.classList.add('is-collapsed');
+                const otherChev = otherCard.querySelector('.repeater-chevron');
+                if (otherChev) otherChev.textContent = '▸';
+              }
+            });
+          }
+
+          const isNowCollapsed = itemCard.classList.toggle('is-collapsed');
           const chev = itemCard.querySelector('.repeater-chevron');
-          if (chev) chev.textContent = isCollapsed ? '▸' : '▾';
+          if (chev) chev.textContent = isNowCollapsed ? '▸' : '▾';
         });
 
         itemHeader.querySelector('.repeater-remove-btn').addEventListener('click', (e) => {

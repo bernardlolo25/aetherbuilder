@@ -4973,91 +4973,211 @@ body:has(.wb-livechat-fab--bottom-right) .wb-tour-presenter-host.wb-tour-pos-bot
   }
 }
 
-
 /* ==========================================================================
    NAVBAR SIDEBAR POSITION  (Left / Right Sidebar Navigation)
-   v2.9.56 — navPosition: 'left' | 'right'
+   v2.9.56 — Grid-based Edge-to-Edge Sticky Sidebar Architecture
    ========================================================================== */
 
-/* ── Sidebar shell ───────────────────────────────────────────────────────── */
+:root {
+  --wb-sidebar-width: 260px;
+}
+
+/* ── 1. Grid Container: Canvas Frame & Standalone Site Root ───────────────── */
+/* NOTE: #public-site-container is a block wrapper; ONLY .canvas-frame & #site-root are grid containers! */
+.canvas-frame.has-sidebar-left,
+.canvas-frame:has(.wb-navbar[data-nav-position="left"]),
+#site-root:has(.wb-navbar[data-nav-position="left"]) {
+  display: grid !important;
+  grid-template-columns: var(--wb-sidebar-width, 260px) minmax(0, 1fr) !important;
+  align-items: start !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+.canvas-frame.has-sidebar-right,
+.canvas-frame:has(.wb-navbar[data-nav-position="right"]),
+#site-root:has(.wb-navbar[data-nav-position="right"]) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) var(--wb-sidebar-width, 260px) !important;
+  align-items: start !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* ── 2. Sidebar Section Wrapper (Column 1 for Left, Column 2 for Right) ──── */
+.canvas-frame.has-sidebar-left > .is-sidebar-navbar-section,
+.canvas-frame:has(.wb-navbar[data-nav-position="left"]) > .canvas-section-wrapper:has(.wb-navbar[data-nav-position="left"]),
+#site-root:has(.wb-navbar[data-nav-position="left"]) > :has(.wb-navbar[data-nav-position="left"]),
+#site-root:has(.wb-navbar[data-nav-position="left"]) > .wb-navbar[data-nav-position="left"] {
+  grid-column: 1 !important;
+  grid-row: 1 / 9999 !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: var(--wb-sidebar-width, 260px) !important;
+  max-width: var(--wb-sidebar-width, 260px) !important;
+  min-width: var(--wb-sidebar-width, 260px) !important;
+  z-index: 60 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.canvas-frame.has-sidebar-right > .is-sidebar-navbar-section,
+.canvas-frame:has(.wb-navbar[data-nav-position="right"]) > .canvas-section-wrapper:has(.wb-navbar[data-nav-position="right"]),
+#site-root:has(.wb-navbar[data-nav-position="right"]) > :has(.wb-navbar[data-nav-position="right"]),
+#site-root:has(.wb-navbar[data-nav-position="right"]) > .wb-navbar[data-nav-position="right"] {
+  grid-column: 2 !important;
+  grid-row: 1 / 9999 !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: var(--wb-sidebar-width, 260px) !important;
+  max-width: var(--wb-sidebar-width, 260px) !important;
+  min-width: var(--wb-sidebar-width, 260px) !important;
+  z-index: 60 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* ── 3. Content Sections (All other sections) ────────────────────────────── */
+.canvas-frame.has-sidebar-left > .canvas-section-wrapper:not(.is-sidebar-navbar-section),
+.canvas-frame.has-sidebar-left > .add-section-zone,
+.canvas-frame:has(.wb-navbar[data-nav-position="left"]) > .canvas-section-wrapper:not(:has(.wb-navbar[data-nav-position="left"])),
+.canvas-frame:has(.wb-navbar[data-nav-position="left"]) > .add-section-zone,
+#site-root:has(.wb-navbar[data-nav-position="left"]) > :not(:has(.wb-navbar[data-nav-position="left"])):not(.wb-navbar[data-nav-position="left"]) {
+  grid-column: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.canvas-frame.has-sidebar-right > .canvas-section-wrapper:not(.is-sidebar-navbar-section),
+.canvas-frame.has-sidebar-right > .add-section-zone,
+.canvas-frame:has(.wb-navbar[data-nav-position="right"]) > .canvas-section-wrapper:not(:has(.wb-navbar[data-nav-position="right"])),
+.canvas-frame:has(.wb-navbar[data-nav-position="right"]) > .add-section-zone,
+#site-root:has(.wb-navbar[data-nav-position="right"]) > :not(:has(.wb-navbar[data-nav-position="right"])):not(.wb-navbar[data-nav-position="right"]) {
+  grid-column: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ── 4. Sidebar Navbar element inside its section ─────────────────────────── */
+.wb-navbar.is-sidebar,
 .wb-navbar[data-nav-position="left"],
 .wb-navbar[data-nav-position="right"] {
-  position: fixed;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 999;
-  /* remove horizontal-only styles */
-  border-radius: 0;
-  margin: 0;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: var(--wb-sidebar-width, 260px) !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  z-index: 50 !important;
 }
-.wb-navbar[data-nav-position="left"]  { left: 0;  border-right: 1px solid rgba(255,255,255,0.08); }
-.wb-navbar[data-nav-position="right"] { right: 0; border-left:  1px solid rgba(255,255,255,0.08); }
 
-/* ── Sidebar inner column ────────────────────────────────────────────────── */
+.wb-navbar[data-nav-position="left"] {
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.wb-navbar[data-nav-position="right"] {
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Ensure canvas section content wrapper inside sidebar does not constrain or stretch */
+.canvas-section-wrapper.is-sidebar-navbar-section .canvas-section-content,
+.canvas-section-wrapper:has(.wb-navbar[data-nav-position="left"]) .canvas-section-content,
+.canvas-section-wrapper:has(.wb-navbar[data-nav-position="right"]) .canvas-section-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100% !important;
+}
+
+/* ── 5. Sidebar Inner Column & Elements ──────────────────────────────────── */
 .wb-nav-sidebar-inner {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 24px 16px 32px;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  padding: 24px 16px 28px !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* Brand stacks nicely at top of sidebar */
+/* Brand inside sidebar */
 .wb-navbar[data-nav-position="left"] .wb-nav-brand,
 .wb-navbar[data-nav-position="right"] .wb-nav-brand {
-  margin-bottom: 20px;
-  width: 100%;
+  margin-bottom: 12px !important;
+  width: 100% !important;
 }
 
-/* ── Vertical nav links ──────────────────────────────────────────────────── */
+/* Vertical Links */
 .wb-nav-links--vertical {
+  display: flex !important;
   flex-direction: column !important;
-  align-items: flex-start !important;
-  width: 100%;
-  gap: 2px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  flex: 1;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  flex: 1 !important;
 }
+
 .wb-nav-links--vertical .wb-nav-item {
-  width: 100%;
-  position: relative;
+  width: 100% !important;
+  position: relative !important;
 }
+
 .wb-nav-links--vertical .wb-nav-link {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: background 0.18s, color 0.18s;
-  box-sizing: border-box;
-  gap: 8px;
-  white-space: nowrap;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: background 0.18s, color 0.18s !important;
+  box-sizing: border-box !important;
+  gap: 8px !important;
 }
+
 .wb-nav-links--vertical .wb-nav-link:hover,
 .wb-nav-links--vertical .wb-nav-link.active {
-  background: rgba(255,255,255,0.1);
-}
-.wb-nav-links--vertical .wb-nav-link.active {
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Submenu inside sidebar: shown as indented block */
+.wb-nav-links--vertical .wb-nav-link.active {
+  font-weight: 700 !important;
+}
+
+/* Submenu inside sidebar: shown as clean indented block */
 .wb-nav-links--vertical .wb-nav-submenu {
   position: static !important;
   opacity: 1 !important;
@@ -5065,112 +5185,146 @@ body:has(.wb-livechat-fab--bottom-right) .wb-tour-presenter-host.wb-tour-pos-bot
   transform: none !important;
   box-shadow: none !important;
   background: transparent !important;
-  padding: 2px 0 2px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  padding: 2px 0 2px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
 }
+
 .wb-nav-links--vertical .wb-nav-submenu .wb-nav-sublink {
-  padding: 7px 12px;
-  font-size: 0.875rem;
-  border-radius: 6px;
-  display: block;
-  opacity: 0.8;
-  text-decoration: none;
-  transition: background 0.15s, opacity 0.15s;
+  padding: 6px 12px !important;
+  font-size: 0.85rem !important;
+  border-radius: 6px !important;
+  display: block !important;
+  opacity: 0.8 !important;
+  text-decoration: none !important;
+  transition: background 0.15s, opacity 0.15s !important;
 }
+
 .wb-nav-links--vertical .wb-nav-submenu .wb-nav-sublink:hover {
-  background: rgba(255,255,255,0.08);
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.08) !important;
+  opacity: 1 !important;
 }
 
-/* ── CTA button at bottom of sidebar ────────────────────────────────────── */
+/* CTA at bottom of sidebar */
 .wb-nav-sidebar-cta {
-  margin-top: auto;
-  padding-top: 16px;
-  width: 100%;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: auto !important;
+  padding-top: 16px !important;
+  width: 100% !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-sizing: border-box !important;
 }
+
 .wb-nav-sidebar-cta .wb-nav-cta {
-  display: block;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
+  display: block !important;
+  text-align: center !important;
+  width: 100% !important;
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
-/* ── Push page content away from sidebar ────────────────────────────────── */
-/* The invisible spacer div we render alongside the sidebar does the pushing */
-.wb-sidebar-push-spacer {
-  display: inline-block;
-  flex-shrink: 0;
+/* Section handle bar inside sidebar (builder mode) */
+.canvas-section-wrapper.is-sidebar-navbar-section .section-handle-bar {
+  max-width: 96% !important;
+  padding: 3px 6px !important;
+  gap: 4px !important;
+  font-size: 0.68rem !important;
 }
 
-/* body:has() approach as extra safety for pages that use flow layout */
-body:has(.wb-navbar[data-nav-position="left"]) > #site-root,
-body:has(.wb-navbar[data-nav-position="left"]) > main,
-body:has(.wb-navbar[data-nav-position="left"]) > .page-wrapper {
-  margin-left: var(--wb-sidebar-width, 260px);
-}
-body:has(.wb-navbar[data-nav-position="right"]) > #site-root,
-body:has(.wb-navbar[data-nav-position="right"]) > main,
-body:has(.wb-navbar[data-nav-position="right"]) > .page-wrapper {
-  margin-right: var(--wb-sidebar-width, 260px);
+/* ── 6. Fixed Footer Alignment with Sidebar ───────────────────────────────── */
+body.has-sidebar-left .wb-footer.is-fixed-bottom,
+body:has(.wb-navbar[data-nav-position="left"]) .wb-footer.is-fixed-bottom {
+  left: var(--wb-sidebar-width, 260px) !important;
+  width: calc(100% - var(--wb-sidebar-width, 260px)) !important;
 }
 
-/* ── Mobile: collapse sidebar to top bar on small screens ───────────────── */
+body.has-sidebar-right .wb-footer.is-fixed-bottom,
+body:has(.wb-navbar[data-nav-position="right"]) .wb-footer.is-fixed-bottom {
+  right: var(--wb-sidebar-width, 260px) !important;
+  left: 0 !important;
+  width: calc(100% - var(--wb-sidebar-width, 260px)) !important;
+}
+
+/* ── 7. Mobile & Tablet Responsiveness ───────────────────────────────────── */
 @media (max-width: 768px) {
+  .canvas-frame.has-sidebar-left,
+  .canvas-frame.has-sidebar-right,
+  .canvas-frame:has(.wb-navbar[data-nav-position="left"]),
+  .canvas-frame:has(.wb-navbar[data-nav-position="right"]),
+  #site-root:has(.wb-navbar[data-nav-position="left"]),
+  #site-root:has(.wb-navbar[data-nav-position="right"]) {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .canvas-frame.has-sidebar-left > .is-sidebar-navbar-section,
+  .canvas-frame.has-sidebar-right > .is-sidebar-navbar-section,
+  .canvas-frame:has(.wb-navbar[data-nav-position="left"]) > .canvas-section-wrapper:has(.wb-navbar[data-nav-position="left"]),
+  .canvas-frame:has(.wb-navbar[data-nav-position="right"]) > .canvas-section-wrapper:has(.wb-navbar[data-nav-position="right"]),
+  #site-root:has(.wb-navbar[data-nav-position="left"]) > :has(.wb-navbar[data-nav-position="left"]),
+  #site-root:has(.wb-navbar[data-nav-position="right"]) > :has(.wb-navbar[data-nav-position="right"]),
+  #site-root:has(.wb-navbar[data-nav-position="left"]) > .wb-navbar[data-nav-position="left"],
+  #site-root:has(.wb-navbar[data-nav-position="right"]) > .wb-navbar[data-nav-position="right"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    position: relative !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
   .wb-navbar[data-nav-position="left"],
   .wb-navbar[data-nav-position="right"] {
-    position: relative !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
-    left: auto !important;
-    right: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     border-right: none !important;
     border-left: none !important;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    overflow: visible;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
+
   .wb-nav-sidebar-inner {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 16px;
-    gap: 12px;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 16px !important;
+    min-height: auto !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
   }
+
   .wb-nav-links--vertical {
-    display: none; /* hidden on mobile – toggle if needed in future */
-  }
-  .wb-nav-sidebar-cta {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-  }
-  .wb-sidebar-push-spacer {
     display: none !important;
   }
-  body:has(.wb-navbar[data-nav-position="left"]) > #site-root,
-  body:has(.wb-navbar[data-nav-position="left"]) > main,
-  body:has(.wb-navbar[data-nav-position="right"]) > #site-root,
-  body:has(.wb-navbar[data-nav-position="right"]) > main {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+
+  .wb-nav-sidebar-cta {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+    width: auto !important;
+  }
+
+  .wb-nav-sidebar-cta .wb-nav-cta {
+    width: auto !important;
+    padding: 8px 14px !important;
+  }
+
+  .canvas-frame.has-sidebar-left > .canvas-section-wrapper:not(.is-sidebar-navbar-section),
+  .canvas-frame.has-sidebar-right > .canvas-section-wrapper:not(.is-sidebar-navbar-section),
+  .canvas-frame.has-sidebar-left > .add-section-zone,
+  .canvas-frame.has-sidebar-right > .add-section-zone {
+    width: 100% !important;
+    grid-column: auto !important;
   }
 }
-
-/* ── Builder canvas: sidebar stays inside canvas viewport ───────────────── */
-.builder-canvas-viewport .wb-navbar[data-nav-position="left"],
-.builder-canvas-viewport .wb-navbar[data-nav-position="right"] {
-  position: relative !important;
-  width: 260px !important;
-  height: auto !important;
-  left: auto !important;
-  right: auto !important;
-  min-height: 400px;
-  display: inline-flex !important;
-  vertical-align: top;
-  z-index: 1 !important;
-}
-.builder-canvas-viewport .wb-sidebar-push-spacer {
-  display: none !important;
-}
-

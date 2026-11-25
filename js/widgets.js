@@ -330,8 +330,8 @@ export const WIDGET_REGISTRY = {
       const sidebarWidth = Number(props.sidebarWidth) || 260;
       const navClass = [
         `style-${headerStyle}`,
-        isFloating ? 'is-floating' : '',
-        isSticky ? 'is-sticky' : '',
+        (!isSidebar && isFloating) ? 'is-floating' : '',
+        (!isSidebar && isSticky) ? 'is-sticky' : '',
         props.showWave ? 'has-wave' : '',
         isSidebar ? `is-sidebar sidebar-${navPosition}` : ''
       ].filter(Boolean).join(' ');
@@ -508,9 +508,8 @@ export const WIDGET_REGISTRY = {
 
       // ── Sidebar (Left / Right) Navigation Layout ──────────────────────────────
       if (isSidebar) {
-        const sidebarInlineStyle = `width: ${sidebarWidth}px;`;
         return `
-          <header class="wb-navbar ${navClass} ${hasCustomBg ? 'has-custom-bg' : ''}" data-nav-position="${navPosition}" style="${sidebarInlineStyle}">
+          <header class="wb-navbar ${navClass} ${hasCustomBg ? 'has-custom-bg' : ''}" data-nav-position="${navPosition}">
             ${bgLayerHtml}
             <div class="wb-nav-sidebar-inner">
               ${brandHtml}
@@ -520,7 +519,6 @@ export const WIDGET_REGISTRY = {
               ${ctaBtnHtml ? `<div class="wb-nav-sidebar-cta">${ctaBtnHtml}</div>` : ''}
             </div>
           </header>
-          <div class="wb-sidebar-push-spacer" data-sidebar-side="${navPosition}" style="width: ${sidebarWidth}px; flex-shrink: 0;"></div>
         `;
       }
 

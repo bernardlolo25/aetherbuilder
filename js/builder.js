@@ -189,6 +189,27 @@ export class BuilderCanvas {
     const frame = document.createElement('div');
     frame.className = `canvas-frame ${isTransparentHeader ? 'has-transparent-header' : ''}`;
 
+    // Detect if page has a sidebar navbar (left or right layout)
+    const sidebarNavSec = sections.find(s => s.widgetType === 'navbar' && (s.props?.navPosition === 'left' || s.props?.navPosition === 'right'));
+    const sidebarPos = sidebarNavSec ? (sidebarNavSec.props?.navPosition || 'top') : null;
+    const sidebarWidth = sidebarNavSec ? (Number(sidebarNavSec.props?.sidebarWidth) || 260) : 260;
+
+    if (sidebarPos && (sidebarPos === 'left' || sidebarPos === 'right')) {
+      frame.classList.add('has-sidebar-navbar', `has-sidebar-${sidebarPos}`);
+      frame.style.setProperty('--wb-sidebar-width', `${sidebarWidth}px`);
+      document.body.classList.add('has-sidebar-navbar', `has-sidebar-${sidebarPos}`);
+      document.body.style.setProperty('--wb-sidebar-width', `${sidebarWidth}px`);
+      if (this.viewport) {
+        this.viewport.classList.add('has-sidebar-navbar', `has-sidebar-${sidebarPos}`);
+        this.viewport.style.setProperty('--wb-sidebar-width', `${sidebarWidth}px`);
+      }
+    } else {
+      document.body.classList.remove('has-sidebar-navbar', 'has-sidebar-left', 'has-sidebar-right');
+      if (this.viewport) {
+        this.viewport.classList.remove('has-sidebar-navbar', 'has-sidebar-left', 'has-sidebar-right');
+      }
+    }
+
     // Apply Global / Page Background Image (Live on Canvas and Editor Viewport)
     this.applyCanvasBackground(frame, activeBg);
     if (!this.isPublicMode && this.viewport) {
@@ -199,8 +220,9 @@ export class BuilderCanvas {
       const widgetDef = WIDGET_REGISTRY[sec.widgetType];
       if (!widgetDef) return;
 
+      const isThisSidebarNav = (sec.widgetType === 'navbar' && (sec.props?.navPosition === 'left' || sec.props?.navPosition === 'right'));
       const secWrapper = document.createElement('div');
-      secWrapper.className = `canvas-section-wrapper widget-type-${sec.widgetType} ${!this.isPublicMode && state.activeElementId === sec.id ? 'builder-element-active' : ''}`;
+      secWrapper.className = `canvas-section-wrapper widget-type-${sec.widgetType} ${isThisSidebarNav ? `is-sidebar-navbar-section sidebar-pos-${sec.props.navPosition}` : ''} ${!this.isPublicMode && state.activeElementId === sec.id ? 'builder-element-active' : ''}`;
       secWrapper.setAttribute('data-section-id', sec.id);
 
       // Apply Spacing & Custom Styles
@@ -211,10 +233,10 @@ export class BuilderCanvas {
         return /^[0-9.-]+$/.test(str) ? `${str}px` : str;
       };
 
-      const isStickySec = (props.stickyHeader === true || props.stickyHeader === 'true' ||
+      const isStickySec = !isThisSidebarNav && (props.stickyHeader === true || props.stickyHeader === 'true' ||
                            props.isSticky === true || props.isSticky === 'true' ||
                            props.position === 'sticky-top' ||
-                           (sec.widgetType === 'navbar' && props.isSticky));
+                           (sec.widgetType === 'navbar' && props.isSticky && !isThisSidebarNav));
       if (isStickySec) {
         secWrapper.classList.add('is-sticky-section');
         secWrapper.style.setProperty('position', 'sticky', 'important');

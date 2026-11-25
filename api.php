@@ -605,6 +605,83 @@ function check_rate_limit($action_key, $max_per_window = 10, $window_seconds = 6
 }
 
 $action = isset($_GET['action']) ? trim($_GET['action']) : '';
+
+// ── GET: get_config ──────────────────────────────────────────────────────────
+if ($action === 'get_config') {
+    $cCloud  = getenv('CLOUDINARY_CLOUD_NAME') ?: '';
+    $cSecret = getenv('CLOUDINARY_API_SECRET') ?: '';
+    $cKey    = getenv('CLOUDINARY_API_KEY') ?: '';
+    $cPreset = getenv('CLOUDINARY_UPLOAD_PRESET') ?: '';
+    $folder  = getenv('CLOUDINARY_FOLDER') ?: 'aether-assets';
+    send_json(200, [
+        'success'    => true,
+        'version'    => AETHER_VERSION,
+        'db'         => [
+            'provider'  => 'local-php',
+            'connected' => true,
+            'label'     => 'PHP File System (data/*.json)'
+        ],
+        'cloudinary' => [
+            'enabled'      => (!empty($cCloud) && (!empty($cSecret) || !empty($cPreset))),
+            'cloudName'    => $cCloud,
+            'uploadPreset' => $cPreset,
+            'isSigned'     => (!empty($cKey) && !empty($cSecret)),
+            'apiKey'       => $cKey,
+            'folder'       => $folder
+        ]
+    ]);
+}
+
+// ── GET/POST: cloudinary_sign ───────────────────────────────────────────────
+if ($action === 'cloudinary_sign') {
+    $cCloud  = getenv('CLOUDINARY_CLOUD_NAME') ?: '';
+    $cSecret = getenv('CLOUDINARY_API_SECRET') ?: '';
+    $cKey    = getenv('CLOUDINARY_API_KEY') ?: '';
+    $folder  = getenv('CLOUDINARY_FOLDER') ?: 'aether-assets';
+    if (empty($cCloud) || empty($cSecret)) {
+        send_json(400, ['success' => false, 'error' => 'Cloudinary not configured on this server.']);
+    }
+    $timestamp = time();
+    $strToSign = "folder={$folder}&timestamp={$timestamp}" . $cSecret;
+    $signature = sha1($strToSign);
+    send_json(200, [
+        'success'   => true,
+        'signature' => $signature,
+        'timestamp' => $timestamp,
+        'apiKey'    => $cKey,
+        'cloudName' => $cCloud,
+        'folder'    => $folder
+    ]);
+}
+
+// ── POST: cloudinary_register ───────────────────────────────────────────────
+if ($action === 'cloudinary_register' && $method === 'POST') {
+    $body = @json_decode(get_request_body(), true) ?: [];
+    $metaFile = DATA_DIR . '/assets_meta.json';
+    $assets = read_json_file($metaFile, []);
+    if (!is_array($assets)) $assets = [];
+    $now = time();
+    $cleanAsset = [
+        'name'          => $body['name'] ?? ($body['public_id'] ? basename($body['public_id']) : 'asset_' . $now),
+        'url'           => $body['secure_url'] ?? ($body['url'] ?? ''),
+        'size'          => $body['bytes'] ?? ($body['size'] ?? 0),
+        'ext'           => $body['format'] ?? 'webp',
+        'resource_type' => $body['resource_type'] ?? 'image',
+        'public_id'     => $body['public_id'] ?? '',
+        'provider'      => 'cloudinary',
+        'modified'      => $now
+    ];
+    $filtered = [];
+    foreach ($assets as $a) {
+        if (($a['url'] ?? '') !== $cleanAsset['url']) {
+            $filtered[] = $a;
+        }
+    }
+    array_unshift($filtered, $cleanAsset);
+    write_json_file($metaFile, $filtered);
+    send_json(200, ['success' => true, 'asset' => $cleanAsset]);
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 // POST: login (legacy & standard)
@@ -1391,7 +1468,21 @@ if ($action === 'list_assets' && $method === 'GET') {
         // Sort newest first
         usort($files, function($a, $b) { return ($b['modified'] ?? 0) - ($a['modified'] ?? 0); });
     }
-    send_json(200, ['success' => true, 'assets' => $files]);
+    $metaAssets = read_json_file(DATA_DIR . '/assets_meta.json', []);
+    if (!is_array($metaAssets)) $metaAssets = [];
+    $merged = $metaAssets;
+    foreach ($files as $loc) {
+        $found = false;
+        foreach ($merged as $m) {
+            if (($m['name'] ?? '') === ($loc['name'] ?? '') || ($m['url'] ?? '') === ($loc['url'] ?? '')) {
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) $merged[] = $loc;
+    }
+    usort($merged, function($a, $b) { return ($b['modified'] ?? 0) - ($a['modified'] ?? 0); });
+    send_json(200, ['success' => true, 'assets' => $merged]);
 }
 
 // ── POST: upload ──────────────────────────────────────────────────────────────

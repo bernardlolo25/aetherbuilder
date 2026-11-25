@@ -1628,7 +1628,10 @@ class AetherApp {
               <div style="font-size:0.78rem;color:var(--text-dim);">Upload &amp; manage your site assets</div>
             </div>
           </div>
-          <button class="media-modal-close" id="media-modal-close">✕</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" id="btn-cloudinary-settings" class="topbar-btn" style="font-size:0.75rem;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#c7d2fe;">☁️ Cloudinary: Setup</button>
+            <button class="media-modal-close" id="media-modal-close">✕</button>
+          </div>
         </div>
 
         <div class="media-upload-zone" id="media-upload-zone">
@@ -1699,6 +1702,36 @@ class AetherApp {
       _selectCallback = callback;
       setSelection(null);
       modalEl.classList.remove('hidden');
+      const updateCldBadge = async () => {
+        const cldBtn = document.getElementById('btn-cloudinary-settings');
+        if (!cldBtn) return;
+        const cfg = await this.getCloudinaryConfig();
+        if (cfg && cfg.enabled) {
+          cldBtn.innerHTML = '☁️ <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;"></span> Cloudinary: Connected';
+          cldBtn.style.borderColor = 'rgba(16,185,129,0.4)';
+          cldBtn.style.color = '#6ee7b7';
+          cldBtn.title = 'Media uploads are sent to Cloudinary (' + cfg.cloudName + ')';
+        } else {
+          cldBtn.innerHTML = '☁️ Cloudinary: Setup';
+          cldBtn.style.borderColor = 'rgba(99,102,241,0.3)';
+          cldBtn.style.color = '#c7d2fe';
+          cldBtn.title = 'Click to connect Cloudinary for cloud image & video storage';
+        }
+      };
+      updateCldBadge();
+
+      const cldBtn = document.getElementById('btn-cloudinary-settings');
+      if (cldBtn && !cldBtn._bound) {
+        cldBtn._bound = true;
+        cldBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.showCloudinarySettingsDialog(() => {
+            updateCldBadge();
+            refreshMediaGrid();
+          });
+        });
+      }
+
       this.loadAssets(_allAssets, '');
       this.fetchAssets().then(assets => {
         _allAssets = assets;
@@ -1849,7 +1882,7 @@ class AetherApp {
         <div class="media-asset-thumb">${thumb}</div>
         <div class="media-asset-info">
           <div class="media-asset-name" title="${asset.name}">${asset.name}</div>
-          <div class="media-asset-meta">${sizekb} KB · ${asset.ext.toUpperCase()}</div>
+          <div class="media-asset-meta">${sizekb} KB · ${asset.ext.toUpperCase()}${asset.provider === 'cloudinary' ? ' <span title="Cloudinary CDN" style="color:#60a5fa;font-size:0.75rem;">☁️</span>' : ''}</div>
         </div>
       `;
 
@@ -2049,6 +2082,118 @@ class AetherApp {
    * @param {Array} existingAssets - Currently loaded asset list (for duplicate check)
    * @param {Function} onComplete - Called after all uploads finish
    */
+  async getCloudinaryConfig() {
+    if (this._cloudinaryConfig) return this._cloudinaryConfig;
+    let serverCfg = { enabled: false };
+    try {
+      const res = await fetch('api.php?action=get_config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.cloudinary) serverCfg = data.cloudinary;
+      }
+    } catch {}
+
+    let localCfg = {};
+    try {
+      localCfg = JSON.parse(localStorage.getItem('aether_cloudinary_config') || '{}');
+    } catch {}
+
+    const enabled = Boolean(serverCfg.enabled || (localCfg.cloudName && (localCfg.uploadPreset || serverCfg.isSigned)));
+    this._cloudinaryConfig = {
+      enabled,
+      isServer: Boolean(serverCfg.enabled),
+      cloudName: serverCfg.cloudName || localCfg.cloudName || '',
+      uploadPreset: serverCfg.uploadPreset || localCfg.uploadPreset || '',
+      isSigned: Boolean(serverCfg.isSigned),
+      apiKey: serverCfg.apiKey || localCfg.apiKey || '',
+      folder: serverCfg.folder || localCfg.folder || 'aether-assets'
+    };
+    return this._cloudinaryConfig;
+  }
+
+  showCloudinarySettingsDialog(onSaved) {
+    document.getElementById('cloudinary-settings-modal')?.remove();
+    const cur = this._cloudinaryConfig || {};
+    let localCfg = {};
+    try { localCfg = JSON.parse(localStorage.getItem('aether_cloudinary_config') || '{}'); } catch {}
+
+    const modal = document.createElement('div');
+    modal.id = 'cloudinary-settings-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:100005;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;';
+
+    modal.innerHTML = `
+      <div style="background:linear-gradient(145deg, #1e1b4b, #0f172a);border:1px solid rgba(99,102,241,0.35);border-radius:16px;padding:24px;max-width:480px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 35px rgba(99,102,241,0.2);font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.5rem;">☁️</span>
+            <div>
+              <div style="font-weight:700;font-size:1.05rem;color:#fff;">Cloudinary Storage</div>
+              <div style="font-size:0.75rem;color:var(--text-dim);">For images, mascot videos &amp; site assets</div>
+            </div>
+          </div>
+          <button id="close-cld-dialog" style="background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;">✕</button>
+        </div>
+
+        <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.78rem;line-height:1.5;color:#c7d2fe;">
+          <strong>Why use Cloudinary?</strong><br/>
+          • Bypasses Vercel 4.5MB serverless limits for transparent WebM mascot videos.<br/>
+          • Direct global CDN delivery for lightning-fast media loading.<br/>
+          • Free tier includes 25GB storage and 25GB monthly bandwidth.
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.82rem;">
+          <div>
+            <label style="display:block;margin-bottom:4px;color:#94a3b8;font-size:0.75rem;font-weight:600;">Cloud Name</label>
+            <input type="text" id="cld-input-cloudname" value="${cur.cloudName || localCfg.cloudName || ''}" placeholder="e.g. demo-app" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;color:#fff;font-size:0.82rem;" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:4px;color:#94a3b8;font-size:0.75rem;font-weight:600;">Upload Preset (Unsigned)</label>
+            <input type="text" id="cld-input-preset" value="${cur.uploadPreset || localCfg.uploadPreset || ''}" placeholder="e.g. aether_uploads" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;color:#fff;font-size:0.82rem;" />
+            <div style="font-size:0.7rem;color:#64748b;margin-top:3px;">Create this in Cloudinary Dashboard &gt; Settings &gt; Upload &gt; Add upload preset (Mode: Unsigned).</div>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:4px;color:#94a3b8;font-size:0.75rem;font-weight:600;">Folder (Optional)</label>
+            <input type="text" id="cld-input-folder" value="${cur.folder || localCfg.folder || 'aether-assets'}" placeholder="aether-assets" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;color:#fff;font-size:0.82rem;" />
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+          <button type="button" id="cld-btn-clear" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:8px 14px;border-radius:8px;font-size:0.78rem;cursor:pointer;">Disconnect</button>
+          <button type="button" id="cld-btn-save" style="background:#6366f1;border:none;color:#fff;font-weight:600;padding:8px 18px;border-radius:8px;font-size:0.78rem;cursor:pointer;">Save Settings ✓</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    modal.querySelector('#close-cld-dialog').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    modal.querySelector('#cld-btn-clear').addEventListener('click', () => {
+      localStorage.removeItem('aether_cloudinary_config');
+      this._cloudinaryConfig = null;
+      modal.remove();
+      this.canvas?.showToast('Cloudinary disconnected. Local storage active.', 'info');
+      if (onSaved) onSaved();
+    });
+
+    modal.querySelector('#cld-btn-save').addEventListener('click', () => {
+      const cloudName = modal.querySelector('#cld-input-cloudname').value.trim();
+      const uploadPreset = modal.querySelector('#cld-input-preset').value.trim();
+      const folder = modal.querySelector('#cld-input-folder').value.trim() || 'aether-assets';
+
+      if (!cloudName) {
+        alert('Please enter your Cloud Name.');
+        return;
+      }
+
+      const cfg = { cloudName, uploadPreset, folder };
+      localStorage.setItem('aether_cloudinary_config', JSON.stringify(cfg));
+      this._cloudinaryConfig = null;
+      modal.remove();
+      this.canvas?.showToast('Cloudinary settings saved!', 'success');
+      if (onSaved) onSaved();
+    });
+  }
+
   async uploadFiles(files, existingAssets = [], onComplete) {
     const progressBar = document.getElementById('media-upload-progress');
     const progressFill = document.getElementById('media-progress-fill');
@@ -2096,26 +2241,85 @@ class AetherApp {
         overwrite = (action === 'replace');
       }
 
-      statusText.textContent = `Uploading ${file.name}...`;
-      const formData = new FormData();
-      formData.append('file', file);
-      if (overwrite) {
-        formData.append('overwrite', '1');
-      }
-      try {
-        formData.append('admin_token', getAdminToken());
-        const res = await fetch('api.php?action=upload', { method: 'POST', body: formData });
-        const result = await res.json();
-        if (result.success) {
-          uploaded++;
-          // Add the new name so subsequent files in the same batch also detect it
-          existingNames.add((result.name || sanitizedName).toLowerCase());
-        } else {
-          console.error('Upload rejected:', result.error);
+      const cloudCfg = await this.getCloudinaryConfig();
+      let uploadedToCloud = false;
+
+      // Cloudinary direct upload path
+      if (cloudCfg && cloudCfg.enabled && cloudCfg.cloudName) {
+        statusText.textContent = `Uploading ${file.name} to Cloudinary...`;
+        try {
+          const cFormData = new FormData();
+          cFormData.append('file', file);
+          const folder = cloudCfg.folder || 'aether-assets';
+          cFormData.append('folder', folder);
+
+          if (cloudCfg.isSigned) {
+            try {
+              const signRes = await fetch('api.php?action=cloudinary_sign');
+              if (signRes.ok) {
+                const signData = await signRes.json();
+                if (signData.signature) {
+                  cFormData.append('api_key', signData.apiKey);
+                  cFormData.append('timestamp', signData.timestamp);
+                  cFormData.append('signature', signData.signature);
+                }
+              }
+            } catch (sErr) {}
+          }
+          if (cloudCfg.uploadPreset && !cFormData.has('signature')) {
+            cFormData.append('upload_preset', cloudCfg.uploadPreset);
+          }
+
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudCfg.cloudName}/auto/upload`, {
+            method: 'POST',
+            body: cFormData
+          });
+          const cResult = await cRes.json();
+          if (cResult.secure_url) {
+            await fetch('api.php?action=cloudinary_register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: file.name,
+                secure_url: cResult.secure_url,
+                bytes: cResult.bytes,
+                format: cResult.format,
+                resource_type: cResult.resource_type,
+                public_id: cResult.public_id
+              })
+            });
+            uploaded++;
+            uploadedToCloud = true;
+            existingNames.add((file.name || sanitizedName).toLowerCase());
+            progressFill.style.width = `${((uploaded + skipped) / total) * 100}%`;
+          }
+        } catch (cErr) {
+          console.warn('Cloudinary upload error, falling back to local server:', cErr);
         }
-        progressFill.style.width = `${((uploaded + skipped) / total) * 100}%`;
-      } catch (err) {
-        console.error('Upload failed:', err);
+      }
+
+      // Local server upload fallback
+      if (!uploadedToCloud) {
+        statusText.textContent = `Uploading ${file.name}...`;
+        const formData = new FormData();
+        formData.append('file', file);
+        if (overwrite) {
+          formData.append('overwrite', '1');
+        }
+        try {
+          formData.append('admin_token', getAdminToken());
+          const res = await fetch('api.php?action=upload', { method: 'POST', body: formData });
+          const result = await res.json();
+          if (result.success) {
+            uploaded++;
+            existingNames.add((result.name || sanitizedName).toLowerCase());
+          } else {
+            console.error('Upload rejected:', result.error);
+          }
+          progressFill.style.width = `${((uploaded + skipped) / total) * 100}%`;
+        } catch (err) {
+          console.error('Upload failed:', err);
+        }
       }
     }
 

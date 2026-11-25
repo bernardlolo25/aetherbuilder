@@ -961,6 +961,32 @@ body.sidebar-resizing-disabled .sidebar-resize-toggle:hover {
   border-color: rgba(99, 102, 241, 0.4);
 }
 
+.repeater-accordion-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #94a3b8);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.repeater-accordion-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.repeater-accordion-btn.is-active {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #c7d2fe;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+}
+
 .repeater-items-wrapper {
   display: flex;
   flex-direction: column;

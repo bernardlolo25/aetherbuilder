@@ -1,3 +1,6 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -138,7 +141,23 @@ function handleListAssets(res) {
       })
       .sort((a, b) => b.modified - a.modified); // newest first
 
-    json(res, 200, { success: true, assets: files });
+    // Merge registered Cloudinary / remote assets from data/assets_meta.json
+    const metaFile = path.join(ROOT, 'data', 'assets_meta.json');
+    let metaAssets = [];
+    if (fs.existsSync(metaFile)) {
+      try {
+        metaAssets = JSON.parse(fs.readFileSync(metaFile, 'utf8') || '[]');
+        if (!Array.isArray(metaAssets)) metaAssets = [];
+      } catch {}
+    }
+    const merged = [...metaAssets];
+    for (const loc of files) {
+      if (!merged.some(m => m.name === loc.name || m.url === loc.url)) {
+        merged.push(loc);
+      }
+    }
+    merged.sort((a, b) => (b.modified || 0) - (a.modified || 0));
+    json(res, 200, { success: true, assets: merged });
   } catch (err) {
     json(res, 500, { success: false, error: err.message });
   }
@@ -234,6 +253,73 @@ http.createServer(async (req, res) => {
 
   if (pathname === '/api.php') {
     const action = url.searchParams.get('action');
+
+    // GET: get_config
+    if (action === 'get_config') {
+      const cCloud = process.env.CLOUDINARY_CLOUD_NAME || '';
+      const cSecret = process.env.CLOUDINARY_API_SECRET || '';
+      const cKey = process.env.CLOUDINARY_API_KEY || '';
+      const cPreset = process.env.CLOUDINARY_UPLOAD_PRESET || '';
+      return json(res, 200, {
+        success: true,
+        version: '2.9.57',
+        db: { provider: 'local-fs', connected: true, label: 'Local Dev Server (server.js)' },
+        cloudinary: {
+          enabled: Boolean(cCloud && (cSecret || cPreset)),
+          cloudName: cCloud,
+          uploadPreset: cPreset,
+          isSigned: Boolean(cKey && cSecret),
+          apiKey: cKey,
+          folder: process.env.CLOUDINARY_FOLDER || 'aether-assets'
+        }
+      });
+    }
+
+    // GET/POST: cloudinary_sign
+    if (action === 'cloudinary_sign') {
+      const cCloud = process.env.CLOUDINARY_CLOUD_NAME;
+      const cSecret = process.env.CLOUDINARY_API_SECRET;
+      const cKey = process.env.CLOUDINARY_API_KEY;
+      const folder = process.env.CLOUDINARY_FOLDER || 'aether-assets';
+      if (!cCloud || !cSecret) {
+        return json(res, 400, { success: false, error: 'Cloudinary not configured in local environment.' });
+      }
+      const timestamp = Math.floor(Date.now() / 1000);
+      const strToSign = 'folder=' + folder + '&timestamp=' + timestamp + cSecret;
+      const crypto = require('crypto');
+      const signature = crypto.createHash('sha1').update(strToSign).digest('hex');
+      return json(res, 200, { success: true, signature, timestamp, apiKey: cKey, cloudName: cCloud, folder });
+    }
+
+    // POST: cloudinary_register
+    if (req.method === 'POST' && action === 'cloudinary_register') {
+      try {
+        const bodyStr = (await readBody(req)).toString('utf8');
+        const asset = JSON.parse(bodyStr || '{}');
+        const metaFile = path.join(ROOT, 'data', 'assets_meta.json');
+        let assets = [];
+        if (fs.existsSync(metaFile)) {
+          try { assets = JSON.parse(fs.readFileSync(metaFile, 'utf8') || '[]'); } catch {}
+        }
+        if (!Array.isArray(assets)) assets = [];
+        const cleanAsset = {
+          name: asset.name || (asset.public_id ? asset.public_id.split('/').pop() : 'asset_' + Date.now()),
+          url: asset.secure_url || asset.url,
+          size: asset.bytes || asset.size || 0,
+          ext: asset.format || (asset.name ? asset.name.split('.').pop() : 'webp'),
+          resource_type: asset.resource_type || 'image',
+          public_id: asset.public_id || '',
+          provider: 'cloudinary',
+          modified: Math.floor(Date.now() / 1000)
+        };
+        assets = assets.filter(a => a.url !== cleanAsset.url);
+        assets.unshift(cleanAsset);
+        fs.writeFileSync(metaFile, JSON.stringify(assets, null, 2), 'utf8');
+        return json(res, 200, { success: true, asset: cleanAsset });
+      } catch (err) {
+        return json(res, 500, { success: false, error: err.message });
+      }
+    }
 
     // POST: verify_session & login (emulate PHP auth for localhost development)
     if (req.method === 'POST' && (action === 'verify_session' || action === 'login')) {
